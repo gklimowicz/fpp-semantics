@@ -1,0 +1,13 @@
+fmod EXERCISE1 is
+    sorts Plea Inquiry Assertion Question Speech .
+    sort LogEntry .
+    subsorts Inquiry < Question < Plea .
+    subsorts Assertion Question < Speech .
+    op respond : Question -> Speech .
+    op record : Speech Speech -> LogEntry .
+    ops p1 p2 : -> Plea .
+    ops i1 i2 : -> Inquiry .
+    ops a1 a2 : -> Assertion .
+    ops q1 q2 : -> Question .
+    ops s1 s2 : -> Speech .
+endfm

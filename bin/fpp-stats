@@ -20,7 +20,7 @@ while getopts :Hhnv OPTCHAR; do
     case $OPTCHAR in
         b)  BFLAG=1
             BVAL="$OPTARG";;
-        H)  echo "File,Lines,Directives,Continuations,Indented,fypp,Includes,Defines,\"Define M()\",Undefs,Ifdefs, Ifndefs,Ifs,Elifs,Elses,Endifs,Errors,Warnings,Uncategorized"
+        H)  echo "File,Lines,Directives,Continuations,Indented,fypp,Includes,Defines,\"Define M()\",Undefs,Ifdefs,Ifndefs,Ifs,Elifs,Elses,Endifs,#,##,Hollerith,Errors,Warnings,Uncategorized"
             exit 0;;
         h)  usage; exit 0;;
         n)  DRY_RUN=1;;
@@ -36,5 +36,5 @@ case $# in
 esac
 
 for F in "$@"; do
-    echo "$F,$(awk -f "$CMD_DIR"/fpp-stats.awk "$F")"
+    echo "$F,$(gawk -v SOURCE="$F" -f "$CMD_DIR"/fpp-stats.awk "$F")"
 done | grep -v '^[^,]*,[^,]*,0,'
