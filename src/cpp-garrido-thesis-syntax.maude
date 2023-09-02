@@ -1,0 +1,194 @@
+--- ------------- ---
+--- SYNTAX OF CPP ---
+--- ------------- ---
+fmod IDENTIFIER is
+  pr QID .
+  sort Identifier IdentifierList IdentifierListP .
+  subsorts Qid < Identifier < IdentifierList .
+  op `(`) : -> IdentifierListP .
+  op `(_`) : IdentifierList -> IdentifierListP .
+  op _,_ : IdentifierList IdentifierList -> IdentifierList [assoc] .
+  op size : IdentifierListP -> Nat .
+  op _in_ : Identifier IdentifierListP -> Bool .
+  op pos : Identifier IdentifierListP -> Nat .
+  op elemAt : Nat IdentifierListP -> Identifier .
+  op cons : Identifier IdentifierListP -> IdentifierListP .
+  vars I I' : Identifier . var IL : IdentifierList . var N : Nat .
+  var ILP : IdentifierListP .
+  eq size(()) = 0 .
+  eq size((I, IL)) = 1 + size((IL)) .
+  eq size((I)) = 1 .
+  eq I in () = false .
+  eq I in (I', IL) = (I == I') or (I in (IL)) .
+  eq I in (I') = (I == I') .
+  eq pos(I, ()) = 0 .
+  ceq pos(I, (I', IL)) = 1 if (I == I') .
+  ceq pos(I, (I', IL)) = 1 + pos(I, (IL)) if (I =/= I') and (I in (IL)) .
+  ceq pos(I,(I')) = 1 if (I == I') .
+  eq pos(I, (IL)) = 0 [owise] .
+  eq elemAt(1, (I, IL)) = I .
+  eq elemAt(s(N), (I, IL)) = elemAt(N, (IL)) .
+  eq elemAt(1, (I)) = I .
+  eq cons(I,()) = (I) .
+  eq cons(I,(IL)) = (I,IL) .
+endfm
+
+fmod TOKEN is
+  pr IDENTIFIER .
+  sorts Token TokenSequence .
+  subsort Identifier < Token < TokenSequence .
+  op nil : -> TokenSequence .
+  op __ : TokenSequence TokenSequence -> TokenSequence [assoc id: nil] .
+  op _inTS_ : Token TokenSequence -> Bool .
+  vars T T' : Token . var TS : TokenSequence .
+  eq T inTS nil = false .
+  eq T inTS (T' TS) = (T == T') or (T inTS TS) .
+endfm
+
+--- --- --- --- --- --- --- --- --- ---
+--- Definition of expresions: CondExp ---
+
+fmod COND-EXP-SYNTAX is
+  pr TOKEN . pr INT .
+  sort CondExp .
+  subsort Identifier < CondExp .
+  op e : Int -> CondExp .   --- had to do this instead so I can modify attributes
+  op tokenize : CondExp -> TokenSequence .
+endfm
+
+
+fmod MACRO-CALL-SYNTAX is ex COND-EXP-SYNTAX .
+  sorts ArgList ArgListP MacroCall .
+  subsort CondExp < ArgList .
+  subsort IdentifierList < ArgList .
+  subsort IdentifierListP < ArgListP .
+  subsort Identifier < MacroCall .
+  subsort MacroCall < CondExp .
+  op ((_)) : ArgList -> ArgListP .
+  op _,_ : ArgList ArgList -> ArgList [ditto] .
+  op __ : Identifier ArgListP -> MacroCall [prec 30] . op name : MacroCall -> Identifier .
+  var I : Identifier . var ALP : ArgListP .
+  eq name(I) = I .
+  eq name(I ALP) = I .
+endfm
+
+
+fmod DEF-COND-SYNTAX is ex COND-EXP-SYNTAX .
+  op defined_ : Identifier -> CondExp .
+endfm
+
+
+fmod ARITH-EXP-SYNTAX is ex COND-EXP-SYNTAX .
+  op _+_ : CondExp CondExp -> CondExp [prec 40 gather(e E)] .
+  op _-_ : CondExp CondExp -> CondExp [prec 40 gather(e E)] .
+  op _*_ : CondExp CondExp -> CondExp [prec 35 gather(e E)] .
+  op _/_ : CondExp CondExp -> CondExp [prec 35 gather(e E)] .
+  op _%_ : CondExp CondExp -> CondExp [prec 35 gather(e E)] .
+endfm
+
+
+fmod BIT-EXP-SYNTAX is ex COND-EXP-SYNTAX .
+  op _<<_ : CondExp CondExp -> CondExp [prec 42] .
+  op _>>_ : CondExp CondExp -> CondExp [prec 42] .
+  op _&_ : CondExp CondExp -> CondExp [prec 46] .
+  op _^_ : CondExp CondExp -> CondExp [prec 46] .
+  op _|_ : CondExp CondExp -> CondExp [prec 46] .
+endfm
+
+
+fmod REXP-SYNTAX is ex COND-EXP-SYNTAX .
+  op _<_  : CondExp CondExp -> CondExp [prec 44] .
+  op _<=_ : CondExp CondExp -> CondExp [prec 44] .
+  op _>_  : CondExp CondExp -> CondExp [prec 44] .
+  op _>=_ : CondExp CondExp -> CondExp [prec 44] .
+  op _==_ : CondExp CondExp -> CondExp [prec 45] .
+  op _!=_ : CondExp CondExp -> CondExp [prec 45] .
+endfm
+
+
+fmod BEXP-SYNTAX is ex COND-EXP-SYNTAX .
+  op !_ : CondExp -> CondExp [prec 30] .
+  op _&&_ : CondExp CondExp -> CondExp [prec 49] .
+  op _||_ : CondExp CondExp -> CondExp [prec 51] .
+endfm
+
+fmod CEXP-SYNTAX is ex COND-EXP-SYNTAX .
+  op _?_:_ : CondExp CondExp CondExp -> CondExp [prec 55] .
+endfm
+
+
+fmod ALL-COND-EXP-SYNTAX is
+  pr COND-EXP-SYNTAX .
+  pr MACRO-CALL-SYNTAX .
+  pr DEF-COND-SYNTAX .
+  pr ARITH-EXP-SYNTAX .
+  pr BIT-EXP-SYNTAX .
+  pr REXP-SYNTAX .
+  pr BEXP-SYNTAX .
+  pr CEXP-SYNTAX .
+endfm
+
+
+--- CppDirectives
+
+fmod CPP-DIR-SYNTAX is
+  sort CppDirective .
+endfm
+
+
+fmod DEFINE-SYNTAX is ex CPP-DIR-SYNTAX .
+  pr TOKEN .
+  sorts MacroDefDir MacroUndefDir .
+  subsort MacroDefDir MacroUndefDir < CppDirective .
+  op #define__cr : Identifier TokenSequence -> MacroDefDir .
+  op #define___cr : Identifier IdentifierListP TokenSequence -> MacroDefDir . op #undef_cr : Identifier -> MacroUndefDir .
+endfm
+
+
+fmod INCLUDE-SYNTAX is ex CPP-DIR-SYNTAX .
+  pr IDENTIFIER . pr MACRO-CALL-SYNTAX .
+  sorts IncludeDir FileName .
+  subsort IncludeDir < CppDirective .
+  op <_> : Identifier -> FileName .
+  op #include_cr : FileName -> IncludeDir .
+  op #include_cr : String -> IncludeDir .
+  op #include_cr : MacroCall -> IncludeDir .
+endfm
+
+
+fmod COND-DIR-SYNTAX is ex CPP-DIR-SYNTAX .
+  pr IDENTIFIER .
+  pr ALL-COND-EXP-SYNTAX .
+  sort CondDir .
+  subsort CondDir < CppDirective .
+  op #if_cr : CondExp -> CondDir .
+  op #ifdef_cr : Identifier -> CondDir .
+  op #ifndef_cr : Identifier -> CondDir .
+  op #elif_cr : CondExp -> CondDir .
+  op #else`cr : -> CondDir .
+  op #endif`cr : -> CondDir .
+endfm
+
+
+fmod LINE-SEQ-SYNTAX is
+  pr CPP-DIR-SYNTAX .
+  pr TOKEN .
+  sorts Line LineSeq .
+  subsorts CppDirective < Line < LineSeq .
+  op nilLS : -> LineSeq .
+  op __ : LineSeq LineSeq -> LineSeq [assoc id: nilLS] .
+  op _cr : TokenSequence -> Line .
+  op _\`cr_ : TokenSequence Line -> Line .
+  vars TS1 TS2 : TokenSequence .
+  eq TS1 \ cr TS2 cr = (TS1 TS2) cr .
+endfm
+
+
+fmod CPP-SYNTAX is
+  pr TOKEN .
+  pr ALL-COND-EXP-SYNTAX .
+  pr DEFINE-SYNTAX .
+  pr INCLUDE-SYNTAX .
+  pr COND-DIR-SYNTAX .
+  pr LINE-SEQ-SYNTAX .
+endfm

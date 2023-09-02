@@ -1,0 +1,470 @@
+--- The following is the Maude specification of the semantics of Cpp.
+
+in cpp-garrido-thesis-syntax.maude
+
+--- ---------------- ---
+--- SEMANTICS OF CPP ---
+--- ---------------- ---
+
+fmod STRINGS is  pr STRING .
+  sort StringSet .
+  subsort String < StringSet .
+  op empty : -> StringSet .
+  op __ : StringSet StringSet -> StringSet [assoc comm id: empty] .
+endfm
+
+
+fmod TOKEN-TO-ARG is pr TOKEN .
+  sort TokenSeqList .
+  subsort TokenSequence < TokenSeqList .
+  op nilTSL : -> TokenSeqList .
+  op _;_ : TokenSeqList TokenSeqList -> TokenSeqList [assoc id: nilTSL] .
+  op size : TokenSeqList -> Nat .
+  op elemAtTS : Nat TokenSeqList -> TokenSequence .
+  op toTokenSeqList : TokenSequence -> TokenSeqList .
+  var T : Token . vars TS1 TS2 TSA : TokenSequence . var TSL : TokenSeqList . var N : Nat .
+  eq size(nilTSL) = 0 .
+  eq size(TS1 ; TSL) = 1 + size(TSL) .
+  eq elemAtTS(1, (TS1 ; TSL)) = TS1 .
+  eq elemAtTS(s(N), (TS1 ; TSL)) = elemAtTS(N, TSL) .
+  ceq toTokenSeqList(TS1) = TS1 if not ('`, inTS TS1) .
+  ceq toTokenSeqList(TS1 '`, TS2) = TS1 ; toTokenSeqList(TS2)
+    if not ('`, inTS TS1) and ('`, inTS TS2) .
+  ceq toTokenSeqList(TS1 '`, TS2) = TS1 ; TS2 if not ('`, inTS TS1) and not ('`, inTS TS2) .
+endfm
+
+
+fmod MACRO-DEF is
+  pr TOKEN . pr STRING . pr TOKEN-TO-ARG .
+  pr MACRO-CALL-SYNTAX .
+  sort MacroDef .
+  op name_replText_ : Identifier TokenSequence -> MacroDef .
+  op name_params_replText_ : Identifier IdentifierListP TokenSequence -> MacroDef . op name : MacroDef -> Identifier .
+  op hasArgs : MacroDef -> Bool .
+  op expand : MacroDef -> TokenSequence .
+  op expandWithArgs : MacroDef ArgListP -> TokenSequence .
+  op ex-rec : IdentifierListP TokenSequence ArgListP -> TokenSequence .
+  op dquote : -> Qid .
+
+  var N : Identifier . var TS : TokenSequence . vars T T2 : Token .
+  var PL : IdentifierListP . var Args : ArgListP .
+  eq name(name N replText TS) = N .
+  eq name(name N params PL replText TS) = N .
+  eq hasArgs(name N replText TS) = false .
+  eq hasArgs(name N params PL replText TS) = true .
+  eq expand(name N replText TS) = ex-rec(`(`), TS, `(`)) .
+  ceq expandWithArgs(name N params PL replText TS, Args) = nil
+    if ( size(PL) =/= size(Args) ) .
+  eq expandWithArgs(name N params PL replText TS, Args) = ex-rec(PL, TS, Args) [owise] .
+  eq ex-rec(PL, nil, Args) = nil .
+  eq ex-rec(PL, '# T TS, Args) = dquote elemAt(pos(T, PL), Args) dquote
+                        ex-rec(PL, TS, Args) .
+  ceq ex-rec(PL, T '## T2 TS, Args) = qid(string(T) + string(T2)) ex-rec(PL, TS, Args)
+    if not(T in PL) and not(T2 in PL) .
+  ceq ex-rec(PL, T '## T2 TS, Args) = qid(string(elemAt(pos(T, PL), Args)) + string(T2))
+        ex-rec(PL, TS, Args) if (T in PL) and not(T2 in PL) .
+  ceq ex-rec(PL, T '## T2 TS, Args) = qid(string(T) + string(elemAt(pos(T2, PL), Args)))
+        ex-rec(PL, TS, Args) if not(T in PL) and (T2 in PL) .
+  eq ex-rec(PL, T '## T2 TS, Args) = qid(string(elemAt(pos(T, PL), Args)) +
+        string(elemAt(pos(T2, PL), Args))) ex-rec(PL, TS, Args) [owise] .
+  ceq ex-rec(PL, T TS, Args) = T ex-rec(PL, TS, Args) if not(T in PL) .
+  eq ex-rec(PL, T TS, Args) = tokenize(elemAt(pos(T, PL), Args)) ex-rec(PL, TS, Args) [owise] .
+
+  op expandWithTSArgs : MacroDef TokenSeqList -> TokenSequence .
+  op ex-recTS : IdentifierListP TokenSequence TokenSeqList -> TokenSequence .
+
+  var TSL : TokenSeqList .
+  ceq expandWithTSArgs(name N params PL replText TS, TSL) = nil
+    if ( size(PL)  =/= size(TSL) ) .
+  eq expandWithTSArgs(name N params PL replText TS, TSL) = ex-recTS(PL, TS, TSL) [owise] .
+  eq ex-recTS(PL, nil, TSL) = nil .
+  eq ex-recTS(PL, '# T TS, TSL) = dquote elemAtTS(pos(T, PL), TSL) dquote
+                          ex-recTS(PL, TS, TSL) .
+
+  ceq ex-recTS(PL, T '## T2 TS, TSL) = qid(string(T) + string(T2)) ex-recTS(PL, TS, TSL)
+    if not(T in PL) and not(T2 in PL) .
+  ceq ex-recTS(PL, T '## T2 TS, TSL) = qid(string(elemAtTS(pos(T, PL), TSL)) + string(T2))
+        ex-recTS(PL, TS, TSL) if (T in PL) and not(T2 in PL) .
+  ceq ex-recTS(PL, T '## T2 TS, TSL) = qid(string(T) + string(elemAtTS(pos(T2, PL), TSL)))
+        ex-recTS(PL, TS, TSL) if not(T in PL) and (T2 in PL) .
+  eq ex-recTS(PL, T '## T2 TS, TSL) = qid(string(elemAtTS(pos(T, PL), TSL)) +
+        string(elemAtTS(pos(T2, PL), TSL))) ex-recTS(PL, TS, TSL) [owise] .
+  ceq ex-recTS(PL, T TS, TSL) = T ex-recTS(PL, TS, TSL) if not(T in PL) .
+  ceq ex-recTS(PL, T TS, TSL) = elemAtTS(pos(T, PL), TSL) ex-recTS(PL, TS, TSL) if (T in PL) .
+endfm
+
+
+fmod MACRO-TABLE is
+  pr MACRO-DEF .
+  sort MacroTable .
+  op empty : -> MacroTable .
+  op [_:_] : Identifier MacroDef -> MacroTable .
+  op __ : MacroTable MacroTable -> MacroTable [assoc comm id: empty] .
+  op _[_] : MacroTable Identifier -> MacroDef .
+  op _[_<-_] : MacroTable Identifier MacroDef -> MacroTable .
+  op isMacro : Identifier MacroTable -> Bool .
+  op isMacroWithArgs : Identifier MacroTable -> Bool .
+  op isMacroWithoutArgs : Identifier MacroTable -> Bool .
+  op remove : MacroDef MacroTable -> MacroTable .
+  vars N N' : Identifier .  vars M M' : MacroDef . var MT : MacroTable .
+  eq ([N : M] MT)[N] = M .
+  eq ([N : M'] MT)[N <- M] = [N : M] MT .
+  eq MT[N <- M] = MT [N : M] [owise] .
+  eq isMacro(N, empty) = false .
+  eq isMacro(N, ([N' : M] MT)) = (N == N') or isMacro(N, MT) .
+  eq isMacroWithArgs(N, MT) = isMacro(N, MT) and hasArgs(MT[N]) .
+  eq isMacroWithoutArgs(N, MT) = isMacro(N, MT) and not hasArgs(MT[N]) .
+  eq remove(M, empty) = empty .
+  eq remove(M, ([N : M] MT)) = remove(M, MT) .
+  ceq remove(M, ([N : M'] MT)) = [N : M'] remove(M, MT) if M =/= M' .
+endfm
+
+
+fmod COND-EXP-SEMANTICS is
+  pr COND-EXP-SYNTAX . pr MACRO-TABLE .
+  op evalB : CondExp MacroTable -> Bool .
+  op evalA : CondExp MacroTable -> Int .
+  op toCondExp : TokenSequence -> CondExp .
+  var X : Int . var MT : MacroTable .
+  var N : Identifier . var MD : MacroDef .
+  ceq evalB(e(X), MT) = true if X =/= 0 .
+  eq evalB(e(0), MT) = false .
+  ceq evalB(N, MT) = false if not isMacro(N, MT) .
+  eq evalA(e(X), MT) = X .
+  eq tokenize(N) = N .
+  eq tokenize(e(X)) = 'X .
+endfm
+
+
+fmod DEF-COND-SEMANTICS is pr DEF-COND-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  var N : Identifier . var MT : MacroTable .
+  eq evalB(defined N, MT) = isMacro(N, MT) .
+  eq tokenize(defined N) = 'defined N .
+endfm
+
+
+fmod ARITH-EXP-SEMANTICS is pr ARITH-EXP-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  vars E E' : CondExp . var MT : MacroTable .
+  var X : Int . vars T T2 : Token .
+  eq evalA(E + E', MT) = evalA(E, MT) + evalA(E', MT) .
+  eq evalA(E - E', MT) = evalA(E, MT) - evalA(E', MT) .
+  eq evalA(E * E', MT) = evalA(E, MT) * evalA(E', MT) .
+  eq evalA(E / E', MT) = evalA(E, MT) quo evalA(E', MT) .
+  eq evalA(E % E', MT) = evalA(E, MT) rem evalA(E', MT) .
+  eq tokenize(E + E') = tokenize(E) '+ tokenize(E') .
+  eq tokenize(E - E') = tokenize(E) '- tokenize(E') .
+  eq tokenize(E * E') = tokenize(E) '* tokenize(E') .
+  eq tokenize(E / E') = tokenize(E) '/ tokenize(E') .
+  eq tokenize(E % E') = tokenize(E) '% tokenize(E') .
+endfm
+
+
+fmod BIT-EXP-SEMANTICS is pr BIT-EXP-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  vars E E' : CondExp . var MT : MacroTable .
+  eq evalA(E << E', MT) = evalA(E, MT) << evalA(E', MT) .
+  eq evalA(E >> E', MT) = evalA(E, MT) >> evalA(E', MT) .
+  eq evalA(E & E', MT) = evalA(E, MT) & evalA(E', MT) .
+  eq evalA(E ^ E', MT) = evalA(E, MT) xor evalA(E', MT) .
+  eq evalA(E | E', MT) = evalA(E, MT) | evalA(E', MT) .
+  eq tokenize(E << E') = tokenize(E) '<< tokenize(E') .
+  eq tokenize(E >> E') = tokenize(E) '>> tokenize(E') .
+  eq tokenize(E & E') = tokenize(E) '& tokenize(E') .
+  eq tokenize(E ^ E') = tokenize(E) '^ tokenize(E') .
+  eq tokenize(E | E') = tokenize(E) '| tokenize(E') .
+endfm
+
+
+fmod REXP-SEMANTICS is pr REXP-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  vars E E' : CondExp . var MT : MacroTable .
+  eq evalB(E < E', MT) = (evalA(E, MT) < evalA(E', MT)) .
+  eq evalB(E <= E', MT) = (evalA(E, MT) <= evalA(E', MT)) .
+  eq evalB(E > E', MT) = (evalA(E, MT) > evalA(E', MT)) .
+  eq evalB(E >= E', MT) = (evalA(E, MT) >= evalA(E', MT)) .
+  eq evalB(E == E', MT) = (evalA(E, MT) == evalA(E', MT)) .
+  eq evalB(E != E', MT) = (evalA(E, MT) =/= evalA(E', MT)) .
+  eq tokenize(E < E') = tokenize(E) '< tokenize(E') .
+  eq tokenize(E <= E') = tokenize(E) '<= tokenize(E') .
+  eq tokenize(E > E') = tokenize(E) '> tokenize(E') .
+  eq tokenize(E >= E') = tokenize(E) '>= tokenize(E') .
+  eq tokenize(E == E') = tokenize(E) '== tokenize(E') .
+  eq tokenize(E != E') = tokenize(E) '!= tokenize(E') .
+endfm
+
+
+fmod BEXP-SEMANTICS is pr BEXP-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  vars E E' : CondExp . var MT : MacroTable .
+  eq evalB(! E, MT) = not evalB(E, MT) .
+  eq evalB(E && E', MT) = evalB(E, MT) and evalB(E', MT) .
+  eq evalB(E || E', MT) = evalB(E, MT) or evalB(E', MT) .
+  eq tokenize(! E) = '! tokenize(E) .
+  eq tokenize(E && E') = tokenize(E) '&& tokenize(E') .
+  eq tokenize(E || E') = tokenize(E) '|| tokenize(E') .
+endfm
+
+
+fmod CEXP-SEMANTICS is pr CEXP-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  vars C E E' : CondExp . var MT : MacroTable .
+  eq evalB(C ? E : E', MT) = if evalB(C, MT) then evalB(E, MT) else evalB(E', MT) fi .
+  eq tokenize(C ? E : E') = tokenize(C) '? tokenize(E) ': tokenize(E') .
+endfm
+
+
+fmod MACRO-CALL-SEMANTICS is pr MACRO-CALL-SYNTAX .
+  ex COND-EXP-SEMANTICS .
+  var N : Identifier . var MT : MacroTable . var AP : ArgListP . var A : ArgList .
+  ceq evalB(N, MT) = evalB(toCondExp(expand(MT[N])), MT) if isMacroWithoutArgs(N, MT) .
+  ceq evalB(N AP, MT) = evalB(toCondExp(expandWithArgs(MT[N], AP)), MT) if isMacroWithArgs(N, MT) .
+  ceq evalA(N, MT) = evalA(toCondExp(expand(MT[N])), MT) if isMacroWithoutArgs(N, MT) .
+  ceq evalA(N AP, MT) = evalA(toCondExp(expandWithArgs(MT[N], AP)), MT) if isMacroWithArgs(N, MT) .
+  var E : CondExp .
+  op tokenize : ArgListP -> TokenSequence .
+  op tokenize : ArgList -> TokenSequence .
+  eq tokenize(()) = nil .
+  eq tokenize(E, A) = tokenize(E) tokenize(A) .
+endfm
+
+
+fmod ALL-COND-EXP-SEMANTICS is
+  pr DEF-COND-SEMANTICS .
+  pr ARITH-EXP-SEMANTICS .
+  pr BIT-EXP-SEMANTICS .
+  pr REXP-SEMANTICS .
+  pr BEXP-SEMANTICS .
+  pr CEXP-SEMANTICS .
+  pr MACRO-CALL-SEMANTICS .
+endfm
+
+
+--- --- --- ---
+--- CPP-STATE ---
+
+fmod CPP-STATE is
+  pr MACRO-TABLE . pr TOKEN . pr STRINGS .
+  sorts CppState CppStateAttribute .
+  subsort CppStateAttribute < CppState .
+  op empty : -> CppState .
+  op _,_ : CppState CppState  -> CppState [assoc comm id: empty] .
+  op includeDirs : StringSet -> CppStateAttribute .
+  op macroTbl : MacroTable -> CppStateAttribute .
+  op curMacroCalls : IdentifierListP -> CppStateAttribute .
+  op skip : Bool -> CppStateAttribute .
+  op nestLevelOfSkipped : Nat -> CppStateAttribute .
+  op branchTaken : Bool -> CppStateAttribute .
+  op outputStream : TokenSequence -> CppStateAttribute .
+endfm
+
+
+fmod HELPING-OPS is
+  pr STRINGS . pr CPP-SYNTAX . pr CPP-STATE .
+  sort MacroDefDirList .
+  subsort MacroDefDir < MacroDefDirList .
+  op nil : -> MacroDefDirList .
+  op _;_ : MacroDefDirList MacroDefDirList -> MacroDefDirList [assoc id: nil] .
+
+  op readFile : String -> LineSeq .
+  --- This function reads in memory the source code of the file
+  --- whose name is specified in the parameter and returns its contents
+
+  op readFile : Identifier StringSet -> LineSeq .
+  op readFile : String StringSet -> LineSeq .
+  --- Idem previous except that the file is searched in the include
+  --- directories specified in the second argument
+
+  op initMacroTable : MacroDefDirList -> MacroTable .
+  var M : Identifier . var TS : TokenSequence .
+  var L : MacroDefDirList . var IdL : IdentifierList .
+  eq initMacroTable(nil) = empty .
+  eq initMacroTable((#define M TS cr) ; L) =
+        [M : (name M replText TS)] initMacroTable(L) .
+  eq initMacroTable((#define M ( IdL ) TS cr) ; L) =
+        [M : (name M params ( IdL ) replText TS)] initMacroTable(L) .
+
+  op initialCppState : StringSet MacroDefDirList -> CppState .
+  var ID : StringSet .
+  eq initialCppState(ID, L) = includeDirs(ID), macroTbl(initMacroTable(L)),
+        curMacroCalls(`(`)), skip(false), nestLevelOfSkipped(0),
+        branchTaken(false), outputStream(nil) .
+
+  --- [gak] This is a kludge, to avoid having to actually cead
+  --- a file in and parse it into tokens. I would need to do that
+  --- for the Fortran preprocessor.
+  eq readFile("foo.c") =
+    #include "foo.h" cr
+    #define 'MAXTOKEN  '100 cr
+    #define 'INC('X) ('X '+ '1) cr
+    #define 'M3('X, 'Y, 'Z) ('X '> 'Y '? 'X ': 'Z) cr
+    ('char 'token '`[ 'MAXTOKEN '`] ';) cr
+    ('int 'i '= 'INC '`( 'i '`) ';) cr
+    ('float 'h '= 'M3 '`( 'i '`, 'j '`, 'k '`) ';) cr
+    #include "foo.h" cr
+    .
+  eq readFile("foo.h", empty) =
+    #if defined 'MAXTOKEN cr
+    ('int 'max ';) cr
+    #else cr
+    ('int 'min ';) cr
+    #endif cr
+    .
+endfm
+
+
+--- --- --- ---
+--- SEMANTICS ---
+fmod CPP-DIR-SEMANTICS is pr CPP-DIR-SYNTAX .
+  pr CPP-STATE .
+  op state : CppDirective CppState -> CppState .
+endfm
+
+
+fmod INCLUDE-SEMANTICS is pr INCLUDE-SYNTAX .
+  ex CPP-DIR-SEMANTICS . pr HELPING-OPS .
+  pr MACRO-CALL-SEMANTICS .
+  var FN : String . var S : CppState .
+  var SS : StringSet . var I : Identifier . var MT : MacroTable .
+  eq state(#include FN cr, (includeDirs(SS), S)) = state(readFile(FN, SS), (includeDirs(SS), S)) .
+  eq state(#include < I > cr, (includeDirs(SS), S)) = state(readFile(I, SS), (includeDirs(SS), S)) .
+  ceq state(#include I cr, (includeDirs(SS), macroTbl(MT), S))
+    = state(readFile(string(expand(MT[I])), SS), (includeDirs(SS), macroTbl(MT), S))
+    if isMacroWithoutArgs(I, MT) .
+endfm
+
+
+fmod DEFINE-SEMANTICS is pr DEFINE-SYNTAX .
+  ex CPP-DIR-SEMANTICS .
+  var I : Identifier . var TS : TokenSequence . var MT : MacroTable .
+  var S : CppState . var IdL : IdentifierList .
+  eq state(#define I TS cr, (macroTbl(MT), S))
+    = macroTbl([I : (name I replText TS)] MT), S .
+  eq state(#define I ( IdL ) TS cr, (macroTbl(MT), S))
+    = macroTbl([I : (name I params (IdL) replText TS)] MT), S .
+  ceq state(#undef I cr, (macroTbl(MT), S))
+    = macroTbl(remove(MT[I], MT)), S if isMacro(I, MT) .
+  eq state(#undef I cr, (macroTbl(MT), S)) = macroTbl(MT), S [owise] .
+endfm
+
+
+fmod COND-DIR-SEMANTICS is pr COND-DIR-SYNTAX .
+  ex CPP-DIR-SEMANTICS .
+  pr ALL-COND-EXP-SEMANTICS .
+  var CE : CondExp . var N : Nat . var B : Bool . var AMT : MacroTable . var S : CppState .
+
+  --- Case 1 of #if: Not skipping -> Not skipping
+  ceq state(#if CE cr, (macroTbl(AMT), skip(false), branchTaken(false), S))
+    = macroTbl(AMT), skip(false), branchTaken(true), S if evalB(CE, AMT) = true .
+
+--- Case 2 of #if: Not skipping -> Skipping
+  ceq state(#if CE cr, (macroTbl(AMT), skip(false), nestLevelOfSkipped(0), branchTaken(false), S))
+    = macroTbl(AMT), skip(true), nestLevelOfSkipped(1), branchTaken(false), S
+    if evalB(CE, AMT) = false .
+
+  --- Case 3 of #if: Skipping -> Skipping
+  eq state(#if CE cr, (skip(true), nestLevelOfSkipped(N), branchTaken(B), S))
+    = skip(true), nestLevelOfSkipped(N + 1), branchTaken(false), S .
+
+  --- Case 1, 2, 3 of #ifdef and #ifndef: idem
+
+  --- Case 1 of #elif: Not skipping -> Skipping
+  eq state(#elif CE cr, (skip(false), nestLevelOfSkipped(0), S))
+    = skip(true), nestLevelOfSkipped(1), S .
+
+  --- Case 2 of #elif: Skipping -> Skipping
+  ceq state(#elif CE cr, (macroTbl(AMT), skip(true), S))
+    = macroTbl(AMT), skip(true), S  if evalB(CE, AMT) = false .
+
+  --- Case 3 of #elif: Skipping -> Not skipping
+  ceq state(#elif CE cr, (macroTbl(AMT), skip(true), nestLevelOfSkipped(1),
+        branchTaken(false), S))
+    = macroTbl(AMT), skip(false), nestLevelOfSkipped(0), branchTaken(true), S
+        if evalB(CE, AMT) = true .
+
+  --- Case 1 of #else: Not skipping -> Skipping
+  eq state(#else`cr, (skip(false), nestLevelOfSkipped(0), S))
+    = skip(true), nestLevelOfSkipped(1), S .
+
+  --- Case 2 of #else: Skipping -> Skipping
+  eq state(#else`cr, (skip(true), nestLevelOfSkipped(N), branchTaken(true), S))
+    = skip(true), nestLevelOfSkipped(N), branchTaken(true), S .
+
+  --- Case 3 of #else: Skipping -> Not skipping
+  eq state(#else`cr, (skip(true), nestLevelOfSkipped(1), branchTaken(false), S))
+    = skip(false), nestLevelOfSkipped(0), branchTaken(true), S .
+
+  --- Case 1 of #endif: Not skipping -> Not skipping
+  eq state(#endif`cr, (skip(false), branchTaken(true), S))
+    = skip(false), branchTaken(false), S .
+
+  --- Case 2 of #endif: Skipping -> Skipping
+  ceq state(#endif`cr, (skip(true), nestLevelOfSkipped(N), S))
+    = skip(true), nestLevelOfSkipped(N - 1), S if N > 1 .
+
+  --- Case 3 of #endif: Skipping -> Not Skipping
+  eq state(#endif`cr, (skip(true), nestLevelOfSkipped(1), branchTaken(true), S))
+    = skip(false), nestLevelOfSkipped(0), branchTaken(false), S .
+endfm
+
+
+fmod LINE-SEQ-SEMANTICS is pr LINE-SEQ-SYNTAX .
+  pr CPP-DIR-SEMANTICS . pr ALL-COND-EXP-SEMANTICS .
+  op state : LineSeq CppState -> CppState .
+  var L : Line .  var LS : LineSeq .  var S : CppState . var IL : IdentifierList .
+  vars ILP ILP2 : IdentifierListP .
+  vars T T2 : Token . vars TS O : TokenSequence . var MT : MacroTable . var I : Identifier .
+  var MC : MacroCall . var AS : TokenSequence .
+  eq state(nil cr, S) = S .
+  eq state(('## TS) cr, (curMacroCalls( (I, IL) ), skip(false), S))
+    = state(TS cr, (curMacroCalls( (IL) ), skip(false), S)) .
+  eq state(('## TS) cr, (curMacroCalls( (I) ), skip(false), S))
+    = state(TS cr, (curMacroCalls( () ), skip(false), S)) .
+  ceq state((T TS) cr, (macroTbl(MT), curMacroCalls(ILP), skip(false), outputStream(O), S))
+    = state(TS cr, (macroTbl(MT), curMacroCalls(ILP), skip(false), outputStream(O T), S))
+   if not(isMacro(T, MT)) or (T in ILP) .
+  ceq state((T '`( AS '`) TS) cr, (macroTbl(MT), curMacroCalls(ILP), skip(false), S))
+    = state((expandWithTSArgs(MT[T], toTokenSeqList(AS)) '## TS) cr,
+        (macroTbl(MT), curMacroCalls(cons(T, ILP)), skip(false), S))
+    if isMacroWithArgs(T, MT) .
+  ceq state((T TS) cr, (macroTbl(MT), curMacroCalls(ILP), skip(false), S))
+    = state((expand(MT[T]) '## TS) cr,
+        (macroTbl(MT), curMacroCalls(cons(T, ILP)), skip(false), S))
+    if isMacroWithoutArgs(T, MT) .
+  eq state((T TS) cr, (skip(true), S)) = skip(true), S .
+
+  eq state(nilLS, S) = S .
+  eq state(L LS, (skip(false), S)) = state(LS, state(L, (skip(false), S))) .
+  eq state(L LS, (skip(true), S)) = state(LS, state(L, (skip(true), S))) .
+endfm
+
+
+fmod CPP-SEMANTICS is
+  pr CPP-SYNTAX . pr HELPING-OPS .
+  pr INCLUDE-SEMANTICS . pr DEFINE-SEMANTICS . pr COND-DIR-SEMANTICS .
+  pr LINE-SEQ-SEMANTICS .
+  op preprocess : String StringSet MacroDefDirList -> TokenSequence .
+  op returnOutput : CppState -> TokenSequence .
+  var Name : String .
+  vars IncludeDirs : StringSet .
+  var ComLineMacros : MacroDefDirList .
+  var O : TokenSequence . var S : CppState .
+  eq preprocess(Name, IncludeDirs, ComLineMacros)
+    = returnOutput(state(readFile(Name),
+        initialCppState(IncludeDirs, ComLineMacros))) .
+  eq returnOutput(outputStream(O), S) = O .
+endfm
+
+
+--- After loading the above specification, executing the line:
+---    red preprocess("foo.c", empty, nil) .
+--- at the command prompt in Maude, it make it “read” the file “foo.c” (specified in
+--- module HELPING-OPS), which exercises the different Cpp directives. The result is:
+
+--- TokenSequence:
+---    'int 'min ';
+---    'char 'token '`[ '100 '`] ';
+---    'int 'i '= 'i '+ '1 ';
+---    'float 'h '= 'i '> 'j '? 'i ': 'k ';
+---    'int 'max ';
