@@ -4,13 +4,13 @@ function dprint (s) {
 }
 
 BEGIN {
-    if (SOURCE ~ /\.[Ff]$/)
+    if (FILENAME ~ /\.[Ff]$/)
         fixed = 1
     else
         fixed = 0
 }
 
-{ L++ }
+{ NUM_LINES++ }
 
 fixed && /^[Cc*]/ {
     # Skip fixed-format comment lines for now to avoid false positives.
@@ -23,7 +23,7 @@ fixed && /^[Cc*]/ {
 }
 
 # A new preprocessor line; assume not continuation until we examine further.
-/^[ \t]*#[^:]/ { P++; CONTINUED = 0; }
+/^[ \t]*#[^:]/ { DIRECTIVE++; CONTINUED = 0; }
 /^[ \t]*#[^#]*##/ { HASH_HASH++; }
 /^[ \t]*#[^#]*#[^#]/ { HASH++; }
 /^[ \t][ \t]*#[^:]/ { INDENT++ }
@@ -44,7 +44,8 @@ fixed && /^[Cc*]/ {
 /^#[ \t]*error/ { ERROR++ }
 /^#[ \t]*warning/ { WARNING++ }
 
-/[^a-zA-Z_][0-9][0-9]*[Hh]/ { HOLLERITH++ }
+/^ *[0-9]* *[Ff][Oo][Rr][Mm][Aa][Tt] *\(.*[0-9][0-9]*[Hh]/ { HOLLERITH++ }
+/^ *[0-9]* *[Dd][Aa][Tt][Aa].*\/.*[0-9][0-9]*[Hh]/ { HOLLERITH++ }
 
 # A directive with a continuation line
 /^[ \t]*#.*[\\]$/ { CONTINUE++; CONTINUED = 1; dprint($0) }
@@ -56,12 +57,13 @@ CONTINUED && /^[ \t]*[^#].*[\\]$/ { CONTINUE++; dprint($0)}
 CONTINUED && /.*[^\\]$/ { CONTINUED = 0; dprint($0) }
 
 END {
-    MISSING = P - (INCLUDE + DEFINE + DEFINE_ARGS + \
+    UNCATEGORIZED = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + \
                    UNDEF + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF + \
                    ERROR + WARNING)
-    printf "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
-        L, P, CONTINUE, INDENT, FYPP, INCLUDE, DEFINE, DEFINE_ARGS,  \
-        UNDEF, IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
+    printf "%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+        FILENAME, NUM_LINES, DIRECTIVE, CONTINUE, INDENT, FYPP, INCLUDE, \
+        DEFINE, DEFINE_ARGS, UNDEF, \
+        IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF,   \
         HASH, HASH_HASH, HOLLERITH, \
-        ERROR, WARNING, MISSING
+        ERROR, WARNING, UNCATEGORIZED
 }
