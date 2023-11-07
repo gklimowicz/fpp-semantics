@@ -1,3 +1,0 @@
-[submodule "fortran-examples"]
-	path = fortran-examples
-	url = git@github.com:gklimowicz/fortran-examples.git
