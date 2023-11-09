@@ -1,0 +1,473 @@
+:PROPERTIES:
+:ID:       20231024T112734.315362
+:END:
+#+title: Fortran preprocessor requirements
+#+author: INCITS/Fortran JoR
+#+date: [2023-10-24 Tue 11:27]
+#+options: toc:nil
+#+startup: showall
+
+#  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME
+
+* Summary
+We summarize the potential requirements for the Fortran 202y preprocessor.
+
+Each heading is of the form =[shorthand-name] One-line description=. There may be an additional tag (category) on the line (such as =:output:=). The section body contains information on
+- Where the requirement came from in Fortran discussions and posts
+- Current status (TBD, accepted by JoR, accepted by WG5, rejected by JoR, rejected by WG5, etc.)
+- Where the reference appears in the C 2018 standard /ISO/IEC 9899:2018/ /Information technology -- Programming languages -- C/. (We will update for 2024 when ratified.) We write these references with
+    + an opening square bracket =[= and the letter =C=, followed by
+    + the section marker =§= and the section number, followed by
+    + (optionally) a =¶= followed by the paragraph number, followed by
+    + (optionally) a bullet symbol =·= and the bullet number or letter, followed by
+    + (optionally) the section title for redundant context, followed by
+    + a closing square bracket.
+
+For example, =[C§5.1.1.2¶1·2 Translation phases]= references section 5.1.1.2 of the C 2018 standard, paragraph 1, second bullet point. This is in the ``Translation phases'' section.
+
+** Translation phases
+Similar to the C standard, we define phases of text processing related to preprocessing. The preprocessor performs the following phases on the input source program before the processor transforms the program for use.
+
+This requires implementations to behave as if these separate preprocessing phases occur, even though they are typically folded together in practice. Source input need not necessarily be stored as files, nor need there be any one-to-one correspondence between these entities and any external representation. The description is conceptual only, and does not specify any particular implementation.
+
+1. Continuation lines in the input source are interpreted, producing a sequence of logical lines (introducing new-line characters for end-of-line indicators). [C§5.1.1.2¶1·1-2]
+2. The preprocessor decomposes the logical lines into preprocessing tokens and sequences of white-space characters and comments. This input shall not end in a partial preprocessing token. New-line characters are retained. For the proper handling of compiler directives, comments are retained. Whether each nonempty sequence of white-space characters other than new-line is retained or replaced by one space character is implementation-defined. [C§5.1.1.2¶1·3]
+3. Preprocessing directives are executed and macro invocations are expanded. A #include preprocessing directive causes the named header or source file to be processed from phase 1 through phase 3, recursively. All preprocessing directives are then deleted. [C§5.1.1.2¶1·4]
+4. Each preprocessing token is converted into a token for subsequent handling by the processor.
+
+
+* Phase 1 Continuation handling
+
+** [c-cont] C-style line continuations in directives
+
+- Source: Fla1
+- Status: TBD
+- C reference: [C§5.1.1.2¶1·2 Translation phases]
+
+In fixed-form and free-from source code, delete a backslash =\= immediately followed by a newline character.
+
+From The C standard:
+#+begin_quote
+Each instance of a backslash character (\) immediately followed by a new-line character is deleted, splicing physical source lines to form logical source lines. Only the last backslash on any physical source line shall be eligible for being part of such a splice. A source file that is not empty shall end in a new-line character, which shall not be immediately preceded by a backslash character before any such splicing takes place.
+#+end_quote
+
+** [fortran-cont-fixed] Process Fortran line continuation in directives :continuation:
+- Source: Che1
+- Status: TBD
+- C reference: N/A
+
+In fixed-form input, a character in column 6 that is not blank or the digit zero continues the line with the previous line, even if the previous line is a directive line, or the continuation of a directive line.
+
+** [fortran-cont-free] Fortran line continuation in directives in free form
+- Source: Che1
+- Status: TBD
+- C reference: §6.10.
+
+In free-form input, an =&= character as the last character on a directive line indicates the directive continues on the next  line.
+
+** [fortran-cont-free-trim] Fortran line continuation in directives in free form :continuation:
+- Source: Che1
+- Status: TBD
+- C reference: §6.10.
+
+In free-form input, an =&= character as the last character on a directive line indicates the directive continues on the next  line. When the first non-blank character on the next line is also an =&=, the characters between the ampersands are deleted.
+
+
+** [c-comment-strip] Strip C-style =/* ... */= comments
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [comment-definition-cont] Comment lines in definitions with continuation lines
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [comment-bang] Recognize the comment character '!' in directives
+- Source: Che1
+- Status: TBD
+- C reference: §6.10.
+
+
+* Phase 2 Tokenization
+** [tokens-case-insensitive] Case insensitive tokens
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [spaces-end-token] Spaces significant in determining tokens
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [replace-trigraph] Trigraph sequences replaced
+- Source: Che1
+- Status: TBD
+- C reference: §6.10.
+
+
+* Phase 3 Directive  processing
+
+** [non-directive] # non-directive
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#if] # if
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#ifdef] # ifdef
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#ifndef] # ifndef
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#elif] # elif
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#else] # else
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#endif] # endif
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#include] # include
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#include-computed] # include (computed)
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#define-id] # define id replacement-list
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#define-id-function] # define id ( id-list ) replacement-list
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#define-id-0-varargs] # define id ( ... ) replacement-list
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#define-id-n-varargs] # define id ( id-list , ... ) replacement-list
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#undef] # undef
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#line] # line
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#error] # error
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#pragma] # pragma
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#newline] # new-line
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#show] # show
+- Source: Lio3
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#import] # import VARNAME
+- Source: Lio3
+- Status: TBD
+- C reference: §6.10.
+
+
+** [#output] # output filename [--append]
+- Source: Lio3
+- Status: TBD
+- C reference: §6.10.
+
+
+
+* Expressions
+
+** [#-operator] =#=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [##-operator] =##=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [defined-operator] =defined=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [bang-operator] =!=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [c-expressions] C-style expressions
+- Source :::
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fortran-expressions] Fortran-style expressions
+- Source :::
+- Status: TBD
+- C reference: §6.10.
+
+
+
+* Predefined macros
+
+** [file-process-date] =__DATE__=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [file-name-context] =__FILE__=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [line-number-context] =__LINE__=
+- Source: cpp
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fortran-conform] =__STDFORTRAN__=
+- Source: cpp-ish
+- Status: TBD
+- C reference: §6.10.
+
+
+** [hosted-implementation] =__STDFORTRAN_HOSTED__=
+- Source: cpp-ish
+- Status: Not accepted
+- C reference: §6.10.
+
+
+
+** [fortran-version] =__STDFORTRAN_VERSION__=
+- Source: cpp-ish
+- Status: TBD
+- C reference: §6.10.
+
+
+** [file-process-time] =__TIME__=
+- Source :::
+- Status: TBD
+- C reference: §6.10.
+
+
+** [stringify-macro] =STRINGIFY=
+- Source: Clu1
+- Status: Not accepted
+- C reference: §6.10.
+
+
+** [scope-macro] =__SCOPE__=
+- Source: Clu1, Lio1
+- Status: Not accepted
+- C reference: §6.10.
+
+
+
+** [vendor-macro] =__VENDOR__=
+- Source: Clu1
+- Status: Not accepted
+- C reference: §6.10.
+
+
+
+** [no-undecorated-std-definitions] undecorated names (no =_=) defined by preprocessor
+- Source: Lio2
+- Status: TBD
+- C reference: §6.10.
+
+
+* Expansion
+** [fixed-no-expand-col-1] No expansion of =C= (or =D=) in column 1
+- Source: Ble1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fixed-expand-col-1] Expansion of =C= (or =D=) in column 1
+- Source: Ble1, Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fixed-no-expand-col-6] No expansion of column 6
+- Source: Kli1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fixed-strip-col-1-comments] Strip Column 1 =C= comments from expanded text
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [no-expand-string] No expansion in strings
+- Source: Ble1, Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [no-expand-hollerith] No expansion in Hollerith
+- Source: Ble1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [no-expand-implicit-char-list] No expansion in =IMPLICIT= single-character specifiers
+- Source: Ble1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [no-expand-format] No expansion of =FORMAT= specifiers
+- Source: Ble1, Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [expand-comments] Expansion in comments
+- Source: Ble1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [expand-directives] Expansion in directives (e.g., OpenMP)
+- Source: Ble1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [preprocess-fortran-include] Expand =INCLUDE= lines as if =#include=
+- Source: Fla1, Jor1
+- Status: TBD
+- C reference: §6.10.
+
+
+* Output form
+
+** [fixed-clip-input] Right margin clipping at column 72
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fixed-no-directive-clip] No right margin clipping on directive lines
+- Source: Fla1
+- Status: TBD
+- C reference: §6.10.
+
+
+** [fixed-output-conform] Expanded text reflects fixed-format rules
+- Source: Fla1
+- Status: TBD
+- C reference: None
+
+
+* Sources
+- cpp: /cpp/ if in the C standard (2018), /cpp-ish/ if in C standard, but "Fortranized".
+- Ble1: JoR Email threads from Rich Bleikamp re: tutorial [2022-08-08 Mon 21:34].
+- Che1: Email from Daniel Chen to JoR [2022-07-29 11:08].
+- Clu1: Email from Tom Clune [2022-08-01 Mon 10:48].
+- Fla1: LLVM Flang Preprocessing.md [https://github.com/llvm/llvm-project/blob/main/flang/docs/Preprocessing.md]
+- Jor1: JoR meeting on preprocessors [2022-08-22 Mon 10:00].
+- Jor2: JoR meeting on preprocessors [2022-09-20 Tue 13:00].
+- Kli1: Private communication in his head.
+- Lio1: Email from Steve Lionel [2022-08-01 Mon 13:52].
+- Lio2: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=561]]
+- Lio3:  JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=562]]
+
+
+* References
+ - Jor email re: cpp tutorial for October meeting?
+ - INCITS+ISO+IEC+9899+2018+(2019)
+ - LLVM Flang Preprocessing.md[ https://github.com/llvm/llvm-project/blob/main/flang/docs/Preprocessing.md
+
+
+* Links                                                            :noexport:
+- [[id:B95B266B-EC1E-44C8-B1F3-ABE74A38D9A3][Review specification for C preprocessor from standard C reference]]
+- [[id:D5905323-2724-4ABB-A0D2-2F5973455240][J3 JoR meeting re preprocessor 20220822-1000]]
+- [[id:C5448143-9FF2-4E7D-B939-FCA13386BB26][J3 JoR meeting re preprocessor 20220920-1300]]
+- [[id:11681178-42A9-41D5-B562-3F25B7049C04][Notes on Fortran preprocessor fppTutorial2 from Rich Bleikamp 2022-09-08]]
+- [[fpp:requirements/Consolidated requirements for Fortran preprocessor for Fortran 202y.org]]
+
+* Footnotes
+
+
+
+# Local Variables:
+# org-latex-inputenc-alist: (("utf8" . "utf8x"))
+# eval: (setq org-latex-default-packages-alist (cons '("mathletters" "ucs" nil) org-latex-default-packages-alist))
+# End:
