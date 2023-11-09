@@ -2,14 +2,6 @@ E=fortran-examples
 
 all: stats.csv
 
-update:
-	git submodule update --remote
-	(cd fortran-examples; \
-	 git pull origin main; \
-	 git submodule update)
-
-update-all: update all
-
 stats.csv:	fortran-examples/all-fortran-files.txt Makefile bin/fpp-stats bin/fpp-stats.awk
 	export HERE=`pwd`; \
 	$$HERE/bin/fpp-stats -H >"$@"; \
