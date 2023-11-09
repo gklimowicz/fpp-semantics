@@ -30,4 +30,11 @@
 *.exe
 *.out
 *.app
+
+
+# Processed files
+*.continueless.*
+*.tokens.*
+
+# Miscellany
 .DS_Store
