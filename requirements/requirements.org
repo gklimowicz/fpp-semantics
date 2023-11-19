@@ -6,6 +6,7 @@
 #+date: [2023-10-24 Tue 11:27]
 #+options: toc:nil
 #+startup: showall
+#+filetags:  tbd(t) rej-j3 acc-j3 rej-wg5 acc-wg5
 
 #  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME
 
@@ -15,15 +16,28 @@ We summarize the potential requirements for the Fortran 202y preprocessor.
 Each heading is of the form =[shorthand-name] One-line description=. There may be an additional tag (category) on the line (such as =:output:=). The section body contains information on
 - Where the requirement came from in Fortran discussions and posts
 - Current status (TBD, accepted by JoR, accepted by WG5, rejected by JoR, rejected by WG5, etc.)
-- Where the reference appears in the C 2018 standard /ISO/IEC 9899:2018/ /Information technology -- Programming languages -- C/. (We will update for 2024 when ratified.) We write these references with
+- Where the reference appears in the C 2018 standard /ISO/IEC 9899:2018/ /Information technology -- Programming languages -- C/. (We will update for 2024 when ratified.)
+  We write these references with
     + an opening square bracket =[= and the letter =C=, followed by
     + the section marker =§= and the section number, followed by
     + (optionally) a =¶= followed by the paragraph number, followed by
     + (optionally) a bullet symbol =·= and the bullet number or letter, followed by
     + (optionally) the section title for redundant context, followed by
-    + a closing square bracket.
+    + a closing square bracket =]=.
 
-For example, =[C§5.1.1.2¶1·2 Translation phases]= references section 5.1.1.2 of the C 2018 standard, paragraph 1, second bullet point. This is in the ``Translation phases'' section.
+  For example, =[C§5.1.1.2¶1·2 Translation phases]= references section 5.1.1.2 of the C 2018 standard, paragraph 1, second bullet point. This is in the ``Translation phases'' section.
+
+- Where the reference appears in the Fortran 2023 standard /ISO/IEC FDIS 1539-1 Information technology — Programming languages — Fortran/.
+  We write these references with
+    + an opening square bracket =[= and the string =F2023=, followed by
+    + the section marker =§= and the section number, followed by one of
+        - an =R= followed by a rule number, or
+        - a =C= followed by a constraint number, or
+        - a =¶= followed by the paragraph number, followed optionally by a bullet symbol =·= and the bullet number or letter
+    + (optionally) the section title for redundant context, followed by
+    + a closing square bracket =]=.
+
+  For example, =[F2019§13.2.1R1301 FORMAT statement]= references section 13.2.1 of the Fortran 2023 standard, rule 1301. This is in the ``FORMAT statement'' section.
 
 ** Translation phases
 Similar to the C standard, we define phases of text processing related to preprocessing. The preprocessor performs the following phases on the input source program before the processor transforms the program for use.
@@ -39,10 +53,8 @@ This requires implementations to behave as if these separate preprocessing phase
 * Phase 1 Continuation handling
 
 ** [c-cont] C-style line continuations in directives
-
-- Source: Fla1
-- Status: TBD
-- C reference: [C§5.1.1.2¶1·2 Translation phases]
+- *Status:* TBD
+- *Source:* Fla1, [C§5.1.1.2¶1·2 Translation phases]
 
 In fixed-form and free-from source code, delete a backslash =\= immediately followed by a newline character.
 
@@ -51,389 +63,379 @@ From The C standard:
 Each instance of a backslash character (\) immediately followed by a new-line character is deleted, splicing physical source lines to form logical source lines. Only the last backslash on any physical source line shall be eligible for being part of such a splice. A source file that is not empty shall end in a new-line character, which shall not be immediately preceded by a backslash character before any such splicing takes place.
 #+end_quote
 
-** [fortran-cont-fixed] Process Fortran line continuation in directives :continuation:
-- Source: Che1
-- Status: TBD
-- C reference: N/A
+** [fortran-cont-fixed] Process Fortran line continuation in directives
+- *Status:* TBD
+- *Source:* Che1
 
 In fixed-form input, a character in column 6 that is not blank or the digit zero continues the line with the previous line, even if the previous line is a directive line, or the continuation of a directive line.
 
+
 ** [fortran-cont-free] Fortran line continuation in directives in free form
-- Source: Che1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Che1, [C§6.10 Preprocessing directives]
 
 In free-form input, an =&= character as the last character on a directive line indicates the directive continues on the next  line.
 
-** [fortran-cont-free-trim] Fortran line continuation in directives in free form :continuation:
-- Source: Che1
-- Status: TBD
-- C reference: §6.10.
+
+** [fortran-cont-free-trim] Fortran line continuation in directives in free form
+- *Status:* TBD
+- *Source:* Che1, [C§6.10 Preprocessing directives]
 
 In free-form input, an =&= character as the last character on a directive line indicates the directive continues on the next  line. When the first non-blank character on the next line is also an =&=, the characters between the ampersands are deleted.
 
 
 ** [c-comment-strip] Strip C-style =/* ... */= comments
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1, [C§6.10 Preprocessing directives]
 
 
 ** [comment-definition-cont] Comment lines in definitions with continuation lines
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1, [C§6.10 Preprocessing directives]
 
 
 ** [comment-bang] Recognize the comment character '!' in directives
-- Source: Che1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Che1, [C§6.10 Preprocessing directives]
 
 
 * Phase 2 Tokenization
 ** [tokens-case-insensitive] Case insensitive tokens
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1
+
+Fortran is not case-sensitive.
+The preprocessor is not be case-sensitive when recognizing identifiers.
+The text fragment
+#+begin_src fortran
+#define abc XYZ
+#define ABC foo
+      subroutine abc
+#+end_src
+
+should expand to
+#+begin_src fortran
+      subroutine foo
+#+end_src
+
+If the preprocessor were case sensitive, we would have behavior like
+#+begin_src fortran
+#define ABC var_1
+#define abc var_2
+      abc = ABC + 1     ! Normally, Fortran treats these as the same identifier
+#+end_src
+
+expanding to
+
+#+begin_src fortran
+      var_2 = var_1 + 1    ! These identifiers are now different
+#+end_src
+
+We should expect it to expand to
+#+begin_src fortran
+      var_2 = var_2 + 1    ! Only the second definition matters
+#+end_src
 
 
 ** [spaces-end-token] Spaces significant in determining tokens
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1
+
+In order to simplify the preprocessor tokenization, spaces are significant, even in fixed-form source.
 
 
-** [replace-trigraph] Trigraph sequences replaced
-- Source: Che1
-- Status: TBD
-- C reference: §6.10.
-
-
-* Phase 3 Directive  processing
+* Phase 3 Directive processing
 
 ** [non-directive] # non-directive
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#if] # if
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#ifdef] # ifdef
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#ifndef] # ifndef
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#elif] # elif
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#else] # else
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#endif] # endif
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#include] # include
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#include-computed] # include (computed)
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#define-id] # define id replacement-list
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#define-id-function] # define id ( id-list ) replacement-list
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#define-id-0-varargs] # define id ( ... ) replacement-list
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#define-id-n-varargs] # define id ( id-list , ... ) replacement-list
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#undef] # undef
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#line] # line
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#error] # error
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#pragma] # pragma
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#newline] # new-line
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [#show] # show
-- Source: Lio3
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Lio3, [C§6.10 Preprocessing directives]
 
 
 ** [#import] # import VARNAME
-- Source: Lio3
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Lio3, [C§6.10 Preprocessing directives]
 
 
 ** [#output] # output filename [--append]
-- Source: Lio3
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Lio3, [C§6.10 Preprocessing directives]
 
 
 
 * Expressions
 
 ** [#-operator] =#=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [##-operator] =##=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [defined-operator] =defined=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [bang-operator] =!=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
 
 
 ** [c-expressions] C-style expressions
 - Source :::
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *C reference:* [C§6.10 Preprocessing directives]
 
 
 ** [fortran-expressions] Fortran-style expressions
 - Source :::
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *C reference:* [C§6.10 Preprocessing directives]
 
-
-
-* Predefined macros
-
-** [file-process-date] =__DATE__=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
-
-
-** [file-name-context] =__FILE__=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
-
-
-** [line-number-context] =__LINE__=
-- Source: cpp
-- Status: TBD
-- C reference: §6.10.
-
-
-** [fortran-conform] =__STDFORTRAN__=
-- Source: cpp-ish
-- Status: TBD
-- C reference: §6.10.
-
-
-** [hosted-implementation] =__STDFORTRAN_HOSTED__=
-- Source: cpp-ish
-- Status: Not accepted
-- C reference: §6.10.
-
-
-
-** [fortran-version] =__STDFORTRAN_VERSION__=
-- Source: cpp-ish
-- Status: TBD
-- C reference: §6.10.
-
-
-** [file-process-time] =__TIME__=
-- Source :::
-- Status: TBD
-- C reference: §6.10.
-
-
-** [stringify-macro] =STRINGIFY=
-- Source: Clu1
-- Status: Not accepted
-- C reference: §6.10.
-
-
-** [scope-macro] =__SCOPE__=
-- Source: Clu1, Lio1
-- Status: Not accepted
-- C reference: §6.10.
-
-
-
-** [vendor-macro] =__VENDOR__=
-- Source: Clu1
-- Status: Not accepted
-- C reference: §6.10.
-
-
-
-** [no-undecorated-std-definitions] undecorated names (no =_=) defined by preprocessor
-- Source: Lio2
-- Status: TBD
-- C reference: §6.10.
 
 
 * Expansion
-** [fixed-no-expand-col-1] No expansion of =C= (or =D=) in column 1
-- Source: Ble1
-- Status: TBD
-- C reference: §6.10.
+** [fixed-no-expand-c-col-1] No expansion of =C= (or =D=) in column 1
+- *Status:* TBD
+- *Source:* Ble1, [C§6.10 Preprocessing directives]
 
+In fixed-form, =C= in column 1 indicates a comment.
+No identifier that begins with a =C= in column is expanded.
 
-** [fixed-expand-col-1] Expansion of =C= (or =D=) in column 1
-- Source: Ble1, Fla1
-- Status: TBD
-- C reference: §6.10.
+** [fixed-no-expand-d-col-1] No expansion of =D= in column 1
+- *Status:* TBD
+- *Source:* Ble1, Fla1, [C§6.10 Preprocessing directives]
+
+In fixed-form, =D= in column 1 is a common extension to indicate a comment.
+No identifier that begins with a =D= in column is expanded.
 
 
 ** [fixed-no-expand-col-6] No expansion of column 6
-- Source: Kli1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Kli1, [C§6.10 Preprocessing directives]
 
+In fixed-form, a character in column 6 that is not blank or zero indicates a continuation line.
+No identifier that begins in column 6 is expanded.
 
-** [fixed-strip-col-1-comments] Strip Column 1 =C= comments from expanded text
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+[Note that since we define expansion to occur after continuation handling, this requirement is not necessary.]
+
+** [fixed-strip-col-1-comments] Strip column 1 =C= comments from expanded text
+- *Status:* TBD
+- *Source:* Fla1, [C§6.10 Preprocessing directives]
 
 
 ** [no-expand-string] No expansion in strings
-- Source: Ble1, Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, Fla1, [C§6.10 Preprocessing directives]
 
+String constants are output without being examined for macro expansion.
 
 ** [no-expand-hollerith] No expansion in Hollerith
-- Source: Ble1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, [C§6.10 Preprocessing directives]
 
+No expansion occurs in the string contained in a Hollerith constant.
 
 ** [no-expand-implicit-char-list] No expansion in =IMPLICIT= single-character specifiers
-- Source: Ble1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, [C§6.10 Preprocessing directives]
 
+The letters in an =IMPLICIT= statement are not considered for macro expansion.
+
+[Note that this implies the preprocessor recognizes =IMPLICIT=.]
 
 ** [no-expand-format] No expansion of =FORMAT= specifiers
-- Source: Ble1, Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, Fla1, [F20123§13.2.1R1301]
+
+In =FORMAT= statements, there is no macro expansion in the /format-specification/..
+
+[Note that this implies the preprocessor recognizes =FORMAT= statements.]
 
 
 ** [expand-comments] Expansion in comments
-- Source: Ble1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, [C§6.10 Preprocessing directives]
 
 
 ** [expand-directives] Expansion in directives (e.g., OpenMP)
-- Source: Ble1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Ble1, [C§6.10 Preprocessing directives]
 
 
 ** [preprocess-fortran-include] Expand =INCLUDE= lines as if =#include=
-- Source: Fla1, Jor1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1, Jor1, [C§6.10 Preprocessing directives]
 
 
 * Output form
 
 ** [fixed-clip-input] Right margin clipping at column 72
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1, [C§6.10 Preprocessing directives]
 
 
 ** [fixed-no-directive-clip] No right margin clipping on directive lines
-- Source: Fla1
-- Status: TBD
-- C reference: §6.10.
+- *Status:* TBD
+- *Source:* Fla1, [C§6.10 Preprocessing directives]
 
 
 ** [fixed-output-conform] Expanded text reflects fixed-format rules
-- Source: Fla1
-- Status: TBD
-- C reference: None
+- *Status:* TBD
+- *Source:* Fla1
+
+
+* Predefined macros
+
+** [file-process-date] =__DATE__=
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
+
+
+** [file-name-context] =__FILE__=
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
+
+
+** [line-number-context] =__LINE__=
+- *Status:* TBD
+- *Source:* cpp, [C§6.10 Preprocessing directives]
+
+
+** [fortran-conform] =__STDFORTRAN__=
+- *Status:* TBD
+- *Source:* cpp-ish, [C§6.10 Preprocessing directives]
+
+
+** [hosted-implementation] =__STDFORTRAN_HOSTED__=
+- *Status:* Not accepted
+- *Source:* cpp-ish, [C§6.10 Preprocessing directives]
+
+
+** [fortran-version] =__STDFORTRAN_VERSION__=
+- *Status:* TBD
+- *Source:* cpp-ish, [C§6.10 Preprocessing directives]
+
+
+** [file-process-time] =__TIME__=
+- Source :::
+- *Status:* TBD
+- *C reference:* [C§6.10 Preprocessing directives]
+
+
+** [stringify-macro] =STRINGIFY=
+- *Status:* Not accepted
+- *Source:* Clu1, [C§6.10 Preprocessing directives]
+
+
+** [scope-macro] =__SCOPE__=
+- *Status:* Not accepted
+- *Source:* Clu1, Lio1, [C§6.10 Preprocessing directives]
+
+
+
+** [vendor-macro] =__VENDOR__=
+- *Status:* Not accepted
+- *Source:* Clu1, [C§6.10 Preprocessing directives]
+
+
+
+** [no-undecorated-std-definitions] undecorated names (no =_=) defined by preprocessor
+- *Status:* TBD
+- *Source:* Lio2, [C§6.10 Preprocessing directives]
 
 
 * Sources
