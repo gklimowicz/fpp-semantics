@@ -36,5 +36,9 @@
 *.continueless.*
 *.tokens.*
 
+# LaTeX temporary files
+requirements/requirements.tex
+requirements/requirements.txt
+
 # Miscellany
 .DS_Store
