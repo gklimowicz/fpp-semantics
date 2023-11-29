@@ -64,7 +64,8 @@ BEGIN {
         exit 0
     }
 
-    if (FILENAME ~ /\.([Ff]|[Ff]77|[Ff][Oo][Rr]|[Ff][Tt][Nn]|[Ff][Pp][Pp])$/)
+    if (FILENAME ~ \
+           /\.([Ff]|[Ff]77|[Ff][Oo][Rr]|[Ff][Tt][Nn]|[Ff][Pp][Pp]|[Ff][Tt][Nn]77)$/)
         fixed = 1
     else
         fixed = 0
