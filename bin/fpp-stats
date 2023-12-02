@@ -35,5 +35,6 @@ case $# in
 esac
 
 for F in "$@"; do
-    gawk -f "$CMD_DIR"/fpp-stats.awk "$F"
+    gawk -f "$CMD_DIR"/fpp-stats.awk \
+         -v FIXED="$(if ../fortran-examples/bin/is-fixed-form "$F"; then echo 1; else echo 0; fi)" "$F"
 done
