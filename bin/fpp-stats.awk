@@ -57,23 +57,27 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
     return _r
 }
 
+function fixed_continue_pound() {
+    return fixed && substr($0, 6, 1) == "#"
+}
+
 BEGIN {
     if (JUST_HEADING) {
-        # This must match output in END block.
-        print "File,Lines,Directives,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#include,Continuations,#,##,Indented,fypp,Hollerith,#error,#warning,Uncategorized"
+        # This must match the printf in the END block.
+        print "File,Form,Lines,Directives,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#include,\"# (other)\",Continuations,#,##,Indented,fypp,Hollerith,#error,#warning"
         exit 0
     }
 
-    if (FILENAME ~ \
-           /\.([Ff]|[Ff]77|[Ff][Oo][Rr]|[Ff][Tt][Nn]|[Ff][Pp][Pp]|[Ff][Tt][Nn]77)$/)
-        fixed = 1
-    else
-        fixed = 0
+    if (FIXED == "") {
+        print "fpp-stats.awk: Need to specify -v FIXED=1 or -v FIXED=0" >"/dev/stderr"
+        exit 1
+    }
+    FREE = !FIXED
 }
 
 { NUM_LINES++ }
 
-fixed && /^[Cc*]/ {
+FIXED && /^[Cc*]/ {
     # Skip fixed-format comment lines for now to avoid false positives.
     next
 }
@@ -84,26 +88,63 @@ fixed && /^[Cc*]/ {
 }
 
 # A new preprocessor line; assume not continuation until we examine further.
-/^[ \t]*#[^:]/ { DIRECTIVE++; CONTINUED = 0; }
-/^[ \t]*#[^#]*##/ { dprint(1, "## op '" $0 "'"); HASH_HASH++; }
-/^[ \t]*#[^#]*#[^#]/ {  dprint(1, "# op '" $0 "'"); HASH++; }
-/^[ \t][ \t]*#[^:]/ { INDENT++ }
-/^[ \t]*#:/ { FYPP++ }
-/^[ \t]*#[ \t]*include/ { INCLUDE++ }
-/^[ \t]*#[ \t]*define[ \t]*[^(]/ {DEFINE++}
-/^[ \t]*#[ \t]*define[ \t][ \t]*[A-Za-z_][A-Za-z0-9_]*[(]/ {DEFINE_ARGS++}
+/^[ \t]*#[^:]/ && !fixed_continue_pound() {
+    DIRECTIVE++
+    CONTINUED = 0
+}
+/^[ \t]*#[^#]*##/ && !fixed_continue_pound() {
+    dprint(1, "## op '" $0 "'")
+    HASH_HASH++
+}
+/^[ \t]*#[^#]*#[^#]/ && !fixed_continue_pound() {
+    dprint(1, "# op '" $0 "'")
+    HASH++
+}
+/^[ \t][ \t]*#[^:]/ && !fixed_continue_pound() {
+    INDENT++
+}
+/^[ \t]*#:/ && !fixed_continue_pound() {
+    FYPP++
+}
+/^[ \t]*#[ \t]*include/ && !fixed_continue_pound() {
+    INCLUDE++
+}
+/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[ ]/ && !fixed_continue_pound() {
+    DEFINE++
+}
+/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[(]/ && !fixed_continue_pound() {
+    DEFINE_ARGS++
+}
 
-/^[ \t]*#[ \t]*undef/ { UNDEF++ }
+/^[ \t]*#[ \t]*undef/ && !fixed_continue_pound() {
+    UNDEF++
+}
 
-/^[ \t]*#[ \t]*ifdef/ { IFDEF++ }
-/^[ \t]*#[ \t]*ifndef/ { IFNDEF++ }
-/^[ \t]*#[ \t]*if[^dn]/ { IF++ }
-/^[ \t]*#[ \t]*elif/ { ELIF++ }
-/^[ \t]*#[ \t]*else/ { ELSE++ }
-/^[ \t]*#[ \t]*endif/ { ENDIF++ }
+/^[ \t]*#[ \t]*ifdef/ && !fixed_continue_pound() {
+    IFDEF++
+}
+/^[ \t]*#[ \t]*ifndef/ && !fixed_continue_pound() {
+    IFNDEF++
+}
+/^[ \t]*#[ \t]*if[^dn]/ && !fixed_continue_pound() {
+    IF++
+}
+/^[ \t]*#[ \t]*elif/ && !fixed_continue_pound() {
+    ELIF++
+}
+/^[ \t]*#[ \t]*else/ && !fixed_continue_pound() {
+    ELSE++
+}
+/^[ \t]*#[ \t]*endif/ && !fixed_continue_pound() {
+    ENDIF++
+}
 
-/^[ \t]*#[ \t]*error/ { ERROR++ }
-/^[ \t]*#[ \t]*warning/ { WARNING++ }
+/^[ \t]*#[ \t]*error/ && !fixed_continue_pound() {
+    ERROR++
+}
+/^[ \t]*#[ \t]*warning/ && !fixed_continue_pound() {
+    WARNING++
+}
 
 # FORMAT statement looking thing that contains Hollerith.
 /^ *[0-9]* *[Ff][Oo][Rr][Mm][Aa][Tt] *\(.*[0-9]+[Hh]/ {
@@ -142,26 +183,42 @@ fixed && /^[Cc*]/ {
 }
 
 # A directive with a continuation line
-/^[ \t]*#.*[\\]$/ { CONTINUE++; CONTINUED = 1 }
+/^[ \t]*#.*[\\]$/ {
+    CONTINUE++
+    CONTINUED = 1
+}
 
 # A non-preprocessor line with a continuation
-CONTINUED && /^[ \t]*[^#].*[\\]$/ { CONTINUE++ }
+CONTINUED && /^[ \t]*[^#].*[\\]$/ {
+    CONTINUE++
+}
 
 # Count # and ## operators on continued lines
-CONTINUED && /^[ \t]*[^#]*##/ { HASH_HASH++; }
-CONTINUED && /^[ \t]*[^#]*#[^#]/ { HASH++; }
+CONTINUED && /^[ \t]*[^#]*##/ {
+    HASH_HASH++
+}
+CONTINUED && /^[ \t]*[^#]*#[^#]/ {
+    HASH++
+}
 
 # An un-continued line after a continuation; don't count it.
-CONTINUED && /.*[^\\]$/ { CONTINUED = 0 }
+CONTINUED && /.*[^\\]$/ {
+    CONTINUED = 0
+}
 
 END {
-    UNCATEGORIZED = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + \
-                   UNDEF + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF + \
-                   ERROR + WARNING)
-    printf "%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
-        FILENAME, NUM_LINES, DIRECTIVE, \
+    # Note that, oddly enough, the 'exit 0' in BEGIN
+    # just brings us here.
+    if (JUST_HEADING)
+        exit 0
+
+    OTHER = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + \
+                         UNDEF + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF + \
+                         ERROR + WARNING)
+    printf "%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+        FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
         DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
-        INCLUDE, CONTINUE, HASH, HASH_HASH, INDENT, FYPP, \
-        HOLLERITH, ERROR, WARNING, UNCATEGORIZED
+        INCLUDE, OTHER, CONTINUE, HASH, HASH_HASH, INDENT, FYPP, \
+        HOLLERITH, ERROR, WARNING
 }
