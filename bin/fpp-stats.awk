@@ -215,7 +215,7 @@ END {
     OTHER = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + \
                          UNDEF + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF + \
                          ERROR + WARNING)
-    printf "%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
         FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
         DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
