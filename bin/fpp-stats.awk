@@ -43,7 +43,7 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
     if (_hi == 0)
         _hi = index(_h, "H")
     if (_hi == 0) {
-        print "Eat Hollerith: Can't happen, _hi == 0" >>"/dev/stderr"
+        print "Eat Hollerith: Can't happen, _hi == 0, file " FILENAME ", line " NR >>"/dev/stderr"
         exit 1
     }
     dprint(1, "Eat Hollerith _hi=" _hi+0)
@@ -57,14 +57,10 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
     return _r
 }
 
-function fixed_continue_pound() {
-    return fixed && substr($0, 6, 1) == "#"
-}
-
 BEGIN {
     if (JUST_HEADING) {
         # This must match the printf in the END block.
-        print "File,Form,Lines,Directives,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#include,\"# (other)\",Continuations,#,##,Indented,fypp,Hollerith,#error,#warning"
+        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",Indented,\"#if ...!\",fypp,Hollerith"
         exit 0
     }
 
@@ -75,75 +71,120 @@ BEGIN {
     FREE = !FIXED
 }
 
-{ NUM_LINES++ }
+{   # For every line...
+    NUM_LINES++
+    FIXED_CONTINUE_POUND = FIXED && substr($0, 6, 1) == "#"
+}
 
 FIXED && /^[Cc*]/ {
-    # Skip fixed-format comment lines for now to avoid false positives.
+    # Don't examine fixed-format comment lines for now to avoid false positives.
     next
 }
 
-/!/ {
-    # Delete comments that might have false positives.
-    $0 = gensub(/!.*/, "", 1, $0)
-}
+# /!/ {
+#     # Delete comments that might have false positives.
+#     $0 = gensub(/!.*/, "", 1, $0)
+# }
 
 # A new preprocessor line; assume not continuation until we examine further.
-/^[ \t]*#[^:]/ && !fixed_continue_pound() {
+# Avoid counting fypp directives; we count them elsewhere.
+
+#    # newline          # non-fypp         # not in continuation column
+(/^[ \t]*#[ \t]*$/ || /^[ \t]*#[^:!]/)&& !FIXED_CONTINUE_POUND {
     DIRECTIVE++
     CONTINUED = 0
+
+    # Delete C-style /* ... */ comments to avoid false positives.
+    $0 = gensub(/\/\*.*\*\//, "", "g", $0)
+
+    # Delete C-style // ... comments, too.
+    $0 = gensub(/\/\/.*/, "", "g", $0)
 }
-/^[ \t]*#[^#]*##/ && !fixed_continue_pound() {
+
+/^[ \t]*#[^#]*##/ && !FIXED_CONTINUE_POUND {
     dprint(1, "## op '" $0 "'")
     HASH_HASH++
 }
-/^[ \t]*#[^#]*#[^#]/ && !fixed_continue_pound() {
+/^[ \t]*#[^#]*#[^#]/ && !FIXED_CONTINUE_POUND {
     dprint(1, "# op '" $0 "'")
     HASH++
 }
-/^[ \t][ \t]*#[^:]/ && !fixed_continue_pound() {
+
+/^[ \t][ \t]*#[^:]/ && !FIXED_CONTINUE_POUND {
     INDENT++
 }
-/^[ \t]*#:/ && !fixed_continue_pound() {
-    FYPP++
-}
-/^[ \t]*#[ \t]*include/ && !fixed_continue_pound() {
+
+/^[ \t]*#[ \t]*include/ && !FIXED_CONTINUE_POUND {
     INCLUDE++
 }
-/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[ ]/ && !fixed_continue_pound() {
+
+(/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[ ]/ \
+    || /^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*$/) \
+&& !FIXED_CONTINUE_POUND {
     DEFINE++
 }
-/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[(]/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*define[ \t]*[A-Za-z_][A-Za-z0-9_]*[(]/ && !FIXED_CONTINUE_POUND {
     DEFINE_ARGS++
 }
 
-/^[ \t]*#[ \t]*undef/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*undef/ && !FIXED_CONTINUE_POUND {
     UNDEF++
 }
 
-/^[ \t]*#[ \t]*ifdef/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*ifdef/ && !FIXED_CONTINUE_POUND {
     IFDEF++
 }
-/^[ \t]*#[ \t]*ifndef/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*ifndef/ && !FIXED_CONTINUE_POUND {
     IFNDEF++
 }
-/^[ \t]*#[ \t]*if[^dn]/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*if[^dn]/ && !FIXED_CONTINUE_POUND {
     IF++
+    if ($0 ~ /!/)
+        IFBANG++
 }
-/^[ \t]*#[ \t]*elif/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*elif/ && !FIXED_CONTINUE_POUND {
     ELIF++
+    if ($0 ~ /!/)
+        IFBANG++
 }
-/^[ \t]*#[ \t]*else/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*else/ && !FIXED_CONTINUE_POUND {
     ELSE++
 }
-/^[ \t]*#[ \t]*endif/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*endif/ && !FIXED_CONTINUE_POUND {
     ENDIF++
 }
 
-/^[ \t]*#[ \t]*error/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*line/ && !FIXED_CONTINUE_POUND {
+    LINE++
+}
+
+/^[ \t]*#[ \t]*[0-9]+/ && !FIXED_CONTINUE_POUND {
+    NNN++
+}
+
+/^[ \t]*#[ \t]*error/ && !FIXED_CONTINUE_POUND {
     ERROR++
 }
-/^[ \t]*#[ \t]*warning/ && !fixed_continue_pound() {
+/^[ \t]*#[ \t]*warning/ && !FIXED_CONTINUE_POUND {
     WARNING++
+}
+
+/^[ \t]*#[ \t]*$/ && !FIXED_CONTINUE_POUND {
+    EMPTY++
+}
+
+# Try to identify fypp directives; just counting them.
+
+#     #: or #!         @:
+(/^[ \t]*#[:!]/ || /^[ \t]*@:/) && !FIXED_CONTINUE_POUND {
+    FYPP++
+}
+
+# Inline forms
+/#{/ || /@{/ {
+    line = $0
+    FYPP += gsub(/#{[^}]*}#/, "", line)
+    FYPP += gsub(/@{[^}]*}@/, "", line)
 }
 
 # FORMAT statement looking thing that contains Hollerith.
@@ -212,13 +253,14 @@ END {
     if (JUST_HEADING)
         exit 0
 
-    OTHER = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + \
-                         UNDEF + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF + \
-                         ERROR + WARNING)
-    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+    OTHER = DIRECTIVE - (DEFINE + DEFINE_ARGS + UNDEF \
+                         + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF \
+                         + INCLUDE + LINE + NNN + ERROR + WARNING + EMPTY)
+    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
         FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
-        DEFINE, DEFINE_ARGS, UNDEF, \
+        INCLUDE, DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
-        INCLUDE, OTHER, CONTINUE, HASH, HASH_HASH, INDENT, FYPP, \
-        HOLLERITH, ERROR, WARNING
+        LINE, NNN, ERROR, WARNING, EMPTY, OTHER, \
+        CONTINUE, HASH, HASH_HASH, INDENT, IFBANG, FYPP, \
+        HOLLERITH
 }
