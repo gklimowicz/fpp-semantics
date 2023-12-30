@@ -40,5 +40,9 @@
 requirements/requirements.tex
 requirements/requirements.txt
 
+# Removed from history tracking, as it is so large,
+# that it pushes git-lfs usage into the pay-for-it zone.
+stats.xlsx
+
 # Miscellany
 .DS_Store
