@@ -20,11 +20,6 @@ See that project for details on how it is maintained.
 We use it here merely as input to the statistics-gathering process.
 
 
-## stats.xlsx
-This file contains a simple statistical analysis of the counts in `all-stats.csv`.
-It imports the data from the CSV file so I don't have to manually update the count columns.
-This makes the file large and slow to open and save, but prevents the inevitable mistakes I would make updating it manually.
-
 # Helper programs
 
 ## bin/fpp-stats
