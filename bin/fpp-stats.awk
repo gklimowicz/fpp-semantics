@@ -60,7 +60,7 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
 BEGIN {
     if (JUST_HEADING) {
         # This must match the printf in the END block.
-        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",Indented,\"#if ...!\",fypp,Hollerith"
+        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",Indented,\"#.../*\",\"#...//\",\"#if ...!\",fypp,Hollerith"
         exit 0
     }
 
@@ -90,15 +90,21 @@ FIXED && /^[Cc*]/ {
 # Avoid counting fypp directives; we count them elsewhere.
 
 #    # newline          # non-fypp         # not in continuation column
-(/^[ \t]*#[ \t]*$/ || /^[ \t]*#[^:!]/)&& !FIXED_CONTINUE_POUND {
+(/^[ \t]*#[ \t]*$/ || /^[ \t]*#[^:!]/) && !FIXED_CONTINUE_POUND {
     DIRECTIVE++
     CONTINUED = 0
 
     # Delete C-style /* ... */ comments to avoid false positives.
-    $0 = gensub(/\/\*.*\*\//, "", "g", $0)
+    if ($0 ~ /\/\*/) {
+        $0 = gensub(/\/\*.*\*\//, "", "g", $0)
+        DIR_SLASH_STAR++
+    }
 
     # Delete C-style // ... comments, too.
-    $0 = gensub(/\/\/.*/, "", "g", $0)
+    if ($0 ~ /\/\//) {
+        $0 = gensub(/\/\/.*/, "", "g", $0)
+        DIR_SLASH_SLASH++
+    }
 }
 
 /^[ \t]*#[^#]*##/ && !FIXED_CONTINUE_POUND {
@@ -241,6 +247,12 @@ CONTINUED && /^[ \t]*[^#]*##/ {
 CONTINUED && /^[ \t]*[^#]*#[^#]/ {
     HASH++
 }
+CONTINUED && /^[^"]*("[^"]*")?[^"]*\/\*/ {
+    DIR_SLASH_STAR++
+}
+CONTINUED && /^[^"]*("[^"]*")?[^"]*\/\// {
+    DIR_SLASH_SLASH++
+}
 
 # An un-continued line after a continuation; don't count it.
 CONTINUED && /.*[^\\]$/ {
@@ -256,11 +268,11 @@ END {
     OTHER = DIRECTIVE - (DEFINE + DEFINE_ARGS + UNDEF \
                          + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF \
                          + INCLUDE + LINE + NNN + ERROR + WARNING + EMPTY)
-    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
         FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
         INCLUDE, DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
         LINE, NNN, ERROR, WARNING, EMPTY, OTHER, \
-        CONTINUE, HASH, HASH_HASH, INDENT, IFBANG, FYPP, \
-        HOLLERITH
+        CONTINUE, HASH, HASH_HASH, \
+        INDENT, DIR_SLASH_STAR, DIR_SLASH_SLASH, IFBANG, FYPP, HOLLERITH
 }
