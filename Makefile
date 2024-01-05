@@ -20,23 +20,28 @@ all: stats.csv
 
 stats.csv:	fortran-examples/all-fortran-files.txt Makefile \
 		bin/fpp-stats bin/fpp-stats.awk
-	export LC_ALL=C
-	N=$$(nproc)
-	HERE=`pwd`
-	SPLIT_TMP="$${HERE}/aff-split.$$$$"
-	STATS_TMP="$${HERE}/$@.$$$$"
-	cd ${E}
-	N_SPLIT=$$(($$(wc -l <all-fortran-files.txt | tr -d ' ') / $$N + 1))
-	split -d -l $$N_SPLIT all-fortran-files.txt "$$SPLIT_TMP."
-	trap 'killall -q xargs; killall -q bash' HUP INT QUIT KILL TERM
-	trap 'rm -f "$$SPLIT_TMP."* "$$STATS_TMP".*' EXIT
+	export LC_ALL=C; \
+	N=$$(nproc); \
+	: echo "N=$N"; \
+	HERE=`pwd`; \
+	: echo "HERE=$HERE"; \
+	SPLIT_TMP="$${HERE}/aff-split.$$$$"; \
+	STATS_TMP="$${HERE}/$@.$$$$"; \
+	: echo "SPLIT_TMP=$SPLIT_TMP; STATS_TMP=$STATS_TMP"; \
+	cd ${E}; \
+	/bin/pwd; \
+	N_SPLIT=$$(($$(wc -l <all-fortran-files.txt | tr -d ' ') / $$N + 1)); \
+	: echo "N_SPLIT=$$N_SPLIT"; \
+	split -d -l $$N_SPLIT all-fortran-files.txt "$$SPLIT_TMP."; \
+	trap 'killall -q xargs; killall -q bash; killall -q gawk' HUP INT QUIT KILL TERM; \
+	trap 'rm -f "$$SPLIT_TMP."* "$$STATS_TMP".*' EXIT; \
 	for F in "$$SPLIT_TMP".*; do \
-	      SUFFIX="$${F/*.*.}"
+	      SUFFIX="$${F/*.*.}"; \
 	      tr '\n' '\0' <"$$F"\
 	      | xargs -0 $${HERE}/bin/fpp-stats >"$$STATS_TMP.$$SUFFIX"& \
-	done
-	wait
-	cd $${HERE}
+	done; \
+	wait; \
+	cd $${HERE}; \
 	(bin/fpp-stats -H; cat "$$STATS_TMP".*) >"$@"
 	wc -l "$@"
 
