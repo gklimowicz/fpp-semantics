@@ -12,16 +12,15 @@ function cleanup(string,                col1) {
     if (FIXED) {
         col1 = substr(string, 1, 1)
         if (col1 == "C" || col1 == "c" || col1 == "*")
-            string = ""
+            return ""
     }
-    if (string != "") {
-        string = gensub(/"[^"]*"/, "", "g", string)
-        string = gensub(/'[^']*'/, "", "g", string)
-        string = gensub(/[/][/].*/, "", "g", string)
-        string = gensub(/[/][*].*[*][/]/, "", "g", string)
-        if (string !~ /^\s*#\s*([Ee][Ll])?[Ii][Ff]/)
-            string = gensub(/!.*/, "", "g", string)
-    }
+
+    string = gensub(/"[^"]*"/, "", "g", string)
+    string = gensub(/'[^']*'/, "", "g", string)
+    string = gensub(/[/][/].*/, "", "g", string)
+    string = gensub(/[/][*].*[*][/]/, "", "g", string)
+    if (string !~ /^\s*#\s*([Ee][Ll])?[Ii][Ff]/)
+        string = gensub(/!.*/, "", "g", string)
 
     return string
 }
@@ -30,18 +29,19 @@ function cleanup(string,                col1) {
 # Note that this is messy, mostly because it seems
 # like there are bugs in 'gensub' or I was using it
 # terribly wrong.
-# Note that since we are not doing legit tokenization,
+# Note that since we are not doing tokenization,
 # there are still cases we will get wrong.
 #
 # Since multiple return values is a pain in awk,
 # this routine has the side effect of counting '&'
 # in free-form lines...
 function eat_hollerith(s,                _h, _hi, _n, _r) {
-    dprint(1, "Eat Hollerith s='" s "'")
+    dprint(1, "Eat Hollerith " FILENAME ":" NR ": s='" s "'")
 
     if (s !~ /[0-9]+H/) {
         print "Eat Hollerith called without Hollerith '" s "'" >>"/dev/stderr"
-        exit 1
+        print "    FILENAME '" FILENAME "' NR " NR >>"/dev/stderr"
+        return ""
     }
 
     # Eat up to nnnH.
@@ -57,13 +57,13 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
         if (_n++ > 20) {
             print "Eat Hollerith: Give up on getting to the Hollerith " \
                 FILENAME ":" NR " at '" _h "'" >>"/dev/stderr"
-            exit 1
+            return ""
         }
     } while (_h != "")
 
     if (_h == "") {
         print "Eat Hollerith: Can't happen, _h = empty" >>"/dev/stderr"
-        exit 1
+        return ""
     }
 
     _hi = index(_h, "h")
@@ -71,7 +71,7 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
         _hi = index(_h, "H")
     if (_hi == 0) {
         print "Eat Hollerith: Can't happen, _hi == 0, file " FILENAME ", line " NR >>"/dev/stderr"
-        exit 1
+        return ""
     }
     dprint(1, "Eat Hollerith _hi index of 'H'=" _hi+0)
 
@@ -93,7 +93,7 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
 BEGIN {
     if (JUST_HEADING) {
         # This must match the printf in the END block.
-        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#pragma,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",\"Ftn op\",Indented,\"#.../*...*/\",\"#.../*...\",\"#...//\",\"Ftn include\",Hollerith,\"Hollerith &\",\"#if ...!\",fypp"
+        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#pragma,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",\"Ftn op\",Indented,\"#.../*...*/\",\"#.../*...\",\"#...//\",\"Ftn include\",Hollerith,\"Hollerith &\",\"#if ...!\""
         exit 0
     }
 
@@ -109,7 +109,6 @@ BEGIN {
 
 {   # For every line...
     NUM_LINES++
-    FIXED_CONTINUE_POUND = FIXED && substr($0, 6, 1) == "#"
 
     # For some of the tests, we want to check for specific strings
     # but we want to make sure we don't look inside strings or comments
@@ -121,10 +120,81 @@ BEGIN {
     # }
 }
 
-# Don't examine fixed-format comment linesto avoid false positives.
+# Don't examine fixed-format comment lines to avoid false positives.
 FIXED && /^[c*]/ {
     next
 }
+
+
+# First, look at non-directive lines that interest us:
+# FORMAT, DATA, INCLUDE.
+# For FORMAT and DATA initializations, we are only
+# looking for instances of Hollerith strings and
+# counting those.
+# Once these are handled, we skip any further processing of
+# Fortran source lines. Note, too, that we don't look for
+# any coninuation lines on any of these lines.
+
+
+# FORMAT statement looking thing that contains Hollerith.
+# Only look at the line with strings and comments removed.
+CLEANED ~ /^\s*[0-9]* *format\s*\(.*[0-9]+H/ {
+    dprint(1, "Hollerith format '" CLEANED "' (from '" $0 "')")
+    this_hollerith = 0
+    remain = CLEANED
+    _n = 0
+    do {
+        this_hollerith++
+        remain = eat_hollerith(remain)
+        if (++_n > 30) {
+            print "Give up on Hollerith in FORMAT: FILENAME '" FILENAME "' NR '" NR " '" $0 "'" >>"/dev/stderr"
+            exit 1
+        }
+    } while (remain ~ /[0-9]+H/)
+    dprint(1, "More Hollerith? " this_hollerith " '" remain "'")
+    HOLLERITH += this_hollerith
+    next
+}
+
+# DATA statement looking thing that contains Hollerith.
+# Only look at the line with strings and comments removed.
+CLEANED ~ /^ *[^/]*\/ *[0-9]+H/ {
+    dprint(1, "Hollerith data '" $0 "'")
+    this_hollerith = 0
+    remain = CLEANED
+    _n = 0
+    do {
+        this_hollerith++
+        remain = eat_hollerith(remain)
+        if (++_n > 50) {
+            print "Give up on Hollerith in DATA: FILENAME '" FILENAME "' NR '" NR " '" $0 "'" >>"/dev/stderr"
+            exit 1
+        }
+    } while (remain ~ /[0-9]+H/)
+    dprint(1, "More Hollerith? " this_hollerith " '" remain "'")
+    HOLLERITH += this_hollerith
+    next
+}
+
+# If in fixed-form file, and the continuation column 6
+# contains a #', it's not likely a directive. Skip this line.
+FIXED && /^     #/ {
+    next
+}
+
+CLEANED ~ /^\s*include\s/ {
+    FTN_INCLUDE++
+}
+
+# The remainder of these tests are related to directive
+# recognition and counting.
+
+# Directives can contain C-style comments that
+# span multiple lines, like
+#     # /* I think this
+#          will fool you. */ include "somefile.h"
+# So we keep track of whether we're in the midst of
+# a comment like this.
 
 # If we are in the midst of an unterminated
 # C-style comment, look for the end of it.
@@ -135,9 +205,9 @@ IN_UNTERMINATED_SLASH_STAR && !/[*][/]/ {
 }
 
 # If this line does complete it, delete the comment
-# text and treat this line as if it is a continuation
-# of the previous line.
-IN_UNTERMINATED_SLASH_STAR {
+# text and treat the remaider of the line as if it
+# is a continuation of the previous line.
+IN_UNTERMINATED_SLASH_STAR && /[*][/]/ {
     rep_count = sub(/.*[*][/]/, "", $0)
     if (rep_count == 0) {
         dprint(0, "Can't find proper end of unterminated C-style comment in '" $0 "'")
@@ -147,10 +217,10 @@ IN_UNTERMINATED_SLASH_STAR {
 }
 
 # A new preprocessor line; assume not continuation until we examine further.
-# Avoid counting fypp directives; we count them elsewhere.
+# Avoid counting fypp directives.
 
 #    # newline    # non-fypp     # not in continuation column
-(/^\s*#\s*$/ || /^\s*#[^:!]/) && !FIXED_CONTINUE_POUND {
+(/^\s*#\s*$/ || /^\s*#[^:!]/) {
     DIRECTIVE++
     CONTINUED = 0
 
@@ -188,6 +258,14 @@ CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][*]/ {
     }
 }
 
+# Once we're past the comment handling,
+# skip any line that is not a continuation
+# and not a directive. No further processing
+# should be necessary.
+!CONTINUED && !/^\s*#/ {
+    next
+}
+
 # Look for continued directive with (possible) strings
 # that appears to have a // comment on it.
 CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][/]/ {
@@ -195,90 +273,85 @@ CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][/]/ {
 }
 
 
-/^\s*#\s*include\s/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*include\s/ {
     INCLUDE++
     IN = "include"
 }
 
-!CONTINUED && CLEANED ~ /^\s*include\s/ {
-    FTN_INCLUDE++
-}
-
 # Various forms of #define
-/^\s*#\s*define\s*[A-Za-z_][A-Za-z0-9_]*(\s+|\s*$)/ \
-&& !FIXED_CONTINUE_POUND {
+/^\s*#\s*define\s*[A-Za-z_][A-Za-z0-9_]*(\s+|\s*$)/ {
     DEFINE++
     IN = "define"
 }
-/^\s*#\s*define\s*[A-Za-z_][A-Za-z0-9_]*[(]/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*define\s*[A-Za-z_][A-Za-z0-9_]*[(]/ {
     DEFINE_ARGS++
     IN = "define()"
 }
 
-/^\s*#\s*undef/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*undef/ {
     UNDEF++
     IN = "undef"
 }
 
-/^\s*#\s*ifdef/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*ifdef/ {
     IFDEF++
     IN = "ifdef"
 }
-/^\s*#\s*ifndef/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*ifndef/ {
     IFNDEF++
     IN = "ifndef"
 }
-/^\s*#\s*if[^dn]/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*if[^dn]/ {
     IF++
     IN = "if"
     if ($0 ~ /!/)
         IFBANG++
 }
-/^\s*#\s*elif/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*elif/ {
     ELIF++
     IN = "elif"
     if ($0 ~ /!/)
         IFBANG++
 }
-/^\s*#\s*else/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*else/ {
     ELSE++
     IN = "else"
 }
-/^\s*#\s*endif/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*endif/ {
     ENDIF++
     IN = "endif"
 }
-/^\s*#\s*pragma/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*pragma/ {
     PRAGMA++
     IN = "pragma"
 }
 
-/^\s*#\s*line/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*line/ {
     LINE++
     IN = "line"
 }
 
-/^\s*#\s*[0-9]+/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*[0-9]+/ {
     NNN++
     IN = "nnn"
 }
 
-/^\s*#\s*error/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*error/ {
     ERROR++
     IN = "error"
 }
-/^\s*#\s*warning/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*warning/ {
     WARNING++
     IN = "warning"
 }
 
-/^\s*#\s*$/ && !FIXED_CONTINUE_POUND {
+/^\s*#\s*$/ {
     EMPTY++
     IN = "empty"
 }
 
 # # operators
-CLEANED ~ /^\s*#[^#]*#[^#:{]/ && !FIXED_CONTINUE_POUND {
+CLEANED ~ /^\s*#[^#]*#[^#:{]/ {
     tmp = $0
     rep_count = gsub(/^\s*#[^#]*#[^#:{]/, "# ", tmp)
     dprint(1, "# op '" $0 "': " rep_count)
@@ -293,7 +366,7 @@ CONTINUED && CLEANED ~ /^\s*[^#]*#[^#:{]/ {
 }
 
 # ## operators
-CLEANED ~ /^\s*#[^#]*##/ && !FIXED_CONTINUE_POUND {
+CLEANED ~ /^\s*#[^#]*##/ {
     tmp = $0
     rep_count = gsub(/^\s*#[^#]*##/, "# ", tmp)
     dprint(1, "## op '" $0 "': " rep_count)
@@ -308,7 +381,6 @@ CONTINUED && CLEANED ~ /^\s*[^#]*##/ {
 
 # Fortran .xxx. operators?
 CLEANED ~ /^\s*#\s*((el)?if)[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
-&& !FIXED_CONTINUE_POUND \
 && (IN == "if" || IN == "elif") {
     tmp = $0
     rep_count = gsub(/\.(n?eq|n?eqv|[gl][et]|not|and|or)\./, "# ", tmp)
@@ -323,60 +395,8 @@ CONTINUED && CLEANED ~ /^\s*[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
     FTN_OP += rep_count
 }
 
-/^\s\s*#[^:]/ && !FIXED_CONTINUE_POUND {
+/^\s\s*#[^:]/ {
     INDENT++
-}
-
-# FORMAT statement looking thing that contains Hollerith.
-# Only look at the line with strings and comments removed.
-CLEAN ~ /^ *[0-9]* *format *\(.*[0-9]+H/ {
-    dprint(1, "Hollerith format '" $0 "'")
-    this_hollerith = 0
-    remain = CLEAN
-    _n = 0
-    do {
-        this_hollerith++
-        remain = eat_hollerith(remain)
-        if (++_n > 30) {
-            print "Give up on Hollerith in FORMAT: FILENAME '" FILENAME "' NR '" NR " '" $0 "'" >>"/dev/stderr"
-            exit 1
-        }
-    } while (remain ~ /[0-9]+H/)
-    dprint(1, "More Hollerith? " this_hollerith " '" remain "'")
-    HOLLERITH += this_hollerith
-}
-
-# DATA statement looking thing that contains Hollerith.
-# Only look at the line with strings and comments removed.
-CLEAN ~ /^ *[^/]*\/ *[0-9]+H/ {
-    dprint(1, "Hollerith data '" $0 "'")
-    this_hollerith = 0
-    remain = CLEAN
-    _n = 0
-    do {
-        this_hollerith++
-        remain = eat_hollerith(remain)
-        if (++_n > 50) {
-            print "Give up on Hollerith in DATA: FILENAME '" FILENAME "' NR '" NR " '" $0 "'" >>"/dev/stderr"
-            exit 1
-        }
-    } while (remain ~ /[0-9]+H/)
-    dprint(1, "More Hollerith? " this_hollerith " '" remain "'")
-    HOLLERITH += this_hollerith
-}
-
-# Try to identify fypp directives; just counting them.
-
-#     #: or #!         @:
-(CLEANED ~ /^\s*#[:!]/ || CLEANED ~ /^\s*@:/) && !FIXED_CONTINUE_POUND {
-    FYPP++
-}
-
-# Inline forms
-CLEANED ~ /#{/ || CLEANED ~ /@{/ {
-    line = $0
-    FYPP += gsub(/#{[^}]*}#/, "", line)
-    FYPP += gsub(/@{[^}]*}@/, "", line)
 }
 
 # A directive with a continuation line
@@ -406,12 +426,12 @@ END {
                          + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF \
                          + PRAGMA + LINE + NNN + ERROR + WARNING \
                          + EMPTY)
-    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
         FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
         INCLUDE, DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
         PRAGMA, LINE, NNN, ERROR, WARNING, EMPTY, OTHER, \
         CONTINUE, HASH, HASH_HASH, FTN_OP, INDENT, \
         DIR_SLASH_STAR, DIR_SLASH_STAR_UNTERMINATED, DIR_SLASH_SLASH, \
-        FTN_INCLUDE, HOLLERITH, HOLLERITH_AMPERSAND, IFBANG, FYPP
+        FTN_INCLUDE, HOLLERITH, HOLLERITH_AMPERSAND, IFBANG
 }
