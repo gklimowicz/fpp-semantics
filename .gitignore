@@ -1,48 +1,24 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
 # Fortran module files
 *.mod
 *.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
 
 # Executables
 *.exe
 *.out
 *.app
 
-
 # Processed files
 *.continueless.*
 *.tokens.*
 
 # LaTeX temporary files
-requirements/requirements.tex
+**.tex
 requirements/requirements.txt
 
 # Removed from history tracking, as it is so large,
 # that it pushes git-lfs usage into the pay-for-it zone.
 stats.xlsx
+~$stats.xlsx
 
 # Miscellany
 .DS_Store
