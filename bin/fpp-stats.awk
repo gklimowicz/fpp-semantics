@@ -213,7 +213,7 @@ IN_UNTERMINATED_SLASH_STAR && /[*][/]/ {
         dprint(0, "Can't find proper end of unterminated C-style comment in '" $0 "'")
     }
     IN_UNTERMINATED_SLASH_STAR = 0
-    CONTINUED = 1
+    DIR_CONTINUED = 1
 }
 
 # A new preprocessor line; assume not continuation until we examine further.
@@ -222,7 +222,7 @@ IN_UNTERMINATED_SLASH_STAR && /[*][/]/ {
 #    # newline    # non-fypp     # not in continuation column
 (/^\s*#\s*$/ || /^\s*#[^:!]/) {
     DIRECTIVE++
-    CONTINUED = 0
+    DIR_CONTINUED = 0
 
     # Delete (but count) C-style /* ... */ comments to avoid false positives.
     if ($0 ~ /[/][*]/) {
@@ -248,7 +248,7 @@ IN_UNTERMINATED_SLASH_STAR && /[*][/]/ {
 # Look for continued directive with (possible) strings
 # that appears to have a /* ... */ comment on it.
 # This may start us looking for unterminated comments again.
-CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][*]/ {
+DIR_CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][*]/ {
     rep_count = gsub(/[/][*].*[*][/]/, "", $0)
     DIR_SLASH_STAR += rep_count
     rep_count = sub(/[/][*].*$/, "", $0)
@@ -262,13 +262,13 @@ CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][*]/ {
 # skip any line that is not a continuation
 # and not a directive. No further processing
 # should be necessary.
-!CONTINUED && !/^\s*#/ {
+!DIR_CONTINUED && !/^\s*#/ {
     next
 }
 
 # Look for continued directive with (possible) strings
 # that appears to have a // comment on it.
-CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][/]/ {
+DIR_CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][/]/ {
     DIR_SLASH_SLASH++
 }
 
@@ -358,7 +358,7 @@ CLEANED ~ /^\s*#[^#]*#[^#:{]/ {
     HASH += rep_count
 }
 
-CONTINUED && CLEANED ~ /^\s*[^#]*#[^#:{]/ {
+DIR_CONTINUED && CLEANED ~ /^\s*[^#]*#[^#:{]/ {
     tmp = $0
     rep_count = gsub(/^\s*[^#]*#[^#:{]/, "# ", tmp)
     dprint(1, "# op '" $0 "': " rep_count)
@@ -372,7 +372,7 @@ CLEANED ~ /^\s*#[^#]*##/ {
     dprint(1, "## op '" $0 "': " rep_count)
     HASH_HASH += rep_count
 }
-CONTINUED && CLEANED ~ /^\s*[^#]*##/ {
+DIR_CONTINUED && CLEANED ~ /^\s*[^#]*##/ {
     tmp = $0
     rep_count = gsub(/^\s*[^#]*##/, "", tmp)
     dprint(1, "## op '" $0 "': " rep_count)
@@ -387,7 +387,7 @@ CLEANED ~ /^\s*#\s*((el)?if)[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
     dprint(1, "Ftn op '" $0 "': " rep_count ", FN='" FILENAME "', NR=" NR)
     FTN_OP += rep_count
 }
-CONTINUED && CLEANED ~ /^\s*[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
+DIR_CONTINUED && CLEANED ~ /^\s*[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
 && (IN == "if" || IN == "elif") {
     tmp = $0
     rep_count = gsub(/\.(n?eq|n?eqv|[gl][et]|not|and|or)\./, "", tmp)
@@ -401,19 +401,21 @@ CONTINUED && CLEANED ~ /^\s*[^.]*\.(n?eq|n?eqv|[gl][et]|not|and|or)\./ \
 
 # A directive with a continuation line
 CLEANED ~ /^\s*#.*[\\]$/ {
+    # dprint(0, "   \\ 1 " FILENAME ":" NR "\t'" $0 "'")
     CONTINUE++
-    CONTINUED = 1
+    DIR_CONTINUED = 1
 }
 
 # A continued directive line with another continuation
-CONTINUED && CLEANED ~ /[\\]$/ {
+DIR_CONTINUED && CLEANED !~ /^\s*#/ && CLEANED ~ /[\\]$/ {
+    # dprint(0, "   \\ 2 " FILENAME ":" NR "\t'" $0 "'")
     CONTINUE++
 }
 
 # An un-continued line after a continuation
-CONTINUED && CLEANED ~ /.*[^\\]$/ {
-    CONTINUE++
-    CONTINUED = 0
+DIR_CONTINUED && CLEANED ~ /.*[^\\]$/ {
+    # dprint(0, "   \\ 3 " FILENAME ":" NR "\t'" $0 "'")
+    DIR_CONTINUED = 0
 }
 
 END {
