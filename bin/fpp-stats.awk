@@ -93,7 +93,7 @@ function eat_hollerith(s,                _h, _hi, _n, _r) {
 BEGIN {
     if (JUST_HEADING) {
         # This must match the printf in the END block.
-        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#pragma,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",Continuations,\"# op\",\"## op\",\"Ftn op\",Indented,\"#.../*...*/\",\"#.../*...\",\"#...//\",\"Ftn include\",Hollerith,\"Hollerith &\",\"#if ...!\""
+        print "File,Form,Lines,Directives,#include,#define,\"#define M()\",#undef,#ifdef,#ifndef,#if,#elif,#else,#endif,#pragma,#line,\"# nnn\",#error,#warning,\"# empty\",\"# (other)\",\"#define (...)\", Continuations,\"# op\",\"## op\",\"Ftn op\",Indented,\"#.../*...*/\",\"#.../*...\",\"#...//\",\"Ftn include\",Hollerith,\"Hollerith &\",\"#if ...!\""
         exit 0
     }
 
@@ -288,6 +288,11 @@ DIR_CONTINUED && /^[^"]*("[^"]*")?[^"]*[/][/]/ {
     IN = "define()"
 }
 
+/^\s*#\s*define\s*[A-Za-z_][A-Za-z0-9_]*[(][^.]*[.][.][.]\s*[)]/ {
+    DEFINE_VARARGS++
+    IN = "define()"
+}
+
 /^\s*#\s*undef/ {
     UNDEF++
     IN = "undef"
@@ -428,12 +433,12 @@ END {
                          + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF \
                          + PRAGMA + LINE + NNN + ERROR + WARNING \
                          + EMPTY)
-    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
+    printf "\"%s\",%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", \
         FILENAME, FIXED?"fixed": "free", NUM_LINES, DIRECTIVE, \
         INCLUDE, DEFINE, DEFINE_ARGS, UNDEF, \
         IFDEF, IFNDEF, IF, ELIF, ELSE, ENDIF, \
         PRAGMA, LINE, NNN, ERROR, WARNING, EMPTY, OTHER, \
-        CONTINUE, HASH, HASH_HASH, FTN_OP, INDENT, \
+        DEFINE_VARAGS, CONTINUE, HASH, HASH_HASH, FTN_OP, INDENT,      \
         DIR_SLASH_STAR, DIR_SLASH_STAR_UNTERMINATED, DIR_SLASH_SLASH, \
         FTN_INCLUDE, HOLLERITH, HOLLERITH_AMPERSAND, IFBANG
 }
