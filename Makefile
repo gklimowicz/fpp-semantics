@@ -11,6 +11,9 @@ SHELL=/bin/bash
 
 all: stats.csv
 
+clean: FORCE
+	rm -f stats.csv
+
 # Compute the stats in parallel and concatenate results.
 # This is awkward, but cuts the time to generate them down dramatically.
 # Note that since all-fortran-files.txt is sorted, the stats.csv
