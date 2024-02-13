@@ -1,0 +1,50 @@
+37c37
+<   - The tools do not (yet) look inside included '.h' files.
+---
+>   - The tools do not (yet) look inside #included files.
+64a65,71
+> #define
+> =======
+> 
+>   Nothing unusual here. There are no cases where '#define' is used with
+>   a variable number of arguments '(...)' or '(arg1, arg2, ...)'.
+> 
+> 
+130a138,151
+> Fortran operators
+> =================
+> 
+>   There is one file
+>   (MOPAC@openmopac/src/deprecated/mod_calls_cublas.F90) that uses `.AND'
+>   in a '#if' directive.
+>   ,----
+>   | #if (MAGMA .and. LINUX)
+>   `----
+> 
+>   This is may be a mistake. Otherwise, there are no examples of Fortran
+>   '.conditional' operators in directives.
+> 
+> 
+133a155,163
+> Examine included files
+> ~~~~~~~~~~~~~~~~~~~~~~
+> 
+>   We currently examine only files that have suffixes that lead us to
+>   conclude they are Fortran files ('.f', '.F', '.f90', etc.). We should
+>   also examine all files that appear in '#include' directives and
+>   'INCLUDE' lines.
+> 
+> 
+146a177
+>   defined in the C standard.
+148a180,187
+> What is the new '#embed' directive in C?
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+>   The recent draft C standard includes a new directive, '#embed'. I
+>   haven't looked into it, or what other changes there might be in the
+>   upcoming C standard for the preprocessor.
+> 
+> 
+172a212
+>          Directives containing #define with varargs (…)                      0.%
