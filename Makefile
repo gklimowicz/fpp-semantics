@@ -9,43 +9,25 @@ E=fortran-examples
 .ONESHELL:
 SHELL=/bin/bash
 
-all: stats.csv
+all: stats-directives.csv
 
 clean: FORCE
-	rm -f stats.csv
+	rm -f stats-directives.csv
 
 # Compute the stats in parallel and concatenate results.
 # This is awkward, but cuts the time to generate them down dramatically.
-# Note that since all-fortran-files.txt is sorted, the stats.csv
+# Note that since all-fortran-files.txt is sorted, the stats-directives.csv
 # file will be as well, without having to explicitly sort it.
 
 # Calculation of N_SPLIT adds 1 to avoid a tiny file at the end.
 
-stats.csv:	fortran-examples/all-fortran-files.txt Makefile \
+stats-directives.csv:	fortran-examples/all-fortran-files.txt \
+		fortran-examples/bin/create-stats-file \
 		bin/fpp-stats bin/fpp-stats.awk
-	export LC_ALL=C; \
-	N=$$(nproc); \
-	: echo "N=$N"; \
-	HERE=`pwd`; \
-	: echo "HERE=$HERE"; \
-	SPLIT_TMP="$${HERE}/aff-split.$$$$"; \
-	STATS_TMP="$${HERE}/$@.$$$$"; \
-	: echo "SPLIT_TMP=$SPLIT_TMP; STATS_TMP=$STATS_TMP"; \
-	cd ${E}; \
-	/bin/pwd; \
-	N_SPLIT=$$(($$(wc -l <all-fortran-files.txt | tr -d ' ') / $$N + 1)); \
-	: echo "N_SPLIT=$$N_SPLIT"; \
-	split -d -l $$N_SPLIT all-fortran-files.txt "$$SPLIT_TMP."; \
-	trap 'killall -q xargs; killall -q bash; killall -q gawk' HUP INT QUIT KILL TERM; \
-	trap 'rm -f "$$SPLIT_TMP."* "$$STATS_TMP".*' EXIT; \
-	for F in "$$SPLIT_TMP".*; do \
-	      SUFFIX="$${F/*.*.}"; \
-	      tr '\n' '\0' <"$$F"\
-	      | xargs -0 $${HERE}/bin/fpp-stats >"$$STATS_TMP.$$SUFFIX"& \
-	done; \
-	wait; \
-	cd $${HERE}; \
-	(bin/fpp-stats -H; cat "$$STATS_TMP".*) >"$@"
+	fortran-examples/bin/create-stats-file \
+		-H fortran-examples/all-fortran-files.txt \
+		bin/fpp-stats \
+	| cpif "$@"
 	wc -l "$@"
 
 FORCE:
