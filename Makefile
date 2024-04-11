@@ -9,10 +9,10 @@ E=fortran-examples
 .ONESHELL:
 SHELL=/bin/bash
 
-all: stats-directives.csv
+all: stats.csv
 
 clean: FORCE
-	rm -f stats-directives.csv
+	rm -f stats.csv
 
 # Compute the stats in parallel and concatenate results.
 # This is awkward, but cuts the time to generate them down dramatically.
@@ -21,7 +21,7 @@ clean: FORCE
 
 # Calculation of N_SPLIT adds 1 to avoid a tiny file at the end.
 
-stats-directives.csv:	fortran-examples/all-fortran-files.txt \
+stats.csv:	fortran-examples/all-fortran-files.txt \
 		fortran-examples/bin/create-stats-file \
 		bin/fpp-stats bin/fpp-stats.awk
 	fortran-examples/bin/create-stats-file \
