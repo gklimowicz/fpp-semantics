@@ -22,3 +22,8 @@ stats.xlsx
 
 # Miscellany
 .DS_Store
+
+**/*.aux
+**/*.fdb_latexmk
+**/*.fls
+**/*.log
