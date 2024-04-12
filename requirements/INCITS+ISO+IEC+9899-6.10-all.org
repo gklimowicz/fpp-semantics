@@ -17,7 +17,7 @@
 # tab-width: 8
 # End:
 
-#  LocalWords: EMPTY placemarker placemarkers destringized Rescanning
+#  LocalWords:  EMPTY placemarker placemarkers destringized Rescanning
 #  LocalWords:  nonreplaced
 
 * 6.10 Preprocessing directives
@@ -26,21 +26,21 @@
 preprocessing-file = [ group ] .
 
 group = group-part
-    | group,  group-part .
+	| group, group-part .
 
 group-part = if-section
-    | control-line
-    | text-line
-    | '#', non-directive .
+	| control-line
+	| text-line
+	| '#', non-directive .
 
 if-section = if-group, [ elif-groups ], [ else-group ], endif-line .
 
 if-group = '#', 'if', constant-expression, new-line, [ group ]
-    | '#', 'ifdef', identifier, new-line, [ group ]
-    | '#', 'ifndef', identifier, new-line, [ group ] .
+	| '#', 'ifdef', identifier, new-line, [ group ]
+	| '#', 'ifndef', identifier, new-line, [ group ] .
 
 elif-groups = elif-group
-    | elif-groups, elif-group .
+	| elif-groups, elif-group .
 
 elif-group = '#', 'elif', constant-expression, new-line, [ group ] .
 
@@ -49,15 +49,15 @@ else-group = '#', 'else', new-line [ group ] .
 endif-line = '#', 'endif', new-line .
 
 control-line = '#', 'include', pp-tokens, new-line
-    | '#', 'define', identifier, replacement-list, new-line
-    | '#', 'define', identifier, lparen, identifi[ er-list ], ')', replacement-list, new-line
-    | '#', 'define', identifier, lparen, '...', ')', replacement-list, new-line
-    | '#', 'define', identifier, lparen, identifier-list, ',', '...', ')', replacement-list, new-line
-    | '#', 'undef', identifier, new-line
-    | '#', 'line', pp-tokens, new-line
-    | '#', 'error', [ pp-tokens ], new-line
-    | '#', 'pragma', [ pp-tokens ], new-line
-    | '#', new-line .
+	| '#', 'define', identifier, replacement-list, new-line
+	| '#', 'define', identifier, lparen, identifi[ er-list ], ')', replacement-list, new-line
+	| '#', 'define', identifier, lparen, '...', ')', replacement-list, new-line
+	| '#', 'define', identifier, lparen, identifier-list, ',', '...', ')', replacement-list, new-line
+	| '#', 'undef', identifier, new-line
+	| '#', 'line', pp-tokens, new-line
+	| '#', 'error', [ pp-tokens ], new-line
+	| '#', 'pragma', [ pp-tokens ], new-line
+	| '#', new-line .
 
 text-line = [ pp-tokens ], new-line .
 
@@ -68,7 +68,7 @@ lparen = '(' . ; character not immediately preceded by white-space
 replacement-list = [ pp-tokens ] .
 
 pp-tokens = preprocessing-token
-    | pp-tokens, preprocessing-token .
+	| pp-tokens, preprocessing-token .
 
 new-line = '\n' .
 #+end_src
@@ -157,7 +157,7 @@ A =#include= directive shall identify a header or source file that can be proces
 **** Semantics
 A preprocessing directive of the form
 #+begin_src c
-# include  <h-char-sequence> new-line
+# include <h-char-sequence> new-line
 #+end_src
 searches a sequence of implementation-defined places for a header identified uniquely by the specified sequence between the =<= and =>= delimiters, and causes the replacement of that directive by the entire contents of the header.
 How the places are specified or the header identified is implementation-defined.
@@ -184,7 +184,7 @@ The preprocessing tokens after =include= in the directive are processed just as 
 The directive resulting after all replacements shall match one of the two previous forms.[fn:6]
 The method by which a sequence of preprocessing tokens between a =<= and a =>= preprocessing token pair or a pair of ="= characters is combined into a single header name preprocessing token is implementation-defined.
 
-The implementation shall provide unique mappings for sequences consisting of one or more [2011: +letters+  _nondigits_ ] or digits (as defined in [2011: +5.2.1+ _6.4.2.1_ ]) followed by a period (=.=) and a single [2011: +letter+ _nondigit_ ].
+The implementation shall provide unique mappings for sequences consisting of one or more [2011: +letters+ _nondigits_ ] or digits (as defined in [2011: +5.2.1+ _6.4.2.1_ ]) followed by a period (=.=) and a single [2011: +letter+ _nondigit_ ].
 The first character shall [2011: +be a letter+ _not be a digit_ ].
 The implementation may ignore the distinctions of alphabetical case and restrict the mapping to eight significant characters before the period.
 
@@ -252,7 +252,7 @@ A preprocessing directive of the form
 # define identifier lparen =...= =)= replacement-list new-line
 # define identifier lparen identifier-list =,= =...= =)= replacement-list new-line
 #+end_src
-defines a /function-like/ macro with [2011: +arguments+ _arguments_ ], [2011:  _whose use is_ ] similar syntactically to a function call.
+defines a /function-like/ macro with [2011: +arguments+ _arguments_ ], [2011: _whose use is_ ] similar syntactically to a function call.
 The parameters are specified by the optional list of identifiers, whose scope extends from their declaration in the identifier list until the new-line character that terminates the =#define= preprocessing directive.
 Each subsequent instance of the function-like macro name followed by a =(= as the next preprocessing token introduces the sequence of preprocessing tokens that is replaced by the replacement list in the definition (an invocation of the macro).
 The replaced sequence of preprocessing tokens is terminated by the matching =)= preprocessing token, skipping intervening matched pairs of left and right parenthesis preprocessing tokens.
@@ -310,8 +310,8 @@ In the following fragment:
 #define in_between(a)	mkstr(a)
 #define join(c, d)	in_between(c hash_hash d)
 
-char p[] = join(x, y); // equivalent to
-                       // char p[] = "x ## y";
+char p[] = join(x, y);	// equivalent to
+			// char p[] = "x ## y";
 #+end_src
 The expansion produces, at various stages:
 #+begin_src c
@@ -411,7 +411,7 @@ To illustrate the rules for redefinition and reexamination, the sequence
 
 f(y+1) + f(f(z)) % t(t(g)(0) + t)(1);
 g(x+(3,4)-w) | h 5) & m
-      (f)^m(m);
+	(f)^m(m);
 p() i[q()] = { q(1), r(2,3), r(4,), r(,5), r(,) };
 char c[2][6] = { str(hello), str() };
 #+end_src
@@ -428,8 +428,8 @@ To illustrate the rules for creating character string literals and concatenating
 #+begin_src c
 #define str(s)	#s
 #define xstr(s)	str(s)
-#define debug(s, t)	printf("x" # s "= %d, x" # t "= %s", \
-                              x ## s, x ## t)
+#define debug(s, t) printf("x" # s "= %d, x" # t "= %s", \
+			      x ## s, x ## t)
 #define INCFILE(n)	vers ## n
 #define glue(a, b)	a ## b
 #define xglue(a, b)	glue(a, b)
@@ -438,7 +438,7 @@ To illustrate the rules for creating character string literals and concatenating
 
 debug(1, 2);
 fputs(str(strncmp("abc\0d", "abc", '\4') // this goes away
-     == 0) str(: @\n), s);
+      == 0) str(: @\n), s);
 #include xstr(INCFILE(2).h)
 glue(HIGH, LOW);
 xglue(HIGH, LOW)
@@ -470,12 +470,12 @@ To illustrate the rules for placemarker preprocessing tokens, the sequence
 #+begin_src c
 #define t(x,y,z) x ## y ## z
 int j[] = { t(1,2,3), t(,4,5), t(6,,7), t(8,9,),
-           t(10,,), t(,11,), t(,,12), t(,,) };
+	   t(10,,), t(,11,), t(,,12), t(,,) };
 #+end_src
 results in
 #+begin_src c
 int j[] = { 123, 45, 67, 89,
-            10, 11, 12,  };
+	    10, 11, 12,  };
 #+end_src
 
 EXAMPLE 6
@@ -485,8 +485,8 @@ To demonstrate the redefinition rules, the following sequence is valid.
 #define OBJ_LIKE	/* white space */ (1-1) /* other */
 #define FUNC_LIKE(a)	(a)
 #define FUNC_LIKE( a )	( /* note the white space*/ \
-                            a /* other stuff on this line
-                               */ )
+		            a /* other stuff on this line
+		               */ )
 #+end_src
 
 But the following redefinitions are invalid:
@@ -503,7 +503,7 @@ Finally, to show the variable argument list macro facilities:
 #define debug(...)	fprintf(stderr, __VA_ARGS_ _)
 #define showlist(...)	puts(#_ _VA_ARGS_ _)
 #define report(test, ...)	((test)?puts(#test):\
-            printf(__VA_ARGS__))
+	    printf(__VA_ARGS__))
 debug("Flag");
 debug("X = %d\n", x);
 showlist(The first, second, and third items.);
@@ -515,7 +515,7 @@ fprintf(stderr,  "Flag");
 fprintf(stderr,  "X=%d\n", x );
 puts( "The first, second, and third items." );
 ((x>y)?puts("x>y"):
-            printf("x is %d but y is %d", x, y));
+	    printf("x is %d but y is %d", x, y));
 #+end_src
 
 
@@ -597,7 +597,7 @@ has no effect.
 ** 6.10.8 Predefined macro names
 [2011: _The values of the predefined macros listed in the following subclauses[fn:11] (except for =__FILE__= and =__LINE__= remain constant throughout the translation unit.
 
-None of these macro names, nor the identifier =defined=, shall be the subject of a =#define= or =#unef=  preprocessing directive.
+None of these macro names, nor the identifier =defined=, shall be the subject of a =#define= or =#undef= preprocessing directive.
 Any other predefined macro names shall begin with a leading underscore followed by an uppercase letter or a second underscore.
 
 The implementation shall not define the macro =_cplusplus=, nor shall it define it in any standard header.
@@ -614,14 +614,14 @@ The following macro names[fn:11]shall be defined by the implementation:
 - =__STDC_VERSION__= :: The integer constant [2011: +199901L+ _201ymmL_ ].[fn:13]
 - =__TIME__= :: The time of translation of the preprocessing translation unit: a character string literal of the form ="hh:mm:ss"= as in the time generated by the =asctime= function. If the time of translation is not available, an implementation-defined valid time shall be supplied.
 
- [2011: _
+[2011: _
 **** 6.10.8.2 Environment macros
-  _]
-  The following macro names are conditionally defined by the implementation:
+_]
+The following macro names are conditionally defined by the implementation:
 [2011: +
 - =__STDC_IEC_559__= :: The integer constant =1=, intended to indicate conformance to the specifications in annex F (IEC 60559 ﬂoating-point arithmetic).
 - =__STDC_IEC_559_COMPLEX__= :: The integer constant =1=, intended to indicate adherence to the specifications in informative annex G (IEC 60559 compatible complex arithmetic).+ ]
-- =__STDC_ISO_10646__= :: An integer constant of the form =yyyymmL= (for example, =199712L=) [2011: +,+ _. If this symbol is defined, then every character in the Unicode required set, when stored in an object of type =wchar_t=, has the same value as the short identifier of that character._ ] [2011: +intended to indicate that values of type =wchar_t= are the coded representations of the characters+ _The /Unicode required set/ consists of all the characters that are_ ]  defined by ISO/IEC 10646, along with all amendments and technical corrigenda as of the specified year and month. [2011: _If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined._ ]
+- =__STDC_ISO_10646__= :: An integer constant of the form =yyyymmL= (for example, =199712L=) [2011: +,+ _. If this symbol is defined, then every character in the Unicode required set, when stored in an object of type =wchar_t=, has the same value as the short identifier of that character._ ] [2011: +intended to indicate that values of type =wchar_t= are the coded representations of the characters+ _The /Unicode required set/ consists of all the characters that are_ ] defined by ISO/IEC 10646, along with all amendments and technical corrigenda as of the specified year and month. [2011: _If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined._ ]
 - =__STDC_MB_MIGHT_NEQ_WC__= ::The integer constant =1=, intended to indicate that, in the encoding for =wchar_t=, a member of the basic character set need not have a code value equal to its value when used as the lone character in an integer character constant.
 - =__STDC_UTF_16__= :: The integer constant =1=, intended to indicate that values of type =char16_t= are UTF−16 encoded. If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
 - =__STDC_UTF_32__= :: The integer constant =1=, intended to indicate that values of type =char32_t= are UTF−32 encoded. If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
@@ -659,7 +659,7 @@ A unary operator expression of the form:
 #+begin_src c
 _Pragma (string-literal)
 #+end_src
-is processed as follows: The string literal is /destringized/ by deleting[2011: +the =L= prefix, if present+  _any encoding prefix_ ], deleting the leading and trailing double-quotes, replacing each escape sequence =\"= by a double-quote, and replacing each escape sequence =\\= by a single backslash.
+is processed as follows: The string literal is /destringized/ by deleting[2011: +the =L= prefix, if present+ _any encoding prefix_ ], deleting the leading and trailing double-quotes, replacing each escape sequence =\"= by a double-quote, and replacing each escape sequence =\\= by a single backslash.
 The resulting sequence of characters is processed through translation phase 3 to produce preprocessing tokens that are executed as if they were the /pp-tokens/ in a pragma directive.
 The original four preprocessing tokens in the unary operator expression are removed.
 
@@ -681,14 +681,12 @@ LISTING ( ..\listing.dir )
 #+end_src
 
 * Footnotes
-
 [fn:1] Thus, preprocessing directives are commonly called ``lines''.
 These ``lines'' have no other syntactic significance, as all white space is equivalent except in certain situations during preprocessing (see the =#= character string literal creation operator in 6.10.3.2, for example).
 
 [fn:2] Because the controlling constant expression is evaluated during translation phase 4, all identifiers either are or are not macro names — there simply are no keywords, enumeration constants, etc.
 
 [2011: _
-
 [fn:3] Thus an implementation where =INT_MAX is =0x7FFF= and =UINT_MAX= is =0xFFFF=, the constant =0x8000= is signed and positive within a =#if= expression even though it would be unsigned in translation phase 7._ ]
 
 [fn:4] Thus, the constant expression in the following =#if= directive and if statement is not guaranteed to evaluate to the same value in these two contexts.
@@ -718,5 +716,4 @@ However, comments may appear anywhere in a source file, including within a prepr
  in ISO/IEC 9899:1999_ ]. The intention is that this will remain an integer constant of type =long int= that is increased with each revision of this International Standard.
 
 [2011: _
-
 [fn:14] he intention is that this will remain an integer constant of type long int that is increased with each revision of this International Standard._]
