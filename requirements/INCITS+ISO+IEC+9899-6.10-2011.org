@@ -597,7 +597,7 @@ has no effect.
 ** 6.10.8 Predefined macro names
 The values of the predefined macros listed in the following subclauses[fn:11] (except for =__FILE__= and =__LINE__= remain constant throughout the translation unit.
 
-None of these macro names, nor the identifier =defined=, shall be the subject of a =#define= or =#unef=  preprocessing directive.
+None of these macro names, nor the identifier =defined=, shall be the subject of a =#define= or =#undef=  preprocessing directive.
 Any other predefined macro names shall begin with a leading underscore followed by an uppercase letter or a second underscore.
 
 The implementation shall not define the macro =_cplusplus=, nor shall it define it in any standard header.
