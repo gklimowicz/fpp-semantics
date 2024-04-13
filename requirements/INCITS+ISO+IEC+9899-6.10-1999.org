@@ -496,7 +496,6 @@ puts( "The first, second, and third items." );
 #+end_src
 
 
-
 ** 6.10.4 Line control
 **** Constraints
 The string literal of a =#line= directive, if present, shall be a character string literal.
@@ -623,7 +622,6 @@ LISTING ( ..\listing.dir )
 #+end_src
 
 * Footnotes
-
 [fn:1] Thus, preprocessing directives are commonly called ``lines''.
 These ``lines'' have no other syntactic significance, as all white space is equivalent except in certain situations during preprocessing (see the =#= character string literal creation operator in 6.10.3.2, for example).
 

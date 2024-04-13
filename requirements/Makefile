@@ -3,8 +3,20 @@ requirements.txt:	requirements.org Makefile
 
 INCITS+ISO+IEC+9899-6.10-1999-from-all.org: INCITS+ISO+IEC+9899-6.10-all.org
 	sed -e 's/{{2011- \([^}]*\)}}/\1/g' \
-	       -e 's/ {{2011+ [^}]*}}\([ .]\)/\1/g' \
-	       -e 's/{{2011+ [^}]*}}//g' \
-		<INCITS+ISO+IEC+9899-6.10-all.org \
+	    -e 's/ {{2011+ [^}]*}}\([ .)]\)/\1/g' \
+	    -e 's/{{2011+ [^}]*}}//g' \
+	    <INCITS+ISO+IEC+9899-6.10-all.org \
 	| sed -e '/{{2011+$$/,/^}}/d' \
 	      -e '/{{2011-$$/d' -e '/^}}/d'  >"$@"
+
+INCITS+ISO+IEC+9899-6.10-2011-from-all.org: INCITS+ISO+IEC+9899-6.10-all.org
+	sed -e 's/{{2011+ \([^}]*\)}}/\1/g' \
+	    -e 's/ {{2011- [^}]*}}\([ .)]\)/\1/g' \
+	    -e 's/{{2011- [^}]*}}//g' \
+	    <INCITS+ISO+IEC+9899-6.10-all.org \
+	| sed -e '/{{2011-$$/,/^}}/d' \
+	      -e '/{{2011+$$/d' -e '/^}}/d'  >"$@"
+
+
+clean:
+	rm -f .DS_Store *.aux *.fdb_latexmk *.fls *.log *.out *.tex

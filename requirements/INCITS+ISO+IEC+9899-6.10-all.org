@@ -127,7 +127,7 @@ check whether the controlling constant expression evaluates to nonzero.
 
 Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression are replaced (except for those macro names modified by the =defined= unary operator), just as in normal text.
 If the token =defined= is generated as a result of this replacement process or use of the =defined= unary operator does not match one of the two specified forms prior to macro replacement, the behavior is undefined.
-After all replacements due to macro expansion and the =defined= unary operator have been performed, all remaining identifiers {{2011+ (including those lexically identical to keywords)}}are replaced with the pp-number =0=, and then each preprocessing token is converted into a token.
+After all replacements due to macro expansion and the =defined= unary operator have been performed, all remaining identifiers {{2011+ (including those lexically identical to keywords)}} are replaced with the pp-number =0=, and then each preprocessing token is converted into a token.
 The resulting tokens compose the controlling constant expression which is evaluated according to the rules of 6.6, except that all signed integer types and all unsigned integer types act as if they have the same representation as, respectively, the type =sintmax_t= and =uintmax_t= defined in the header =<stdint.h>=.{{2011+ [fn:3]}}
 This includes interpreting character constants, which may involve converting escape sequences into execution character set members.
 Whether the numeric value for these character constants matches the value obtained when an identical character constant occurs in an expression (other than within a =#if= or =#elif= directive) is implementation-defined.[fn:4]
@@ -184,7 +184,7 @@ The preprocessing tokens after =include= in the directive are processed just as 
 The directive resulting after all replacements shall match one of the two previous forms.[fn:6]
 The method by which a sequence of preprocessing tokens between a =<= and a =>= preprocessing token pair or a pair of ="= characters is combined into a single header name preprocessing token is implementation-defined.
 
-The implementation shall provide unique mappings for sequences consisting of one or more {{2011- letters}}{{2011+ nondigits}} or digits (as defined in {{2011- 5.2.1}}{{2011+ 6.4.2.1}} ) followed by a period (=.=) and a single {{2011- letter}}{{2011+ nondigit}}.
+The implementation shall provide unique mappings for sequences consisting of one or more {{2011- letters}}{{2011+ nondigits}} or digits (as defined in {{2011- 5.2.1}}{{2011+ 6.4.2.1}}) followed by a period (=.=) and a single {{2011- letter}}{{2011+ nondigit}}.
 The first character shall {{2011- be a letter}}{{2011+ not be a digit}}.
 The implementation may ignore the distinctions of alphabetical case and restrict the mapping to eight significant characters before the period.
 
@@ -523,7 +523,6 @@ puts( "The first, second, and third items." );
 #+end_src
 
 
-
 ** 6.10.4 Line control
 **** Constraints
 The string literal of a =#line= directive, if present, shall be a character string literal.
@@ -629,15 +628,18 @@ The following macro names are conditionally defined by the implementation:
 - =__STDC_IEC_559__= :: The integer constant =1=, intended to indicate conformance to the specifications in annex F (IEC 60559 ﬂoating-point arithmetic).
 - =__STDC_IEC_559_COMPLEX__= :: The integer constant =1=, intended to indicate adherence to the specifications in informative annex G (IEC 60559 compatible complex arithmetic).
 }}
-- =__STDC_ISO_10646__= :: An integer constant of the form =yyyymmL= (for example, =199712L=) {{2011- ,}}{{2011+  _. If this symbol is defined, then every character in the Unicode required set, when stored in an object of type =wchar_t=, has the same value as the short identifier of that character.}}{{2011- intended to indicate that values of type =wchar_t= are the coded representations of the characters}}{{2011+ The /Unicode required set/ consists of all the characters that are}}  defined by ISO/IEC 10646, along with all amendments and technical corrigenda as of the specified year and month. {{2011+ If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.}}
+- =__STDC_ISO_10646__= :: An integer constant of the form =yyyymmL= (for example, =199712L=){{2011- , intended to indicate that values of type =wchar_t= are the coded representations of the characters}}{{2011+ . If this symbol is defined, then every character in the Unicode required set, when stored in an object of type =wchar_t=, has the same value as the short identifier of that character.}}{{2011+  The /Unicode required set/ consists of all the characters that are}} defined by ISO/IEC 10646, along with all amendments and technical corrigenda as of the specified year and month.{{2011+  If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.}}
+{{2011+
 - =__STDC_MB_MIGHT_NEQ_WC__= ::The integer constant =1=, intended to indicate that, in the encoding for =wchar_t=, a member of the basic character set need not have a code value equal to its value when used as the lone character in an integer character constant.
 - =__STDC_UTF_16__= :: The integer constant =1=, intended to indicate that values of type =char16_t= are UTF−16 encoded. If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
 - =__STDC_UTF_32__= :: The integer constant =1=, intended to indicate that values of type =char32_t= are UTF−32 encoded. If some other encoding is used, the macro shall not be defined and the actual encoding used is implementation-defined.
 
 *Forward references:* common definitions (7.19), unicode utilities (7.28).
+}}
 {{2011-
 
 The values of the predefined macros (except for =__FILE__= and =__LINE__= ) remain constant throughout the translation unit.
+
 None of these macro names, nor the identifier =defined=, shall be the subject of a =#define= or a =#undef= preprocessing directive. Any other predefined macro names shall begin with a leading underscore followed by an uppercase letter or a second underscore.
 
 The implementation shall not predefine the macro =__cplusplus=, nor shall it define it in any standard header.
@@ -723,7 +725,7 @@ However, comments may appear anywhere in a source file, including within a prepr
 [fn:12] The presumed source file name and line number can be changed by the =#line= directive.
 
 [fn:13] This macro was not specified in ISO/IEC9899:1990 and was specified as =199409L= in {{2011- ISO/IEC 9899/AMD1:1995}}{{2011+ ISO/IEC 9899:1990/Amd.1:1955 and as =199901L= in ISO/IEC 9899:1999}}. The intention is that this will remain an integer constant of type =long int= that is increased with each revision of this International Standard.
-
 {{2011+
+
 [fn:14] he intention is that this will remain an integer constant of type long int that is increased with each revision of this International Standard.
 }}
