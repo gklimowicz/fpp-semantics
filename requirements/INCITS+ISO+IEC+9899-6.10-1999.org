@@ -1,7 +1,7 @@
 :PROPERTIES:
 :ID: 20240410T172230.159000
 :END:
-#+title: §6.10 Preprocessor Directives [1999]
+#+title: §6.10 Preprocessor Directives 1999
 #+author: ISO WG 14
 #+options: toc:nil H:5
 #+latex_header: \usepackage{titlesec}
@@ -309,8 +309,8 @@ In the following fragment:
 #define in_between(a)	mkstr(a)
 #define join(c, d)	in_between(c hash_hash d)
 
-char p[] = join(x, y); // equivalent to
-		       // char p[] = "x ## y";
+char p[] = join(x, y);	// equivalent to
+			// char p[] = "x ## y";
 #+end_src
 The expansion produces, at various stages:
 #+begin_src c
@@ -388,7 +388,7 @@ To illustrate the rules for redefinition and reexamination, the sequence
 
 f(y+1) + f(f(z)) % t(t(g)(0) + t)(1);
 g(x+(3,4)-w) | h 5) & m
-      (f)^m(m);
+	(f)^m(m);
 p() i[q()] = { q(1), r(2,3), r(4,), r(,5), r(,) };
 char c[2][6] = { str(hello), str() };
 #+end_src
@@ -405,7 +405,7 @@ To illustrate the rules for creating character string literals and concatenating
 #+begin_src c
 #define str(s)	#s
 #define xstr(s)	str(s)
-#define debug(s, t)	printf("x" # s "= %d, x" # t "= %s", \
+#define debug(s, t) printf("x" # s "= %d, x" # t "= %s", \
 			      x ## s, x ## t)
 #define INCFILE(n)	vers ## n
 #define glue(a, b)	a ## b
@@ -415,7 +415,7 @@ To illustrate the rules for creating character string literals and concatenating
 
 debug(1, 2);
 fputs(str(strncmp("abc\0d", "abc", '\4') // this goes away
-     == 0) str(: @\n), s);
+      == 0) str(: @\n), s);
 #include xstr(INCFILE(2).h)
 glue(HIGH, LOW);
 xglue(HIGH, LOW)
@@ -460,10 +460,10 @@ To demonstrate the redefinition rules, the following sequence is valid.
 #+begin_src c
 #define OBJ_LIKE	(1-1)
 #define OBJ_LIKE	/* white space */ (1-1) /* other */
-#define FUNC_LIKE(a)	(a)
-#define FUNC_LIKE( a )	( /* note the white space*/ \
-			    a /* other stuff on this line
-			       */ )
+#define FUNC_LIKE(a)	 (a)
+#define FUNC_LIKE( a )( /* note the white space*/ \
+                        a /* other stuff on this line
+                           */ )
 #+end_src
 
 But the following redefinitions are invalid:
@@ -480,7 +480,7 @@ Finally, to show the variable argument list macro facilities:
 #define debug(...)	fprintf(stderr, __VA_ARGS_ _)
 #define showlist(...)	puts(#_ _VA_ARGS_ _)
 #define report(test, ...)	((test)?puts(#test):\
-		printf(__VA_ARGS__))
+            printf(__VA_ARGS__))
 debug("Flag");
 debug("X = %d\n", x);
 showlist(The first, second, and third items.);
@@ -492,7 +492,7 @@ fprintf(stderr,  "Flag");
 fprintf(stderr,  "X=%d\n", x );
 puts( "The first, second, and third items." );
 ((x>y)?puts("x>y"):
-		  printf("x is %d but y is %d", x, y));
+            printf("x is %d but y is %d", x, y));
 #+end_src
 
 
