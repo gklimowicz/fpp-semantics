@@ -9,8 +9,8 @@ This is a text file (in `org-mode` format) that contains the text from Section 6
 
 Deltas from the one revision to the next are written in pairs of curly braces `{{...}}`.
 
-* `{{`_yyyy_`-` _deleted-text_`}}` means that for the year _yyyy_ standard, _deleted-text_ was removed. The entire construct must be on one physical line.
-* `{{`_yyyy_`+` _inserted-text_`}}` means that for the year _yyyy_ standard, _inserted-text_ was inserted. The entire construct must be on one physical line.
+* `{{`_yyyy_`-` _deleted-text_`}}` means that for the year _yyyy_ standard, _deleted-text_ was removed from the previous revision. The entire construct must be on one physical line.
+* `{{`_yyyy_`+` _inserted-text_`}}` means that for the year _yyyy_ standard, _inserted-text_ was inserted into the current revision. The entire construct must be on one physical line.
 * `{{`_yyyy_`-` and `{{`_yyyy_`+` on a line by itself indicates multiline text to be deleted or inserted, respectively, for year _yyyy_. These constructs are terminated by a line containing only `}}`.
 
 
