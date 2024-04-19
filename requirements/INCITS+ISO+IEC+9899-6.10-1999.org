@@ -458,20 +458,20 @@ int j[] = { 123, 45, 67, 89,
 EXAMPLE 6
 To demonstrate the redefinition rules, the following sequence is valid.
 #+begin_src c
-#define OBJ_LIKE	(1-1)
-#define OBJ_LIKE	/* white space */ (1-1) /* other */
-#define FUNC_LIKE(a)	 (a)
-#define FUNC_LIKE( a )( /* note the white space*/ \
-                        a /* other stuff on this line
-                           */ )
+#define OBJ_LIKE      (1-1)
+#define OBJ_LIKE      /* white space */ (1-1) /* other */
+#define FUNC_LIKE(a)   ( a )
+#define FUNC_LIKE( a )(   /* note the white space*/ \
+                          a /* other stuff on this line
+                             */ )
 #+end_src
 
 But the following redefinitions are invalid:
 #+begin_src c
-#define OBJ_LIKE	(0)	//different token sequence
-#define OBJ_LIKE	(1 - 1)	//different white space
-#define FUNC_LIKE(b) ( a )	//different parameter usage
-#define FUNC_LIKE(b) ( b )	//different parameter spelling
+#define OBJ_LIKE       (0)       // different token sequence
+#define OBJ_LIKE       (1 - 1)   // different white space
+#define FUNC_LIKE(b) ( a )       // different parameter usage
+#define FUNC_LIKE(b) ( b )       // different parameter spelling
 #+end_src
 
 EXAMPLE 7
@@ -622,6 +622,7 @@ LISTING ( ..\listing.dir )
 #+end_src
 
 * Footnotes
+
 [fn:1] Thus, preprocessing directives are commonly called ``lines''.
 These ``lines'' have no other syntactic significance, as all white space is equivalent except in certain situations during preprocessing (see the =#= character string literal creation operator in 6.10.3.2, for example).
 

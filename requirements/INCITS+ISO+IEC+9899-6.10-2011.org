@@ -481,20 +481,20 @@ int j[] = { 123, 45, 67, 89,
 EXAMPLE 6
 To demonstrate the redefinition rules, the following sequence is valid.
 #+begin_src c
-#define OBJ_LIKE	(1-1)
-#define OBJ_LIKE	/* white space */ (1-1) /* other */
-#define FUNC_LIKE(a)	 (a)
-#define FUNC_LIKE( a )( /* note the white space*/ \
-                        a /* other stuff on this line
-                           */ )
+#define OBJ_LIKE      (1-1)
+#define OBJ_LIKE      /* white space */ (1-1) /* other */
+#define FUNC_LIKE(a)   ( a )
+#define FUNC_LIKE( a )(   /* note the white space*/ \
+                          a /* other stuff on this line
+                             */ )
 #+end_src
 
 But the following redefinitions are invalid:
 #+begin_src c
-#define OBJ_LIKE	(0)	//different token sequence
-#define OBJ_LIKE	(1 - 1)	//different white space
-#define FUNC_LIKE(b) ( a )	//different parameter usage
-#define FUNC_LIKE(b) ( b )	//different parameter spelling
+#define OBJ_LIKE       (0)       // different token sequence
+#define OBJ_LIKE       (1 - 1)   // different white space
+#define FUNC_LIKE(b) ( a )       // different parameter usage
+#define FUNC_LIKE(b) ( b )       // different parameter spelling
 #+end_src
 
 EXAMPLE 7
@@ -666,6 +666,7 @@ LISTING ( ..\listing.dir )
 #+end_src
 
 * Footnotes
+
 [fn:1] Thus, preprocessing directives are commonly called ``lines''.
 These ``lines'' have no other syntactic significance, as all white space is equivalent except in certain situations during preprocessing (see the =#= character string literal creation operator in 6.10.3.2, for example).
 
@@ -696,6 +697,6 @@ However, comments may appear anywhere in a source file, including within a prepr
 
 [fn:12] The presumed source file name and line number can be changed by the =#line= directive.
 
-[fn:13] This macro was not specified in ISO/IEC9899:1990 and was specified as =199409L= in ISO/IEC 9899:1990/Amd.1:1955 and as =199901L= in ISO/IEC 9899:1999. The intention is that this will remain an integer constant of type =long int= that is increased with each revision of this International Standard.
+[fn:13] This macro was not specified in ISO/IEC9899:1990 and was specified as =199409L= in ISO/IEC 9899:1990/Amd.1:1995 and as =199901L= in ISO/IEC 9899:1999. The intention is that this will remain an integer constant of type =long int= that is increased with each revision of this International Standard.
 
-[fn:14] he intention is that this will remain an integer constant of type long int that is increased with each revision of this International Standard.
+[fn:14] The intention is that this will remain an integer constant of type long int that is increased with each revision of this International Standard.
