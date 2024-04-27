@@ -32,6 +32,7 @@ group =
 
 group-part =
 	if-section
+	| control-line
 	| text-line
 	| '#', non-directive .
 
@@ -89,7 +90,7 @@ new-line =
 #+end_src
 
 **** Description
-A preprocessing directive consists of a sequence of preprocessing tokens that {{1990|1999=begins with}} a =#= preprocessing token that (at the start of translation phase 4) is either the first character in the source file (optionally after white space containing no new-line characters) or that follows white space containing at least one new-line character{{1990|1999=, and is ended by the next}} new-line character.[fn:1]
+A preprocessing directive consists of a sequence of preprocessing tokens that begins with a =#= preprocessing token that (at the start of translation phase 4) is either the first character in the source file (optionally after white space containing no new-line characters) or that follows white space containing at least one new-line character, and is ended by the next new-line character.[fn:1]
 A new-line character ends the preprocessing directive even if it occurs within what would otherwise be an invocation of a function-like macro.
 
 A text line shall not begin with a =#= preprocessing token.
@@ -121,7 +122,7 @@ the sequence of preprocessing tokens on the second line is not a preprocessing d
 
 ** 6.10.1 Conditional inclusion
 **** Constraints
-The expression that controls conditional inclusion shall be an integer constant expression except that: {{1990|1999=it shall not contain a cast; }}identifiers (including those lexically identical to keywords) are interpreted as described below;[fn:2] and it may contain unary operator expressions of the form
+The expression that controls conditional inclusion shall be an integer constant expression except that: it shall not contain a cast; identifiers (including those lexically identical to keywords) are interpreted as described below;[fn:2] and it may contain unary operator expressions of the form
 #+begin_src c
 defined identifier
 #+end_src
@@ -143,7 +144,7 @@ check whether the controlling constant expression evaluates to nonzero.
 Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression are replaced (except for those macro names modified by the =defined= unary operator), just as in normal text.
 If the token =defined= is generated as a result of this replacement process or use of the =defined= unary operator does not match one of the two specified forms prior to macro replacement, the behavior is undefined.
 After all replacements due to macro expansion and the =defined= unary operator have been performed, all remaining identifiers are replaced with the pp-number =0=, and then each preprocessing token is converted into a token.
-The resulting tokens compose the controlling constant expression which is evaluated according to the rules of 6.6{{1990|1999=, except that}} all signed integer types and all unsigned integer types act as if they have the same representation as, respectively, the types =intmax_t= and =uintmax_t= defined in the header =<stdint.h> =.
+The resulting tokens compose the controlling constant expression which is evaluated according to the rules of 6.6, except that all signed integer types and all unsigned integer types act as if they have the same representation as, respectively, the types =intmax_t= and =uintmax_t= defined in the header =<stdint.h>=.
 This includes interpreting character constants, which may involve converting escape sequences into execution character set members.
 Whether the numeric value for these character constants matches the value obtained when an identical character constant occurs in an expression (other than within a =#if= or =#elif= directive) is implementation-defined.[fn:4]
 Also, whether a single-character character constant may have a negative value is implementation-defined.
@@ -161,7 +162,7 @@ If it evaluates to false (zero), the group that it controls is skipped: directiv
 Only the first group whose control condition evaluates to true (nonzero) is processed.
 If none of the conditions evaluates to true, and there is a =#else= directive, the group controlled by the =#else= is processed; lacking a =#else= directive, all the groups until the =#endif= are skipped.[fn:5]
 
-*Forward references:* macro replacement (6.10.3), source file inclusion (6.10.2), largest integer types (7.20.1.5).
+*Forward references:* macro replacement (6.10.3), source file inclusion (6.10.2), largest integer types (7.18.1.5).
 
 
 ** 6.10.2 Source file inclusion
@@ -199,7 +200,7 @@ The preprocessing tokens after =include= in the directive are processed just as 
 The directive resulting after all replacements shall match one of the two previous forms.[fn:6]
 The method by which a sequence of preprocessing tokens between a =<= and a =>= preprocessing token pair or a pair of ="= characters is combined into a single header name preprocessing token is implementation-defined.
 
-The implementation shall provide unique mappings for sequences consisting of one or more {{1990|1999=letters}}{{1990|2011|2018= or digits}} (as defined in {{1990|1999=5.2.1}}) followed by a period (=.=) and a single {{1990|1999=letter}}.
+The implementation shall provide unique mappings for sequences consisting of one or more letters or digits (as defined in 5.2.1) followed by a period (=.=) and a single letter.
 The first character shall be a letter.
 The implementation may ignore the distinctions of alphabetical case and restrict the mapping to eight significant characters before the period.
 
@@ -259,8 +260,6 @@ A preprocessing directive of the form
 # define identifier replacement-list new-line
 #+end_src
 defines an /object-like macro/ that causes each subsequent instance of the macro name[fn:7] to be replaced by the replacement list of preprocessing tokens that constitute the remainder of the directive.
-{{1990|2011|2018=
-The replacement list is then rescanned for more macro names as specified below.
 
 A preprocessing directive of the form
 #+begin_src c
@@ -268,7 +267,7 @@ A preprocessing directive of the form
 # define identifier lparen =...= =)= replacement-list new-line
 # define identifier lparen identifier-list =,= =...= =)= replacement-list new-line
 #+end_src
-defines a /function-like/ macro with {{1990|1999=arguments}}, similar syntactically to a function call.
+defines a /function-like/ macro with arguments, similar syntactically to a function call.
 The parameters are specified by the optional list of identifiers, whose scope extends from their declaration in the identifier list until the new-line character that terminates the =#define= preprocessing directive.
 Each subsequent instance of the function-like macro name followed by a =(= as the next preprocessing token introduces the sequence of preprocessing tokens that is replaced by the replacement list in the definition (an invocation of the macro).
 The replaced sequence of preprocessing tokens is terminated by the matching =)= preprocessing token, skipping intervening matched pairs of left and right parenthesis preprocessing tokens.
@@ -347,7 +346,7 @@ In other words, expanding =hash_hash= produces a new token, consisting of two ad
 
 
 *** 6.10.3.4 Rescanning and further replacement
-After all parameters in the replacement list have been substituted and =#= and =##= processing has taken place, all placemarker preprocessing tokens are removed.Then, the resulting preprocessing token sequence is rescanned, along with all subsequent preprocessing tokens of the source file, for more macro names to replace.
+After all parameters in the replacement list have been substituted and =#= and =##= processing has taken place, all placemarker preprocessing tokens are removed. Then, the resulting preprocessing token sequence is rescanned, along with all subsequent preprocessing tokens of the source file, for more macro names to replace.
 
 If the name of the macro being replaced is found during this scan of the replacement list (not including the rest of the source file’s preprocessing tokens), it is not replaced.
 Furthermore, if any nested replacements encounter the name of the macro being replaced, it is not replaced.
@@ -477,7 +476,6 @@ To demonstrate the redefinition rules, the following sequence is valid.
 #+begin_src c
 #define OBJ_LIKE      (1-1)
 #define OBJ_LIKE      /* white space */ (1-1) /* other */
-{{1990|1999|2011=
 #define FUNC_LIKE(a)   ( a )
 #define FUNC_LIKE( a )(   /* note the white space*/ \
                           a /* other stuff on this line
@@ -486,7 +484,6 @@ To demonstrate the redefinition rules, the following sequence is valid.
 
 But the following redefinitions are invalid:
 #+begin_src c
-{{1990|1999|2011=
 #define OBJ_LIKE       (0)       // different token sequence
 #define OBJ_LIKE       (1 - 1)   // different white space
 #define FUNC_LIKE(b) ( a )       // different parameter usage
@@ -598,11 +595,11 @@ The following macro names[fn:12] shall be defined by the implementation:
 - =__STDC_HOSTED__= :: The integer constant =1= if the implementation is a hosted implementation or the integer constant =0= if it is not.
 - =__STDC_VERSION__= :: The integer constant =199901L=.[fn:14]
 - =__TIME__= :: The time of translation of the preprocessing translation unit: a character string literal of the form ="hh:mm:ss"= as in the time generated by the =asctime= function. If the time of translation is not available, an implementation-defined valid time shall be supplied.
+
 The following macro names are conditionally defined by the implementation:
 - =__STDC_IEC_559__= :: The integer constant =1=, intended to indicate conformance to the specifications in annex F (IEC 60559 ﬂoating-point arithmetic).
 - =__STDC_IEC_559_COMPLEX__= :: The integer constant =1=, intended to indicate adherence to the specifications in informative annex G (IEC 60559 compatible complex arithmetic).
 - =__STDC_ISO_10646__= :: An integer constant of the form =yyyymmL= (for example, =199712L=), intended to indicate that values of type =wchar_t= are the coded representations of the characters defined by ISO/IEC 10646, along with all amendments and technical corrigenda as of the specified year and month.
-{{1990|1999=
 
 The values of the predefined macros (except for =__FILE__= and =__LINE__= ) remain constant throughout the translation unit.
 

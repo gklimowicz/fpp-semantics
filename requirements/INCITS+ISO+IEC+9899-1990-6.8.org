@@ -178,7 +178,7 @@ The directive resulting after all replacements shall match one of the two previo
 The method by which a sequence of preprocessing tokens between a =<= and a =>= preprocessing token pair or a pair of ="= characters is combined into a single header name preprocessing token is implementation-defined.
 
 There shall be an implementation-defined mapping between the delimited sequence and the external source file name.
-The implementation shall provide unique mappings for sequences consisting of one or more letters or digits (as defined in 5.2.1) followed by a period (=.=) and a single letter.
+The implementation shall provide unique mappings for sequences consisting of one or more letters (as defined in 5.2.1) followed by a period (=.=) and a single letter.
 The implementation may ignore the distinctions of alphabetical case and restrict the mapping to six significant characters before the period.
 
 A =#include= preprocessing directive may appear in a source file that has been read because of a =#include= directive in another file, up to an implementation-defined nesting limit (see 5.2.4.1).

@@ -163,7 +163,7 @@ check whether the controlling constant expression evaluates to nonzero.
 Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression are replaced (except for those macro names modified by the =defined= unary operator), just as in normal text.
 If the token =defined= is generated as a result of this replacement process or use of the =defined= unary operator does not match one of the two specified forms prior to macro replacement, the behavior is undefined.
 After all replacements due to macro expansion and the =defined= unary operator have been performed, all remaining identifiers {{2011|2018=(including those lexically identical to keywords) }}are replaced with the pp-number =0=, and then each preprocessing token is converted into a token.
-The resulting tokens compose the controlling constant expression which is evaluated according to the rules of {{1990=6.4}}{{1999|2011|2018|2024=6.6}}{{1990|1999=, except that}}{{2011|2018=. For the purposes of this token conversion and evaluation,}} {{1990==int= and =unsigned int=}}{{1999|2011|2018|2024=all signed integer types and all unsigned integer types}} act as if they have the same representation as, respectively, {{1990==long= and =unsigned long}}{{1999|2011|2018|2024=the types =intmax_t= and =uintmax_t= defined in the header =<stdint.h> }}=.{{2011|2018=[fn:3]}}
+The resulting tokens compose the controlling constant expression which is evaluated according to the rules of {{1990=6.4}}{{1999|2011|2018|2024=6.6}}{{1990|1999=, except that}}{{2011|2018=. For the purposes of this token conversion and evaluation,}} {{1990==int= and =unsigned int=}}{{1999|2011|2018|2024=all signed integer types and all unsigned integer types}} act as if they have the same representation as, respectively, {{1990==long= and =unsigned long=}}{{1999|2011|2018|2024=the types =intmax_t= and =uintmax_t= defined in the header =<stdint.h>=}}.{{2011|2018=[fn:3]}}
 This includes interpreting character constants, which may involve converting escape sequences into execution character set members.
 Whether the numeric value for these character constants matches the value obtained when an identical character constant occurs in an expression (other than within a =#if= or =#elif= directive) is implementation-defined.[fn:4]
 Also, whether a single-character character constant may have a negative value is implementation-defined.
@@ -181,7 +181,7 @@ If it evaluates to false (zero), the group that it controls is skipped: directiv
 Only the first group whose control condition evaluates to true (nonzero) is processed.
 If none of the conditions evaluates to true, and there is a =#else= directive, the group controlled by the =#else= is processed; lacking a =#else= directive, all the groups until the =#endif= are skipped.[fn:5]
 
-*Forward references:* macro replacement (6.{{1990=8}}{{1999|2011|2018=10}}.3), source file inclusion (6.{{1990=8}}{{1999|2011|2018=10}}.2){{1999|2011|2018=, largest integer types (7.20.1.5)}}.
+*Forward references:* macro replacement (6.{{1990=8}}{{1999|2011|2018=10}}.3), source file inclusion (6.{{1990=8}}{{1999|2011|2018=10}}.2){{1999=, largest integer types (7.18.1.5)}}{{2011|2018=, largest integer types (7.20.1.5)}}.
 
 
 ** 6.{{1990=8}}{{1999|2011|2018=10}}.2 Source file inclusion
@@ -222,7 +222,7 @@ The method by which a sequence of preprocessing tokens between a =<= and a =>= p
 {{1990=
 There shall be an implementation-defined mapping between the delimited sequence and the external source file name.
 }}
-The implementation shall provide unique mappings for sequences consisting of one or more {{1990|1999=letters}}{{2011|2018=nondigits}}{{1990|2011|2018= or digits}} (as defined in {{1990|1999=5.2.1}}{{2011|2018=6.4.2.1}}) followed by a period (=.=) and a single {{1990|1999=letter}}{{2011|2018=nondigit}}.
+The implementation shall provide unique mappings for sequences consisting of one or more {{1990|1999=letters}}{{2011|2018=nondigits}}{{1999|2011|2018= or digits}} (as defined in {{1990|1999=5.2.1}}{{2011|2018=6.4.2.1}}) followed by a period (=.=) and a single {{1990|1999=letter}}{{2011|2018=nondigit}}.
 {{1999=
 The first character shall be a letter.
 }}
@@ -399,7 +399,7 @@ In other words, expanding =hash_hash= produces a new token, consisting of two ad
 
 
 *** 6.{{1990=8}}{{1999|2011|2018=10}}.3.4 Rescanning and further replacement
-After all parameters in the replacement list have been substituted{{1999|2011|2018= and =#= and =##= processing has taken place, all placemarker preprocessing tokens are removed.}}{{1990=, the}}{{1999=Then, the}}{{2011|2018=The}} resulting preprocessing token sequence is {{2011|2018=then }}rescanned, along with all subsequent preprocessing tokens of the source file, for more macro names to replace.
+After all parameters in the replacement list have been substituted{{1999|2011|2018= and =#= and =##= processing has taken place, all placemarker preprocessing tokens are removed.}}{{1990=, the}}{{1999= Then, the}}{{2011|2018= The}} resulting preprocessing token sequence is {{2011|2018=then }}rescanned, along with all subsequent preprocessing tokens of the source file, for more macro names to replace.
 
 If the name of the macro being replaced is found during this scan of the replacement list (not including the rest of the source file’s preprocessing tokens), it is not replaced.
 Further{{1999|2011|2018=more}}, if any nested replacements encounter the name of the macro being replaced, it is not replaced.
@@ -743,7 +743,12 @@ The following macro names{{1999|2011|2018=[fn:12]}} shall be defined by the impl
 {{1990=
 - =__STDC__= :: The decimal constant =1=, intended to indicate a conforming implementation.
 }}
+{{1999=
+
+}}
 {{2011|2018=
+
+*Forward references:* the =asctimefunction= (7.27.3.1).
 
 
 **** 6.10.8.2 Environment macros
@@ -784,10 +789,6 @@ The implementation shall not predefine the macro =__cplusplus=, nor shall it def
 *Forward references:* the =asctimefunction= (7.23.3.1), standard headers (7.1.2).
 }}
 {{2011|2018=
-*Forward references:* the =asctimefunction= (7.27.3.1).
-}}
-{{2011|2018=
-
 
 **** 6.10.8.3 Conditional features macros
 - =__STDC_ANALYZABLE__= ::The integer constant =1=, intended to indicate conformance to the specifications in annex L (Analyzability).
