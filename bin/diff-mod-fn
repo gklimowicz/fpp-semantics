@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -e -u -o pipefail
+
+
+CMD="$(basename $0)"
+CMD_DIR="$(dirname $0)"
+function usage {
+    (echo "Usage: $CMD [-hnv] file1 file2"
+     echo "-h        Print this help message."
+     echo "-n        Dry run. Don't execute commands."
+     echo "-v        Verbose. Print extra information if appropriate."
+     echo "Diff two files accounting for footnote differenes") 1>&2
+}
+
+DRY_RUN=
+VFLAG=
+while getopts hnv OPTCHAR; do
+    case $OPTCHAR in
+        h)  usage; exit 0;;
+        n)  DRY_RUN=1;;
+        v)  VFLAG=1;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+case $# in
+    2) ;;
+    *)  usage; exit 1;;
+esac
+
+F1="$(mktemp "/tmp/$(basename "$1")-XXXXXX")"
+F2="$(mktemp "/tmp/$(basename "$2")-XXXXXX")"
+
+trap 'rm -f "$F1" "$F2"' EXIT HUP INT QUIT TERM
+
+sed -e 's/\[fn:[0-9]*\]/[fn:x]/g' <"$1" >"$F1"
+sed -e 's/\[fn:[0-9]*\]/[fn:x]/g' <"$2" >"$F2"
+
+diff --color=always "$F1" "$F2"
