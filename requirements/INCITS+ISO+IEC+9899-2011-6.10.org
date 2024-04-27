@@ -22,35 +22,45 @@
 
 * 6.10 Preprocessing directives
 **** Syntax
-#+begin_src bnf
-preprocessing-file = [ group ] .
+#+begin_src ebnf
+preprocessing-file =
+	[ group ] .
 
-group = group-part
+group =
+	group-part
 	| group, group-part .
 
-group-part = if-section
+group-part =
+	if-section
 	| control-line
 	| text-line
 	| '#', non-directive .
 
-if-section = if-group, [ elif-groups ], [ else-group ], endif-line .
+if-section =
+	if-group, [ elif-groups ], [ else-group ], endif-line .
 
-if-group = '#', 'if', constant-expression, new-line, [ group ]
+if-group =
+	'#', 'if', constant-expression, new-line, [ group ]
 	| '#', 'ifdef', identifier, new-line, [ group ]
 	| '#', 'ifndef', identifier, new-line, [ group ] .
 
-elif-groups = elif-group
+elif-groups =
+	elif-group
 	| elif-groups, elif-group .
 
-elif-group = '#', 'elif', constant-expression, new-line, [ group ] .
+elif-group =
+	'#', 'elif', constant-expression, new-line, [ group ] .
 
-else-group = '#', 'else', new-line [ group ] .
+else-group =
+	'#', 'else', new-line [ group ] .
 
-endif-line = '#', 'endif', new-line .
+endif-line =
+	'#', 'endif', new-line .
 
-control-line = '#', 'include', pp-tokens, new-line
+control-line =
+	'#', 'include', pp-tokens, new-line
 	| '#', 'define', identifier, replacement-list, new-line
-	| '#', 'define', identifier, lparen, identifi[ er-list ], ')', replacement-list, new-line
+	| '#', 'define', identifier, lparen, [ identifier-list ], ')', replacement-list, new-line
 	| '#', 'define', identifier, lparen, '...', ')', replacement-list, new-line
 	| '#', 'define', identifier, lparen, identifier-list, ',', '...', ')', replacement-list, new-line
 	| '#', 'undef', identifier, new-line
@@ -59,18 +69,24 @@ control-line = '#', 'include', pp-tokens, new-line
 	| '#', 'pragma', [ pp-tokens ], new-line
 	| '#', new-line .
 
-text-line = [ pp-tokens ], new-line .
+text-line =
+	[ pp-tokens ], new-line .
 
-non-directive = pp-tokens, new-line .
+non-directive =
+	pp-tokens, new-line .
 
-lparen = '(' . ; character not immediately preceded by white-space
+lparen =
+	'(' . ; character not immediately preceded by white-space
 
-replacement-list = [ pp-tokens ] .
+replacement-list =
+	[ pp-tokens ] .
 
-pp-tokens = preprocessing-token
+pp-tokens =
+	preprocessing-token
 	| pp-tokens, preprocessing-token .
 
-new-line = '\n' .
+new-line =
+	'\n' .
 #+end_src
 
 **** Description
@@ -128,7 +144,7 @@ check whether the controlling constant expression evaluates to nonzero.
 Prior to evaluation, macro invocations in the list of preprocessing tokens that will become the controlling constant expression are replaced (except for those macro names modified by the =defined= unary operator), just as in normal text.
 If the token =defined= is generated as a result of this replacement process or use of the =defined= unary operator does not match one of the two specified forms prior to macro replacement, the behavior is undefined.
 After all replacements due to macro expansion and the =defined= unary operator have been performed, all remaining identifiers (including those lexically identical to keywords) are replaced with the pp-number =0=, and then each preprocessing token is converted into a token.
-The resulting tokens compose the controlling constant expression which is evaluated according to the rules of 6.6, except that all signed integer types and all unsigned integer types act as if they have the same representation as, respectively, the type =sintmax_t= and =uintmax_t= defined in the header =<stdint.h>=.[fn:3]
+The resulting tokens compose the controlling constant expression which is evaluated according to the rules of 6.6, except that all signed integer types and all unsigned integer types act as if they have the same representation as, respectively, the type =intmax_t= and =uintmax_t= defined in the header =<stdint.h>=.[fn:3]
 This includes interpreting character constants, which may involve converting escape sequences into execution character set members.
 Whether the numeric value for these character constants matches the value obtained when an identical character constant occurs in an expression (other than within a =#if= or =#elif= directive) is implementation-defined.[fn:4]
 Also, whether a single-character character constant may have a negative value is implementation-defined.
