@@ -639,8 +639,6 @@ If the processor produces output corresponding to the preprocessed input (e.g., 
 
 * Footnotes
 
-
-
 # Local Variables:
 # org-latex-inputenc-alist: (("utf8" . "utf8x"))
 # eval: (setq org-latex-default-packages-alist (cons '("mathletters" "ucs" nil) org-latex-default-packages-alist))
