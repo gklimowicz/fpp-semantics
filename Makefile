@@ -30,4 +30,22 @@ stats.csv:	fortran-examples/all-fortran-files.txt \
 	| cpif "$@"
 	wc -l "$@"
 
+# Identify all variations of `#if' and `#elif' expressions.
+# For each fortran file f
+#     Remove all continuation lines;
+#     Select `#if' and `#elif' expressions
+#     Squeeze out /* ... */ comments
+#     Squeeze out extra blanks
+#     Sort and keep only unique entries
+pp-expressions.txt:	fortran-examples/all-fortran-files.txt
+	export LC_ALL=C; \
+	tr '\n' '\0' <fortran-examples/all-fortran-files.txt \
+	| (builtin cd fortran-examples; xargs -0 \
+	      awk '{if (sub(/\\$$/,"")) printf "%s", $$0; else print $$0}') \
+	| sed -E -n -e 's/^[[:space:]]*#[[:space:]]*(if|elif)[[:space:]]+(.*)/\2/p' \
+	| sed -E -e 's;/\*.*\*/; ;g' \
+	      -e 's/[[:space:]][[:space:]]+/ /g' \
+	      -e 's/[[:space:]]$$//' \
+	| sort -u > "$@"
+
 FORCE:
