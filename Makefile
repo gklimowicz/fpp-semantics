@@ -9,7 +9,8 @@ E=fortran-examples
 .ONESHELL:
 SHELL=/bin/bash
 
-all: stats.csv
+all: stats.csv all-fpp-conditional-expressions.txt \
+	all-comment-directives.txt
 
 clean: FORCE
 	rm -f stats.csv
@@ -31,21 +32,59 @@ stats.csv:	fortran-examples/all-fortran-files.txt \
 	wc -l "$@"
 
 # Identify all variations of `#if' and `#elif' expressions.
-# For each fortran file f
+# for each fortran file f
 #     Remove all continuation lines;
 #     Select `#if' and `#elif' expressions
 #     Squeeze out /* ... */ comments
 #     Squeeze out extra blanks
 #     Sort and keep only unique entries
-pp-expressions.txt:	fortran-examples/all-fortran-files.txt
+all-fpp-conditional-expressions.txt:	$E/all-fortran-files.txt
 	export LC_ALL=C; \
-	tr '\n' '\0' <fortran-examples/all-fortran-files.txt \
-	| (builtin cd fortran-examples; xargs -0 \
+	tr '\n' '\0' <$E/all-fortran-files.txt \
+	| (builtin cd $E; xargs -0 \
 	      awk '{if (sub(/\\$$/,"")) printf "%s", $$0; else print $$0}') \
 	| sed -E -n -e 's/^[[:space:]]*#[[:space:]]*(if|elif)[[:space:]]+(.*)/\2/p' \
 	| sed -E -e 's;/\*.*\*/; ;g' \
 	      -e 's/[[:space:]][[:space:]]+/ /g' \
 	      -e 's/[[:space:]]$$//' \
-	| sort -u > "$@"
+	| sort --ignore-case -u > "$@"
+
+# Identify all compiler directives embedded in
+# Fortran comment lines. We are looking for `!$word'
+# and `!word$'. In fixed-form, the `word' is probably only
+# three characters long.
+#
+# (for each fixed-format Fortran file f
+#      Remove all non-comment lines
+#      Print directive from all comment lines that look like directives
+#  for each free-format Fortran file f
+#      Remove all lines that do not begin with a comment
+#      Print directive from all comment lines that look like directives)
+# | (Downcase everything
+#    check directives again (unnecessary)
+#    sort and print unique entries)
+all-comment-directives.txt: $E/all-fortran-files-fixed.txt \
+	             $E/all-fortran-files-free.txt
+	(export LC_ALL=C; \
+	 builtin cd $E \
+	 && cat all-fortran-files-fixed.txt \
+	 | tr '\n' '\0' \
+	 | xargs -0 gawk '/^[^CcDd*]/ { next } \
+	                /^.[a-zA-Z][a-zA-Z][a-z]A-Z][$$]/ { print substr($$1,2,4); next } \
+	                /^.[$$][a-zA-Z][a-zA-Z][a-zA-Z]*/ { print substr($$1,2.4); next }'; \
+	 cat all-fortran-files-free.txt \
+	 | tr '\n' '\0' \
+	 | xargs -0 gawk '/^[^ ]*!/ { next } \
+	                /^ *[^!]*$$/ { next } \
+			$$1 ~ /^![a-zA-Z][a-zA-Z]*[$$]/ { print substr($$1,2,4) } \
+	                $$1 ~ /^![$$][a-zA-Z][a-zA-Z]*/ { print substr($$1,2) }') \
+	| (export LC_ALL=C; \
+	   tr -d ' ' \
+	   | tr '[[:upper:]]' '[[:lower:]]' \
+	   | sort -u) > "$@"
+
+#	   | gawk '/^[$$][a-zA-Z][a-zA-Z][a-zA-Z]*/ \
+#	            || /^[a-zA-Z][a-zA-Z][a-zA-Z][$$]/ \
+#	            || /^[a-zA-Z][a-zA-Z][$$]/ { print }' \
 
 FORCE:
