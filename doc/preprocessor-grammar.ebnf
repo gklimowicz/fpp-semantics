@@ -2,40 +2,40 @@
 ws
     = whitespace ;
 
-(* Some white space is *)
+(* Some white space is optional *)
 ows
-    = { whitespace };
+    = { whitespace } ;
 
 whitespace
     = ? Space ?
-    | ? Hoizontal Tabulation ?
+    | ? Horizontal Tabulation ?
     | "\\" end of line
     | "/*" anything "*/"
-    | end of line;
+    | end of line ;
 
-pp file = { group part };
+pp file = { group part } ;
 
 group part
     = if section
     | control line
     | ows, "#", ows, non directive
-   | text line;
+    | fortran text line ;
 
-if section = if group, { elif group }, endif line;
+if section = if group, { elif group }, endif line ;
 
 if group
     = ows, "#", ows, "if", ws, pp expression, ows, end of line, { group part }
     | ows, "#", ows, "ifdef", ws, identifier, ows, end of line, { group part }
-    | ows, "#", ows, "ifndef", ws, identifier, ows, end of line, { group part };
+    | ows, "#", ows, "ifndef", ws, identifier, ows, end of line, { group part } ;
 
 elif group
-    = ows, "#", ows, "elif", ws, pp expression, ows, end of line, { group part };
+    = ows, "#", ows, "elif", ws, pp expression, ows, end of line, { group part } ;
 
 else group
-    = ows, "else", ows, end of line, { group part };
+    = ows, "else", ows, end of line, { group part } ;
 
 endif line
-    = ows, "#", ows, "endif", ows, end of line;
+    = ows, "#", ows, "endif", ows, end of line ;
 
 control line
     = include control line
@@ -44,32 +44,32 @@ control line
     | line control line
     | error control line
     | pragma control line
-    | ows, "#", ows, end of line;
+    | ows, "#", ows, end of line ;
 
 include control line
-    = ows, "#", ows, "include", ws, { pp token }, ows, end of line;
+    = ows, "#", ows, "include", ws, { pp token }, ows, end of line ;
 
 define id control line
-    = ows, "#", ows, "define", ws, identifier, ows, end of line;
-    = ows, "#", ows, "define", ws, identifier, ws, { pp-token }, end of line;
+    = ows, "#", ows, "define", ws, identifier, ows, end of line ;
+    | ows, "#", ows, "define", ws, identifier, ws, { pp-token }, end of line ;
 
 define pp function control line
     = ows, "#", ows, "define", ws, identifier,
       "(", [ ows, identifier ], { ows, ",", ows, identifier }, ows, ")",
-      ows, { pp tokens }, end of line;
+      ows, { pp tokens }, end of line ;
 
 line control line
     = ows, "#", ows, "line", ws, pp string, ws, pp number, end of line
-    | ows, "#", ows, "line", ws, pp number, end of line;
+    | ows, "#", ows, "line", ws, pp number, end of line ;
 
 error control line
-    = ows, "#", ows, "error", ws, pp string, end of line;
+    = ows, "#", ows, "error", ws, pp string, end of line ;
 
 pragma control line
-    = ows, "#", ows, "pragma", ws, anything, end of line;
+    = ows, "#", ows, "pragma", ws, anything, end of line ;
 
 identifier
-    = letter {letter | digit | "_" };
+    = letter {letter | digit | "_" } ;
 
 letter
     = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
@@ -79,13 +79,13 @@ letter
     | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H"
     | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P"
     | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X"
-    | "Y" | "Z";
+    | "Y" | "Z" ;
 
 digit
-    = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+    = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
 pp number
-    = digit { digit };
+    = digit { digit } ;
 
 pp token
     = identifier
@@ -93,64 +93,68 @@ pp token
     | c preprocessor token
     | int literal constant
     | real literal constant
-    | char literal constant;
+    | char literal constant ;
 
 fortran token
-    = "=" | "!" | "+" | "-" | "%" | "*" | "&" | "/" | "~" | "\\"
-    | "<" | "(" | ">" | ")" | "?" | "[" | "`" | "]"
-    | "^" | "|" | "," | "$" | "." | ":" | "@"
+    = "=" | "+" | "-" | "%" | "*" | "&" | "/" | "~" | "\\"
+    | "<" | ">" | "(" | ")" | "?" | "[" | "]" | "`"
+    | "|" | "," | "$" | "." | ":" | "@"
     | "==" | "/=" | "=>" | "**" | "//" | "<=" | ">="
     | "(/" | "/)" | "(?" | "?)"
     | ".", identifier, "."
 
 c preprocessor token
-    = "|" | "^" | "~" | "{" | "}"
-    | "&&" | "||" | "!=";
+    = "|" | "^" | "~" | "{" | "}" | "!"
+    | "&&" | "||" | "!="  | "<<" | ">>"
+    | "+=" | "-=" | "%=" | "*=" | "/=" | "^="
+    | "&=" | "|="
+    | "<<=" | ">>=" ;
 
 digit string
-    = digit, { digit };
+    = digit, { digit } ;
 
 int literal constant
-    = digit string, [ "_" kind param ];
+    = digit string, [ "_" kind param ] ;
 
 real literal constant
     = significand, [ exponent ], [ "_", kind param ]
-    | digit string, exponent, [ "_", kind param ];
+    | digit string, exponent, [ "_", kind param ] ;
 
 significand
     = digit string, "." [ digit string ]
-    | "." digit string;
+    | "." digit string ;
 
 exponent
-    = exponent letter, digit string;
+    = exponent letter, digit string ;
 
 exponent letter
-    = "D" | "E";
+    = "D" | "E" ;
 
 kind param
     = int literal constant
-    | identifier;
+    | identifier ;
 
 char literal constant
-    = [kind param "_" ], char string;
+    = [kind param "_" ], char string ;
 
 char string
-    = quote mark, { 2 * quote mark | representable char in quotes },
-      quote mark
-    | apostrophe, { 2 * apostrophe | representable char in apostrophes },
-      apostrophe;
+    = quote mark, { 2 * quote mark | representable char in quotes }, quote mark
+    | apostrophe, { 2 * apostrophe | representable char in apostrophes }, apostrophe ;
 
 representable char in quotes
-    = any character - quote mark;
+    = any character - quote mark ;
 
 representable char in apostrophes
-    = any character - apostrophe;
+    = any character - apostrophe ;
 
 pp expression
-    = ;
+    = (* TBD *) ;
 
 non directive
-    = ows, "#", ows,{ pp token };
+    = ows, "#", ows,{ pp token } ;
+
+fortran text line
+    = anything ;
 
 anything
-    = { any character};
+    = { any character} ;
