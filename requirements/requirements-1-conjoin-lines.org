@@ -143,5 +143,5 @@ In free-form input, an ~&~ character as the last character on a directive line i
 
 
 
-[[bibliographystyle:apalike]]
+[[bibliographystyle:alpha]]
 [[bibliography:references.bib]]

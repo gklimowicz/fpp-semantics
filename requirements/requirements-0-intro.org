@@ -268,7 +268,7 @@ Each phase will have a separate document that defines the required behavior to t
 
 
 
-[[bibliographystyle:apalike]]
+[[bibliographystyle:alpha]]
 [[bibliography:references.bib]]
 
 
