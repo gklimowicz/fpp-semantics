@@ -1,0 +1,6 @@
+#+startup: show3levels logredeadline
+
+# Documents and other note sources
+#+tags: article book email web-page
+
+#+tags: noexport

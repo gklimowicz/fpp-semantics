@@ -1,0 +1,31 @@
+:PROPERTIES:
+:ID: 20240907T195814.039000
+:END:
+#+author: Gary Klimowicz
+#+date: [2024-09-07 19:58 Sat]
+#+setupfile: setupfile.org
+#+filetags:
+
+#  LocalWords:  a
+
+* Summary
+
+
+| Prefix | Directive Name | Source                   |
+|--------+----------------+--------------------------|
+| dir$   | noinline       | AMD AOCC 4.2 User Manual |
+| dir$   | forceinline    | AMD AOCC 4.2 User Manual |
+| dir$   | unroll         | AMD AOCC 4.2 User Manual |
+| dir$   | nounroll       | AMD AOCC 4.2 User Manual |
+| dir$   | prefetch       | AMD AOCC 4.2 User Manual |
+| dir$   | novector       | AMD AOCC 4.2 User Manual |
+| dir$   | vector         | AMD AOCC 4.2 User Manual |
+| dir$   | vector always  | AMD AOCC 4.2 User Manual |
+| dir$   | freeform       | AMD AOCC 4.2 User Manual |
+| dir$   | nofreeform     | AMD AOCC 4.2 User Manual |
+|        |                |                          |
+
+
+* References
+
+* Links

@@ -1,0 +1,298 @@
+/*
+ * An EBNF grammar for the Fortran preprocessor
+ *
+ * The dialect of EBNF used is the W3C dialect as defined
+ * in Section 6 Notation in https://www.w3.org/TR/xml/.
+ *     - Rule names are in CamelCase.
+ *     - 'string'         matches the ``string'' (that contains no apostrophe).
+ *     - "string"         matches the ``string'' (that contains no quote mark).
+ *     - #xN              matches the ISO/IEC 10646 code point N.
+ *     - [characters]     matches any of the ``characters'' (with ranges).
+ *     - [^characters]    matches any characters not in ``characters''.
+ *     - stuff?           matches ``stuff'' or nothing (optional ``stuff''.
+ *     - stuff*           matches zero or more occurences of ``stuff''.
+ *     - stuff+           matches one or more occurences of ``stuff''.
+ *     - stuff-notstuff   matches ``stuff', unless it matches ``notstuff''.
+ *
+ * In general, the grammar rules follow Clause §6.10 of
+ * the C programming language standard (ISO/IEC 9899:2018, IDT).
+ *
+ * The grammar rules for expressions are modeled after
+ * the Fortran standard's expression rules in clause §10.1.2.
+ *
+ * Unlike either of these standards, the rules below
+ * explicitly show where whitespace is allowed or disallowed
+ * in the preprocessor directives. This allows the grammar
+ * to be free-standing without additional commentary about
+ * where whitespace is allowed or not (as in the C standard).
+ *
+ * The Fortran standard speaks of ``lines'', but doesn't
+ * really explain how lines are determined. To make line boundaries
+ * explicit in the grammar below, directive rules often end
+ * in the terminal symbol ``endOfLine''. (We assumes that a
+ * pass before the preprocessor, the Line Conjoiner, converts
+ * physical source text with continuations into logical lines.
+ * These logical lines act as if they end with the endOfLine token.)
+ *
+ * Where necessary, we add commentary before a rule
+ * to provide rationale for what might be in or left out.
+ */
+
+PreprocessingFile = GroupPart* .
+
+/* A GroupPart is some directive, or some Fortran text. */
+GroupPart = IfSection
+          | ControlLine
+          | Pound NonDirective
+          | FortranSourceLine .
+
+Pound = OptWS '#' OptWS .
+
+IfSection = IfGroup ElifGroup* ElseGroup? EndifLine .
+
+/* Preprocessor keywords are usually followed by whitespace. */
+IfGroup = Pound 'if' OptWS PreprocessorExpression OptWS endOfLine GroupPart*
+        | Pound 'ifdef' WS Identifier OptWS endOfLine GroupPart*
+        | Pound 'ifndef' WS Identifier OptWS endOfLine GroupPart* .
+
+
+ElifGroup = Pound 'elif' OptWS PPExpression OptWS endOfLine GroupPart* .
+
+ElseGroup = Pound 'else' OptWS endOfLine GroupPart* .
+
+EndifLine = Pound 'endif' OptWS endOfLine .
+
+ControlLine = IncludeControlLine
+            | DefineIdControlLine
+            | DefineFunctionControlLine
+            | LineControlLine
+            | ErrorControlLine
+            | WarningControlLine
+            | PragmaControlLine
+            | Pound endOfLine .
+
+/* May not need preprocessor token strings in real code? */
+IncludeControlLine = Pound 'include' WS CharLiteralString OptWS endOfLine .
+
+
+DefineIdControlLine = Pound 'define' WS Identifier OptWS  endOfLine
+                    | Pound 'define' WS Identifier WS ReplacementText endOfLine .
+
+/*
+ * Parameter lists on macro functions are comma-separated
+ * identifiers.
+ * WG5 recommends not supporting variable-length argument lists\
+ * at this time.
+ */
+DefineFunctionControlLine = Pound 'define' WS Identifier
+      '(' OptWS (Identifier (OptWS ',' OptWS Identifier)*)? OptWS ')'
+      OptWS ReplacementText endOfLine .
+
+LineControlLine = Pound 'line' WS CharLiteralConstant WS DigitString endOfLine
+                | Pound 'line' WS DigitString endOfLine .
+
+ErrorControlLine = Pound 'error' WS CharLiteralConstant endOfLine .
+WarningControlLine = Pound 'warning' WS CharLiteralConstant endOfLine .
+
+PragmaControlLine = Pound 'pragma' WS anything endOfLine .
+
+Identifier = Letter (Letter | Digit | '_')* .
+
+/*
+ * '#' and '##' operators can only appear in the replacement
+ * text in #define directives.
+ */
+ReplacementText = (PPToken | '#' | '##')*
+
+/* WG5: The preprocessor is case-sensitive */
+Letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h'
+       | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p'
+       | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x'
+       | 'y' | 'z'
+       | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H'
+       | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P'
+       | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X'
+       | 'Y' | 'Z' .
+
+Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
+
+
+PPToken = FortranToken
+        | CPPToken .
+
+/*
+ * This should include every token that a dumb tokenizer
+ * could recognize. There is no semantic proceesing,
+ * so we can't distinguish between keywords and identifiers.
+ * We alse recognize Fortran comments as tokens, as WG5
+ * recommends that they be passed through to the processor
+ * for handling comment-style pragmas (such as !omp$).
+ */
+FortranToken = '='  | '+'  | '-'  | '%'  | '*'  | '/'
+             | '<'  | '>'  | '('  | ')'  | '?'  | '['  | ']'
+             | '|'  | ','  | '$'  | '.'  | ':'  | '@'
+             | '==' | '**' | '<=' | '>=' | '::'
+             | '/=' | '=>' | '//' | '(/' | '/)' | '(?' | '?)'
+             | IntLiteralConstant ('_' KindParam)?
+             | RealLiteralConstant ('_' KindParam)?
+             | (KindParam '_')? CharLiteralConstant
+             | Identifier
+             | '.' Identifier '.'
+             | FortranBangComment .
+
+KindParam = DigitString
+          | Identifier .
+
+FortranBangComment = '!' Char* endOfLine .
+FortranFixedComment = [cC*] Char* endOfLine .
+
+/*
+ * Tokens that can appear in C preprocessor replacement text
+ * beyond what is allowed as Fortran tokens.
+ */
+CPPToken = '&'  | '|'  | '^' | '~' | '!'
+         | '&&' | '||' | '!=' .
+
+DigitString = Digit Digit* .
+
+/*
+ * In the preprocessor, we don't allow kind parameters
+ * on numbers. The preprocessor should perform arithmetic
+ * in the highest precision available in the processor.
+ *
+ * Integer and floating-point expressions should probably
+ * be evaluated as accurately as possible. This should have
+ * negligible impact on the preprocessor's performance.
+ * (How much arithmetic can you do without loops, recursion,
+ * or arrays?)
+ */
+IntLiteralConstant = DigitString .
+
+RealLiteralConstant = Significand Exponent?
+                    | DigitString Exponent .
+
+Significand = DigitString '.' DigitString?
+            | '.' DigitString .
+
+Exponent = ExponentLetter DigitString .
+
+ExponentLetter = 'd' | 'D' | 'e' | 'E' .
+
+CharLiteralConstant = CharString .
+
+/* Fortran strings do not support \ escape characters. */
+CharString = #x34 ((Char - #x34) | #x34 #x34)* #x34       /* double quote */
+           | #x39 ((Char - #x39) | #x39 #x39)* #x39 .     /* single quote */
+
+/* Following Fortran ISO/IEC 1539-1:2023 §10.1.2.
+ * modified for C-like syntax.
+ *
+ * INCITS and WG5 have agreed (so far) that the preprocessor
+ * should conform to a subset of the C preprocessor
+ * expression syntax. There has been no consensus
+ * to include the predefined Fortran operators.
+ */
+PPExpression = Level5Expr .
+
+/*
+ * TODO: Add logical expressions, .EQV. and .NEQV.:
+ *     There are no EquivOp operators (.EQV. or .NEQV.)
+ *     in the preprocessor. The preprocessor does not
+ *     have LOGICAL types or values.
+ */
+Level5Expr = EquivOperand .
+EquivOperand = (EquivOperand OrOp)? OrOperand .
+OrOperand = (OROperand AndOp)? AndOperand .
+AndOperand = NotOp? Level4Expr .
+
+AndOp = '&&'
+      |  '.AND.' .
+OrOp = '||'
+     |  '.OR.' .
+
+/*
+ * WG5: The '!' not operator appears in existing
+ * Fortran codes. It cannot be treated like the start
+ * of a comment in the preprocessor.
+ */
+NotOp = '!' .
+      |  '.NOT.' .
+
+Level4Expr = (Level3Expr RelOp)? Level3Expr .
+
+RelOp = '=' | '/=' | '==' | '!=' | '<' | '<=' | '>' | '>=' .
+
+Level3Expr = Level2Expr .
+
+Level2Expr = (Level2Expr? AddOp)? AddOperand .
+AddOperand = (addOperand MultOp)? MultOperand .
+MultOperand = Level1Expr (PowerOp  MultOperand)? .
+
+PowerOp = '**' .
+/* TODO: Add more C arithmetic and binary operators */
+MultOp = '*' | '/' .
+AddOp = '+' | '-' .
+
+Level1Expr = PrimaryExpr .
+
+PrimaryExpr = LiteralConstant
+            | FunctionReference
+            | '(' PPExpression ')'
+            | ConditionalExpression .
+
+LiteralConstant = IntLiteralConstant
+                | RealLiteralConstant
+                | CharLiteralConstant
+                | PPIdentifier .
+
+PPIdentifier = '__FILE__'
+             | '__LINE__'
+             | '__DATE__'
+             | '__TIME__'
+             | '__STDF__'
+             | '__STDF_VERSION__'
+             | '__VA_ARGS__'
+             | '__VA_OPT__'
+             | ProcessorDefinedPPIdentifier .
+
+ProcessorDefinedPPIdentifier = .
+
+NonDirective = Pound PPToken* .
+
+/* TODO: Rethink this in the presence of a tokenizer */
+FortranSourceLine = FortranFixedComment
+                  | OptWS FortranToken* OptWS endOfLine .
+
+(* Some white space is not optional *)
+WS = Whitespace+ .
+
+(* Some white space is optional *)
+OptWS = Whitespace* .
+
+/*
+ * Space and tab are allowed in Fortran.
+ * Line feed (#xA) is not mentioned, and is dealt with
+ * by the Line Conjoiner.
+ * Comments can separate tokens as if they were whitespace..
+ */
+Whitespace = ' '                      /* space */
+           | #x9                      /* horizontal tab */
+           | PreprocessorComment .
+
+
+/* CPP-style comments */
+PreprocessorComment = '/*' ((Char - '*') | ('*' (Char - '/')))* '*/' .
+
+/*
+ * The standard defines these characters as acceptable in
+ * comments and character constants. The processor may
+ * define additional characters as well.
+ */
+Char = #x9
+     | ' '
+     | [#x21-#x7e]
+     | ProcessorDefinedCharacter .
+
+ProcessorDefinedCharacter = .
+
+endOfLine = /* explicit end-of-line terminal symbol */ .

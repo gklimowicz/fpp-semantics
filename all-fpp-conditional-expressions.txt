@@ -6,6 +6,7 @@
 ! (defined COUP_OAS_PFL || defined COUP_OAS_ICON)
 ! (defined HAVE_FINDLOC) && ! (defined HAVE_COLLECTIVE_SUBROUTINES)
 ! (defined LINUX)
+! (defined __INTEL_COMPILER || _CRAYFTN)
 ! (defined(CODE_ANALYZE) && USE_PETSC && PARTICLES)
 ! (defined(HAVE_CLFFT) || defined(HAVE_CUDA))
 ! (defined(PROG_NUMRUNS_) || defined(DOUBLERUN_))
@@ -34,6 +35,7 @@
 ! defined _DOUBLE
 ! defined _io_lib
 ! defined _OPENMP
+! defined __INTEL_COMPILER || _CRAYFTN
 ! defined __MPI
 ! defined __NON_BLOCKING_SCATTER
 ! defined(CERNLIB_QFPGF77)
@@ -232,6 +234,7 @@
 !(WNO_ENABLED || getMeanMerged_ENABLED || setMeanMerged_ENABLED)
 !(XDD_ENABLED || XMD_ENABLED)
 !(ZLIB)
+!ASSERTIONS
 !BENCHM_ENABLED
 !Binary_ENABLED
 !CGR_ENABLED
@@ -242,6 +245,7 @@
 !D0_ENABLED
 !D1_ENABLED
 !D2_ENABLED
+!DC_ENABLED
 !DD_ENABLED
 !DEBUG
 !Default_ENABLED
@@ -514,6 +518,7 @@
 !defined TS_FIXED && defined SOLVE3D && defined NONLINEAR && (defined TS_DIF2 || defined TS_DIF4)
 !defined TS_HADVECTION_TL
 !defined W3_COAWST_MODEL
+!defined W3_CURSP
 !defined WDISS_ROELVINK && !defined WDISS_GAMMA && !defined WDISS_FRIC
 !defined WEAK_CONSTRAINT
 !defined WET_DRY && (defined WRITE_WATER && defined MASKING)
@@ -844,6 +849,7 @@
 !defined(HAVE_PNFFT)
 !defined(HAVE_SCALAPACK)
 !defined(HAVE_SVLS) && !defined(HAVE_LESLIB)
+!defined(HAVE_VERROU)
 !defined(HDFEOS)
 !defined(HIB_CRAY) && !defined(HIB_UNIX_CONVEX)
 !defined(HIB_UNIX_CONVEX)
@@ -926,6 +932,7 @@
 !defined(TETON_OPENMP_HAS_FORTRAN_INTERFACE)
 !defined(THIRD_DERIV)
 !defined(THORNADO_OMP_OL) && !defined(THORNADO_OACC)
+!defined(twoway) && !defined(mpas)
 !defined(UM_JULES)
 !defined(USE_ADIOS) && !defined(USE_ADIOS2)
 !defined(USE_CCL_MULTIPLY)
@@ -995,6 +1002,7 @@
 !defined(__INTEL_COMPILER) || __INTEL_COMPILER >= 1900 || __INTEL_COMPILER < 1800
 !defined(__INTEL_LLVM_COMPILER) && __INTEL_COMPILER >= 1910
 !defined(__INTEL_LLVM_COMPILER) && __INTEL_COMPILER >= 2021
+!defined(__INTEL_LLVM_COMPILER) || (20250000 <= __INTEL_LLVM_COMPILER)
 !defined(__LIBINT)
 !defined(__LIBXC)
 !defined(__LIBXSMM2) && (1 < __LIBXSMM || (1170000 < (LIBXSMM_CONFIG_VERSION_MAJOR*1000000 + LIBXSMM_CONFIG_VERSION_MINOR*10000 + LIBXSMM_CONFIG_VERSION_UPDATE*100 + LIBXSMM_CONFIG_VERSION_PATCH)))
@@ -1012,6 +1020,7 @@
 !defined(__PORTLAND_COMPILER)
 !defined(__SCALAPACK)
 !defined(__SHORT_FILE__)
+!defined(__SMEAGOL)
 !defined(__SPECFUNC_ARRAYS_XMM2R8_PF_CACHE_HINT__)
 !defined(__SPECFUNC_ARRAYS_YMM4R8_PF_CACHE_HINT__)
 !defined(__SPECFUNC_ARRAYS_ZMM8R8_PF_CACHE_HINT__)
@@ -1498,6 +1507,7 @@ ${xsmm_supported[n]}$
 ( defined RTMS_CRTM2 )
 ( defined RTMS_CRTM2EM )
 ( defined RTMS_TAU_OMEGA )
+( defined SEAICE_ALLOW_BOTTOMDRAG || defined SEAICE_ALLOW_SIDEDRAG )
 ( defined SEAICE_ALLOW_JFNK || defined SEAICE_ALLOW_KRYLOV )
 ( defined SEAICE_CGRID && ( defined SEAICE_ALLOW_JFNK || defined SEAICE_ALLOW_KRYLOV ) )
 ( defined SEAICE_CGRID && defined SEAICE_ALLOW_EVP )
@@ -2042,6 +2052,7 @@ ${xsmm_supported[n]}$
 (DCT_VERSION==dct_loop)
 (DCT_VERSION==dct_many)
 (DCT_VERSION==dft_loop)
+(DCT_VERSION==dft_many)
 (DEBUG)
 (DEFAULT_OUTPUT_PRECISION==dble)
 (DEFAULT_OUTPUT_PRECISION==sngl)
@@ -3128,6 +3139,7 @@ ${xsmm_supported[n]}$
 (dipole_debug >= 0)
 (DIVIDION_REPLACEMENT) == 0
 (DIVISION_REPLACEMENT) == 0
+(DO_ASSERTIONS)
 (DSIZE == 16)
 (DTYPE == 3) && !(MULTITHREADED)
 (DWORDSIZE == 8 && RWORDSIZE == 4)
@@ -3279,12 +3291,14 @@ ${xsmm_supported[n]}$
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 7))
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 9))
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 8))
+(PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 15)
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR > 6))
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 8))
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 9))
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 8)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 7)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<18)
+(PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<22)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<=4)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<=6)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<=7 && PETSC_VERSION_SUBMINOR<5)
@@ -3293,8 +3307,10 @@ ${xsmm_supported[n]}$
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>14) && !defined(PETSC_HAVE_MPI_F90MODULE_VISIBILITY)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>16)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>=18)
+(PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>=22)
 (PETSC_VERSION_MAJOR>=3) && (PETSC_VERSION_MINOR>6)
 (PETSC_VERSION_MINOR < 14)
+(PETSC_VERSION_RELEASE == 1)
 (PIO_DEFINED)
 (plasma_ == 0)
 (plasma_ > 0)
@@ -3807,6 +3823,7 @@ ${xsmm_supported[n]}$
 (__GNUC__) && defined(_WARNING_WORKAROUND_)
 (__GNUC__<4) || ((__GNUC__==4) && (__GNUC_MINOR__<8))
 (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+(__LIBXC && XC_MAJOR_VERSION < 5)
 (__PW_FPGA_SP && !(__PW_FPGA))
 (__PW_FPGA_SP && __PW_FPGA)
 (__RCS_CYLINDER_PF_CACHE_HINT__) == 1
@@ -3941,6 +3958,7 @@ Asis_ENABLED
 Asis_ENABLED && SB_ENABLED
 Asis_ENABLED && SL_ENABLED
 Asis_ENABLED && SR_ENABLED
+ASSERTIONS
 assign_ENABLED
 ASSIM_SCALING == 0
 ASSMBLY_HEAVISIDES
@@ -4230,6 +4248,7 @@ CPP_mach == CPP_win64_spmd || CPP_mach == CPP_p4win64_spmd || CPP_mach == CPP_p4
 CPP_mach == CPP_ymp || CPP_mach == CPP_c90 || CPP_mach == CPP_ymp_spmd || CPP_mach == CPP_t90 || CPP_mach == CPP_t90_i3e
 CPP_MPI
 CPRGNU && __GNUC_VERSION__ < 5
+CPVERSION_CHECK(1, 11, <=, LIBXSMM_CONFIG_VERSION_MAJOR, LIBXSMM_CONFIG_VERSION_MINOR)
 CPVERSION_CHECK(8, 3, >, __GNUC__, __GNUC_MINOR__)
 CPVERSION_CHECK(9, 5, >, __GNUC__, __GNUC_MINOR__) || defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)
 CRAY
@@ -4245,7 +4264,6 @@ CUDA_GPU
 CUDA_SHORT_VERSION <= 10
 CUDA_SHORT_VERSION <=10
 CUDA_VERSION < 11030
-CUDA_VERSION > 11010 && (__PGIC__ > 21 || (__PGIC__ == 21 && __PGIC_MINOR > 2))
 CUDA_VERSION >= 10010
 CUDA_VERSION >= 10020
 CUDB_ENABLED || CUUB_ENABLED
@@ -4340,7 +4358,6 @@ DAT==1
 DAT==2
 DAT==3
 DAV_METH == DAV_DPR
-DAV_METH == DAV_GJD
 DAV_METH == DAV_IIGD
 DBEN_run
 DBG_CHECK
@@ -4679,7 +4696,6 @@ defined (PATTERNT_TOP) || defined (PATTERNT_BOTTOM)
 defined (PC_LINUX1)
 defined (PC_NT1)
 defined (PERIODIC)
-defined (PETSC)
 defined (PETSCMG)
 defined (PHYSICS)
 defined (PIO)
@@ -4989,8 +5005,7 @@ defined (__INTEL_COMPILER) && defined (__MKL)
 defined (__INTEL_COMPILER) && defined (__TIMESTAMP__)
 defined (__INTEL_COMPILER) || defined (NAGFOR)
 defined (__INTEL_COMPILER) || defined (__PGI) || defined (NAGFOR)
-defined (__INTEL_LLVM_COMPILER) || (__NVCOMPILER)
-defined (__INTEL_LLVM_COMPILER) || defined (__NVCOMPILER)
+defined (__INTEL_LLVM_COMPILER) || defined (__NVCOMPILER) || defined (NAGFOR)
 defined (__LEGACY_PLUGINS)
 defined (__LIBINT)
 defined (__LIBXC)
@@ -5601,6 +5616,7 @@ defined FT_EIGENMODES || defined AFT_EIGENMODES
 defined FVW
 defined FZ_INIT_STACK_LEN
 defined FZ_USE_STACK
+defined GAHM_DEBUG
 defined GATHER_PMC_DATA && (GATHER_PMC_DATA) == 1
 defined GCC_ZERO_EMISSION
 defined GENERIC_DSTART
@@ -5672,6 +5688,7 @@ defined HAVE_MPI && (defined FC_INTEL || defined FC_GNU || defined FC_IBM)
 defined HAVE_MPI1
 defined HAVE_MPI1 && defined HAVE_MPI_IO
 defined HAVE_MPI2
+defined HAVE_MPI2 && defined HAVE_GPU_MPI
 defined HAVE_MPI2 && defined HAVE_MPI2_INPLACE
 defined HAVE_MPI2 && defined HAVE_MPI_IO
 defined HAVE_MPI2_INPLACE
@@ -6525,6 +6542,7 @@ defined VISC_3DCOEF && defined SOLVE3D
 defined VISC_GRID || defined DIFF_GRID
 defined W3_AIR_WAVES || defined W3_WAVES_OCEAN
 defined W3_B4B && defined W3_OMPG
+defined W3_CURSP
 defined W3_NCO && !defined W3_T
 defined W3_PDLIB && defined W3_DEBUGCOH
 defined W3_PDLIB && defined W3_DEBUGINIT
@@ -6785,7 +6803,6 @@ defined __AVX512PF__
 defined __AVX512VL__
 defined __BUILD_START_TIME__
 defined __CUDA
-defined __DBCSR_ACC
 defined __DEBUG_V_H_vs_SPHEROPOLE
 defined __ESSL
 defined __FDE_declare_future
@@ -6993,6 +7010,7 @@ defined( __HIP_PROFILING )
 defined( __INTEL_COMPILER )
 defined( __PGI) || defined (__FLANG)
 defined(ABSOFT) || defined(sysIRIX64)
+defined(AB_OUTPUT)
 defined(ACCELERATE)
 defined(ACCELERATOR_CUDA_C)
 defined(ACCELERATOR_CULA) || defined(ACCELERATOR_CUDA_C)
@@ -7932,7 +7950,7 @@ defined(EACCSD) || defined(IPCCSD)
 defined(ECCE)
 defined(ELMER_HAVE_MPIF_HEADER)
 defined(ELMER_HAVE_MPI_MODULE)
-defined(ENABLE_BUOYANCY) && defined(ENABLE_SMAGORINSKY)
+defined(ENABLE_BALANCE) && defined(ENABLE_BUOYANCY)
 defined(ENABLE_ESMF_ERR_LOGGING)
 defined(Enable_flush)
 defined(ENABLE_LS_OPENRSP)
@@ -8246,6 +8264,7 @@ defined(IPK4) && defined(LPK8)
 defined(IPK8)
 defined(IPK8) && defined(LPK8)
 defined(IRIX64)
+defined(isam) && defined(verbose_isam)
 defined(isam) && defined(verbose_isam_deg)
 defined(isam) || defined(verbose_isam)
 defined(ISNAN_INTRINSIC)
@@ -8387,6 +8406,7 @@ defined(MULTIPHASE)
 defined(MULTIPHASE) && defined(CAHNHILLIARD)
 defined(MULTIPROCESSOR)
 defined(MULTISCALAR_)
+defined(MULTI_IMAGE_SUPPORT)
 defined(MUMPS5)
 defined(MUMPS5) && defined(DNC)
 defined(MYREAL8) && !defined(WITHOUT_LINALG)
@@ -8412,9 +8432,9 @@ defined(NAVIERSTOKES) && (!(SPALARTALMARAS))
 defined(NAVIERSTOKES) && (SPALARTALMARAS)
 defined(NAVIERSTOKES) &(!(SPALARTALMARAS))
 defined(NAVIERSTOKES) || (defined(INCNS))
-defined(NAVIERSTOKES) || defined (INCNS)
 defined(NAVIERSTOKES) || defined(INCNS)
 defined(NAVIERSTOKES) || defined(INCNS) || defined(ACOUSTIC)
+defined(NAVIERSTOKES) || defined(INCNS) || defined(MULTIPHASE)
 defined(NAVIERSTOKES) || defined(INCNS) || defined(MULTIPHASE) || defined(ACOUSTIC)
 defined(NAVIERSTOKES) || defined(SPALARTALMARAS)
 defined(NDEBUG)
@@ -8879,6 +8899,7 @@ defined(VAX)
 defined(VECTOR_MODE)
 defined(VELOC_) || defined (ADVECT_)
 defined(VELOC_) || defined(ADVECT_)
+defined(verbose_isam) && defined(isam)
 defined(VERSION)
 defined(VESSEL)
 defined(VISUAL_CPLUSPLUS)
@@ -9046,6 +9067,7 @@ defined(_CRAY) || defined(sgi_mipspro)
 defined(_CRAYFTN)
 defined(_CRAYFTN) && FCKIT_HAVE_FINAL
 defined(_CRAYFTN) || defined(NAGFOR) || defined(__flang__)
+defined(_CRAYFTN) || defined(__GFORTRAN__) || defined(__INTEL_COMPILER) || defined(NAGFOR)
 defined(_CRAYFTN) || defined(__INTEL_COMPILER) || defined(NAGFOR) || defined(__flang__)
 defined(_CRAYT3E) && !defined(NO_BINSUM)
 defined(_CUDA)
@@ -9109,6 +9131,7 @@ defined(_LINUX)
 defined(_LONG_LINE_LENGTH)
 defined(_MANAGED)
 defined(_MIXED)
+defined(_MOLCAS_MPP_) && defined(_GA_)
 defined(_MPI)
 defined(_MPI) && defined(_PRESTART)
 defined(_MPI3)
@@ -9210,7 +9233,6 @@ defined(__CUDA)
 defined(__CUDA) && defined (_OPENACC)
 defined(__CUDA) && defined(_OPENACC)
 defined(__CUDA) && defined(__SYNC_NVPROF)
-defined(__CUDA) || defined(_OPENACC)
 defined(__CUDA) || defined(__CUDA_GNU)
 defined(__CUDA_DEBUG)
 defined(__CUFFT_ALL_XY_PLANES)
@@ -9457,6 +9479,7 @@ defined(__sgi) || defined(__aix) || defined(__SX) || defined(__APPLE__)
 defined(__sgi) || defined(__mips__)
 defined(__sinix) || defined(__sinix__) || defined(__SINIX__)
 defined(__SIRIUS)
+defined(__SMEAGOL)
 defined(__SPGLIB)
 defined(__SPLA) && defined(__OFFLOAD_GEMM)
 defined(__STATM_RESIDENT)
@@ -9498,6 +9521,7 @@ defined(__XML_STANDALONE)
 defined(__XSD)
 defined(__YUKAWA)
 DefIns_ENABLED
+DEFMET_ENABLED
 Def_ENABLED
 Def_ENABLED && (D1_ENABLED || (D0_ENABLED && SK_ENABLED))
 Def_ENABLED && D1_ENABLED && BLAS_ENABLED && DISPATCH_ENABLED
@@ -9606,7 +9630,6 @@ Exp_ENABLED
 F18_ENABLED
 F2018_LOCALITY
 F2023_LOCALITY
-F2023_LOCALITY || F2018_LOCALITY
 FACE_run
 false
 False_ENABLED
@@ -9702,6 +9725,7 @@ FV_ENABLED == 3
 FV_ENABLED >= 2
 FV_ENABLED==3
 FV_RECONSTRUCT
+GAHM_USE_FULL_DOMAIN
 GCC_VERSION < 70500
 GCC_VERSION < 90000
 GE0M==0
@@ -9753,6 +9777,7 @@ getCharSeq_ENABLED
 getCharUpper_ENABLED
 getCharVec_ENABLED
 getChoice_ENABLED
+getCholRand_ENABLED
 getCompact_ENABLED
 getComplementRange_D1_IK_ENABLED
 getComplement_D0_SK_ENABLED || setComplement_D0_SK_ENABLED
@@ -10228,6 +10253,7 @@ getTrimmedTZ_ENABLED
 getUnifCDF_ENABLED
 getUnifCDF_ENABLED || setUnifCDF_ENABLED
 getUnifEllLogPDF_ENABLED
+getUnifEllsLogPDF_ENABLED
 getUnifParLogPDF_ENABLED
 getUnifParRand_ENABLED
 getUnifRand_ENABLED
@@ -10530,6 +10556,7 @@ inrange_ENABLED && D0_D1_ENABLED
 INT16
 INT32
 INT64
+INTEL_COMPILER_ENABLED && DLL_ENABLED && (WINDOWS_ENABLED || DARWIN_ENABLED)
 INTEL_ENABLED
 INTEL_ENABLED && DD_ENABLED
 INTEL_ENABLED && II_ENABLED
@@ -10881,6 +10908,7 @@ MKL
 MMG_VERSION_LT(5,5)
 MMG_VERSION_LT(5,6)
 MMG_VERSION_LT(5,8)
+mmvue_typer_ENABLED
 MM_ENABLED
 MNPLD_ENABLED
 MNPLD_ENABLED || PWLN_ENABLED || MEAN_ENABLED || NEAR_ENABLED || NEXT_ENABLED || PREV_ENABLED
@@ -11547,6 +11575,7 @@ setChebExpan_ENABLED
 setChoice_ENABLED
 setChoice_ENABLED && Def_ENABLED
 setChoLow_ENABLED
+setCholRand_ENABLED
 setCompact_ENABLED
 setComplement_D1_SK_ENABLED
 setComplement_ENABLED
@@ -11734,16 +11763,22 @@ setMean_ENABLED && D2_ENABLED && DIM_ENABLED
 setMean_ENABLED && D2_ENABLED && WNO_ENABLED && DIM_ENABLED
 setMean_ENABLED && DIM_ENABLED
 setMean_ENABLED && XY_ENABLED
-setMember_ENABLED && D0_D1_ENABLED
-setMember_ENABLED && D1_D1_ENABLED
-setMember_ENABLED && D1_D2_ENABLED
-setMember_ENABLED && D2_D2_ENABLED
+setMember_ENABLED && D0_D1_ENABLED && Cng_ENABLED
+setMember_ENABLED && D0_D1_ENABLED && Def_ENABLED
+setMember_ENABLED && D1_D1_ENABLED && Cng_ENABLED
+setMember_ENABLED && D1_D1_ENABLED && Def_ENABLED
+setMember_ENABLED && D1_D2_ENABLED && Cng_ENABLED
+setMember_ENABLED && D1_D2_ENABLED && Def_ENABLED
+setMember_ENABLED && D2_D2_ENABLED && Cng_ENABLED
+setMember_ENABLED && D2_D2_ENABLED && Def_ENABLED
 setMerged_ENABLED
 setMinBrent_ENABLED
 setMinMaxVal_ENABLED && D0_ENABLED && SK_ENABLED
 setMinMaxVal_ENABLED && D1_ENABLED
 setMinMax_ENABLED
 setMinPowell_ENABLED
+setMMUR_ENABLED && D1_ENABLED
+setMMUR_ENABLED && D2_ENABLED
 setMultiNormRand_ENABLED
 setNAN_ENABLED
 setNegExpCDF_ENABLED
@@ -12183,6 +12218,7 @@ SOLVERB==2
 SOLVERDUST==0
 SOLVERDUST==1
 SOLVERDUST==2
+SOLVERDUST==3
 SOLVERhydro
 Sorted_ENABLED
 SPACE_2D
@@ -12218,6 +12254,7 @@ ssmax_z3
 ST42
 Standard_ENABLED
 STAT
+STEP
 Step_ENABLED
 Step_ENABLED && (getRange_ENABLED || setRange_ENABLED)
 stop_typer_ENABLED

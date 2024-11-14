@@ -1,0 +1,36 @@
+:PROPERTIES:
+:ID: 20240825T141127.300000
+:END:
+#+author: Gary Klimowicz
+#+date: [2024-08-25 14:11 Sun]
+#+setupfile: setupfile.org
+#+filetags:
+#+options: toc:nil H:5
+#+latex_header: \usepackage{titlesec}
+#+latex_header: \usepackage{parskip}
+#+latex_header: \usepackage{hyperref}
+#+latex_header: \usepackage{textgreek}
+#+latex_header: \hypersetup{linktoc = all, colorlinks = true, urlcolor = blue, citecolor = blue, linkcolor = blue}
+#+latex_header: \titlespacing{\subsection}{0pt}{*4}{*1.5}
+#+latex_header: \titlespacing{\subsubsection}{0pt}{*4}{*1.5}
+#+latex_header: \parindent=0pt
+#+latex_header: \usepackage{tikz}
+#+latex_header: \usetikzlibrary{quotes}
+
+#  LocalWords:  a
+
+* Summary
+\begin{tikzpicture}
+\draw circle (0.5);
+\draw (-0.5,0) to ["text"] (0.5,0);
+\end{tikzpicture}
+
+
+* References
+
+
+* Links
+
+* Ignore                                                             :noexport:
+bibliographystyle:unsrt
+[[bibliography:~/Documents/biblio/references.bib]]

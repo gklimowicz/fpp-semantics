@@ -1,0 +1,45 @@
+#+startup: show3levels logredeadline
+
+# Events
+#+tags: class conference meeting presentation show
+
+# Documents and other note sources
+#+tags: article book email j3-paper journal log movie tv video web-page
+
+# Zettelkasten note types
+#+tags: cogmap list project quote realm recipe
+
+# J3 meetings
+#+tags: #152 #213 #214 #215 #216 #217 #218 #219 #220 #221 #222 #223 #224 #225 #226
+#+tags: #227 #228 #229 #230 #231 #232 #233 #234 #235
+
+# WG5 meetings
+#+tags: #42 #43 #44
+
+# Fortran standards
+#+tags: F1966 F1977 F1990 F1995 F2003 F2008 F2018 F2023 F202y
+
+# Fortran concepts
+#+tags: array-constructor assumed-rank assumed-shape asynchronous bind block
+#+tags: c-f-pointer coindex
+#+tags: do-concurrent
+#+tags: enum enumeration exceptions explicit-shaped finalization fixed-form fpp free-form
+#+tags: generics i/o images interface interp
+#+tags: f-null optional-arg preprocessor scoping submodule template types
+
+#+tags: i-co-scan i-ieee-scalb i-mold i-scan i-shape
+
+# Languages
+#+tags: ada agda c coq cpp fortran go haskell javascript lisp moa prolog scala scheme snobol
+
+# Organizations
+#+tags: act restaurant flang fortran-lang lfortran INCITS J3 PL22 SC22 WG5 WG9 WG14 WG21 WG23
+
+# Cuisines
+#+tags: american breakfast chinese italian japanese mexican pizza vegetarian vegan
+
+# Topics
+#+tags: agenda constructivism crime dynamics emacs health humor ip music
+#+tags: semantics statics travel unicode
+#+tags: vellvm volatile writing zettelkasten
+#+tags: noexport wordpress

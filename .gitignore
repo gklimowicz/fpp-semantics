@@ -24,6 +24,7 @@ stats.xlsx
 .DS_Store
 
 **/*.aux
+**/*.bbl
 **/*.fdb_latexmk
 **/*.fls
 **/*.log
