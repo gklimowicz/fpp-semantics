@@ -31,9 +31,9 @@ This paper lists the requirements and how JoR came to them.
 
 The first section, ``Guiding Principles'', describes the value system we use to evaluate which requirements are most import (or unimportant) for the Fortran preprocessor.
 
-The second section, ``On Fortran source form'', describes the peculiarities of Fortran source, C source, C preprocessor (CPP) directives, and which conventions we will follow for FPP.
+The second section, ``On Fortran source form'', describes the peculiarities of Fortran source, C source, C preprocessor (CPP) directives, and which conventions we will follow for FPP. Many of the differences between CPP and FPP arise from these peculiarities.
 
-The third section describes phases of the translation process that lead up to preprocessing and subsequent processing by ``the processor'' itself.
+The third section describes phases of the translation process that lead up to preprocessing and subsequent processing by ``the processor'' itself. As we have these phase out, the phase for directive execution in FPP should be identical to CPP.
 
 Finally, we identify next steps.
 
@@ -75,12 +75,14 @@ Many programs depend on some preprocessing capability. Most of these rely on a p
 
 The main goal of this project is to promote the portability of programs that rely on CPP-like behavior by standardizing the semantics of a Fortran preprocessor and making it a mandatory feature of standards-complying processors.
 
+Fortran supports separate compilation and use of modules. The use of the preprocessor in C for importing library interfaces is not really needed in Fortran. (Fortran programmers use the =MODULE= and =USE= statements to import these interfaces.)
+
 
 ** Be ``Fortran-aware''
 Fortran is not C, and has certain issues in its source form that require special attention [[cite:&klimowicz-2024-fortran-awareness]] that aren't needed in CPP.
 - Fortran has two distinct source forms: fixed-form and free-form. FPP should support both.
 - Some Fortran tokens and C tokens have different meaning: ~//~ means concatenation in Fortran, but introduces comments in C; ~!~ is the `not' operator in C, but introduces comments in Fortran.
-- There are source statements in Fortran where we don't necessarily want macro expansion, such as in the ~IMPLICIT~ /implicit-spec-list/ ([[cite:&iso-iec-jtc1-2023-prog-lang-fortran]] §8.7) and in the ~FORMAT~ /format-items/ (§13.3).
+- There are source statements in Fortran where we may not want macro expansion, such as in the ~IMPLICIT~ /implicit-spec-list/ ([[cite:&iso-iec-jtc1-2023-prog-lang-fortran]] [F2023§8.7 IMPLICIT statement]) and in the ~FORMAT~ /format-items/ ([F2023§13.3R1303 format-items]).
 
 
 ** Support a meaningful subset of CPP
@@ -199,9 +201,11 @@ We do the same for Fortran. For FPP, though, we are only concerned with phases t
 
 
 ** Phase 1: Remove continuations
-For fixed-form source, follow the column-6 conventions to produce a sequence of logical lines.
+For fixed-form Fortran source, follow the column-6 conventions to produce a sequence of logical lines.
 
-For free-form source, follow the ~&~ conventions to produce a sequence of logical lines.
+For free-form Fortran source, follow the ~&~ conventions to produce a sequence of logical lines.
+
+In either form, remove continuations from directive lines (those lines beginning with ~#~).
 
 
 ** Phase 2: Translate comment directives
@@ -223,7 +227,7 @@ The output from Phase 3 is converted to preprocessor tokens according to the rul
 ** Phase 5: Execute preprocessor directives
 Preprocessing directives in the output from Phase 4 are executed. As in C, the execution of preprocessor directives and interpretation of macro definition and expansion is a /token-replacement/ process, not a /text replacement/ process.
 
-Macros are expanded in directives and Fortran source.
+Macros are expanded in Fortran source.
 
 Source code is included, excluded, or modified based on the directives.
 
