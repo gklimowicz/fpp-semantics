@@ -28,6 +28,14 @@ INCITS/Fortran has talked several times in Plenary, and the JoR subgroup has met
 
 This paper lists the requirements and syntax for Phase 0 of the preprocessor, the Line Conjoiner.
 
+The Line Conjoiner phase eliminates all continuation lines in the input source files.
+
+For preprocessor directive lines (beginning with ~#~) it removes the ~\~ ~new-line~ line continuations.
+
+For fixed-form Fortran source, it removes continuations introduced with characters in column 6.
+
+For free-form Fortran source, it removes continuations introduced by ~&~ at the end of line.
+
 # #+include: "./requirements-0-intro.org::*Citing standards and /de facto/ standards"
 
 
@@ -40,68 +48,111 @@ This paper lists the requirements and syntax for Phase 0 of the preprocessor, th
 
 
 
-* Phase 1, Line Conjoiner requirements
+* Line Conjoiner requirements
 :PROPERTIES:
-:COLUMNS:  %30reqid(ID) %6status(Status) %10TAGS(Export) %30csource(Sources) %60ITEM(Description)
+:COLUMNS:  %30reqid(ID) %6status(Status) %10TAGS(Export) %30csources(Sources) %60ITEM(Description)
 :END:
 
 
 ** Directives
+*** Directive lines have ~#~ as the first non-blank character on the line
+:PROPERTIES:
+:reqid: [dir-firstnonblank-char-pound]
+:status: TBD
+:sources: [C§5.1.1.2¶1·2 Translation phases], [G14§1.4¶4 The preprocessing language]
+:END:
+
+Rationale: [C§6.10¶2 Description].
+
+
+*** Whitespace is allowed before the ~#~
+:PROPERTIES:
+:reqid: [dir-whitespace-before-pound]
+:status: TBD
+:sources: [C2024§6.10¶2 Description], [G14§1.4¶4 The preprocessing language],
+:END:
+
+
+*** Whitespace is allowed after the ~#~
+:PROPERTIES:
+:reqid: [dir-whitespace-after-pound]
+:status: TBD
+:sources: [G14§1.4¶4 The preprocessing language],
+:END:
+
+
+*** 4095 characters allowed in a directive logical line
+:PROPERTIES:
+:reqid: [logical-line-length-4095]
+:status: TBD
+:sources: [C2024§5.2.4.1¶1•15 4095 characters in a logical source line], [G14§11.2¶2•7 Number of characters on a logical source line],
+:END:
+
 
 *** Directive lines are not bound by fixed-form conventions
+Rationale: The preprocessor directives are a sub-language within the Fortran standard. In accordance with CPP, these lines are neither fixed-form nor free-form Fortran.
 
-**** Column 6 in a directive line does not mark a continuation
+**** in a fixed-form Fortran source file, Column 6 in a directive line does not mark a directive continuation
 :PROPERTIES:
 :reqid: [dir-column-6-not-cont]
 :status: TBD
-:source: [Flpp§]
-:references: [C§5.1.1.2¶1·2 Translation phases]
+:sources: [C§5.1.1.2¶1·2 Translation phases], [G14§]
 :END:
+
+Rationale: preprocessor lines are not Fortran source lines.
+
 
 *** Recognize C-style ~\new-line~ line continuations in directives
 :PROPERTIES:
 :reqid: [c-backslash-dir]
 :status: TBD
-:source: ]
-:references: [C§5.1.1.2¶1·2 Translation phases], [Flpp§1·3 Fixed form right margin clipping
+:sources: [C§5.1.1.2¶1·2 Translation phases], [G14§1·3 Fixed form right margin clipping]
 :END:
 
 In a directive line fixed-form and free-from source code, delete a backslash ~\~ immediately followed by a new-line character. The following line continues the directive line.
 
-From The C standard:
+Rationale: From The C standard:
 #+begin_quote
 Each instance of a backslash character (\) immediately followed by a new-line character is deleted, splicing physical source lines to form logical source lines. Only the last backslash on any physical source line shall be eligible for being part of such a splice. A source file that is not empty shall end in a new-line character, which shall not be immediately preceded by a backslash character before any such splicing takes place.
 #+end_quote
 
-*** Comment lines in definitions with continuation lines
+Such lines already appear in our corpus of Fortran source programs.
+
+
+*** No comment lines in definitions with continuation lines
 :PROPERTIES:
 :reqid: [comment-definition-cont]
 :status: TBD
-:source: [Flpp§], [C§6.10 Preprocessing directives]
+:sources: [G14§], [C§6.10 Preprocessing directives]
 :END:
+
+Fortran source lines with continuations may have comment liens between the continuation lines.
+
+CPP allows comments an the same line as preprocessor directives. FPP will allow the same.
 
 
 ** Fixed form Fortran
-*** Remove Fortran line 6 continuation in fixed-form Fortran text
+*** A ~#~ sign in column 6 is not recognized as introducing a directive line.
 :PROPERTIES:
-:reqid: [fortran-cont-fixed-6]
+:reqid: [fortran-cont-fixed-6-not-directive]
 :status: TBD
-:source: che1
+:sources: che1
 :END:
 
-In fixed-form input, a character in column 6 that is not blank or the digit zero continues the line with the previous line, even if the previous line is a directive line, or the continuation of a directive line.
+In fixed-form input, a character in column 6 that is not blank or the digit zero continues the line with the previous line.
 
+Rationale: The corpus of example programs has instances where column 6 contains ~#~, but only to mark continuation lines. The corpus does not have an example with ~#~ in column 6 for a preprocessor directive.
 
 
 *** Identifier tokens are not broken by fixed-form line continuations
 :PROPERTIES:
 :reqid: [identifiers-span-continuations]
 :status: TBD
-:source: jor4, [F2023§6.2.2C601]
+:sources: [F2023§6.2.2C601], jor4
 :tests: [Flpp pp005.F KWM split across continuation, implicit padding], [Flpp pp006.F ditto, but with intervening *comment line]
 :END:
 
-In fixed-form, there are only 66 characters available for statement text (columns 7-72). The maximum length of an identifier is 63 characters. It is not practical to have identifiers end at a fixed-form line boundary at column 72.
+Rationale: In fixed-form, there are only 66 characters available for statement text (columns 7-72). The maximum length of an identifier is 63 characters. It is not practical to have identifiers end at a fixed-form line boundary at column 72.
 
 
 ** Free form Fortran
@@ -109,7 +160,7 @@ In fixed-form, there are only 66 characters available for statement text (column
 :PROPERTIES:
 :reqid: [fortran-cont-free-amp]
 :status: TBD
-:source: che1, [C§6.10 Preprocessing directives]
+:sources: che1, [C§6.10 Preprocessing directives]
 :END:
 
 In free-form input, an ~&~ character as the last character on a directive line indicates the directive continues on the next line. The handling of the continuation is as described in [F2023§6.3.2.4].
@@ -119,15 +170,17 @@ In free-form input, an ~&~ character as the last character on a directive line i
 :PROPERTIES:
 :reqid: [fortran-cont-free-amp-comment]
 :status: TBD
-:source:   che1, [C§6.10 Preprocessing directives], [F2023§6.3.2.3 Free form commentary], [F2023§6.3.2.4 Free form statement continuation]
+:sources:   che1, [C§6.10 Preprocessing directives], [F2023§6.3.2.3 Free form commentary], [F2023§6.3.2.4 Free form statement continuation]
 :END:
 
 In free-form input, an ~&~ character as the last character on a directive line indicates the directive continues on the next line. The handling of the continuation is as described in [F2023§6.3.2.4].
+
+
 *** Remove leading spaces before ~&~ in Fortran line continuation in free form
 :PROPERTIES:
 :REQID:    [fortran-cont-free-rm-lead-amp]
 :status: TBD
-:source: che1, [C§6.10 Preprocessing directives]
+:sources: che1, [C§6.10 Preprocessing directives]
 :END:
 
 In free-form input, an ~&~ character as the last character on a directive line indicates the directive continues on the next  line. When the first non-blank character on the next line is also an ~&~, the characters between the ampersands are deleted.
@@ -141,7 +194,104 @@ In free-form input, an ~&~ character as the last character on a directive line i
 
 *** Are any comment-based directives sandwiched between continuation lines?
 
+* Syntax
+
+** Fixed-Form source lines
+#+begin_src lisp
+; Fortran file syntax for the Line Conjoiner
+
+; The input to the Line Conjoiner is a sequence of
+; fixed-form Fortran lines or directives
+; or a sequence of free-form Fortran lines and directives.
+; A file contains either fixed-form or free-form lines, not both.
+
+InputFile = { FortranFixedSourceLine | DirectiveLine }*
+          | { FortranFreeFormSourceLine | DirectiveLine }* .
+
+;;;; Fixed Form
+
+; A fixed-source Fortran line is either a comment or
+; something that looks like a Fortran statement.
+FortranFixedSourceLine = FixedCommentLine | FixedFortranStatementLine .
+
+; Fortran fixed-form comment lines begin with a "C" or "c"
+; or "*" in column 1. They can also begin with arbitrary whitespace
+; followed by "!". They can contain any character available.
+; Note that we explicitly call out the end-of-line as the
+; special ?EOL? marker. The Fortran standard does not
+; explicitly state how lines end (e.g., with "\n").
+FixedCommentLine = ( "C" | "c" | "*" ) Anything ?EOL?
+                 | OptWS "!" Anything ?EOL? .
+
+; A Fortran fixed-form statement contains an optional line number
+; in columns 1-5, a space in column 6, and the Fortran statement text.
+; This initial line can be followed by continuation lines, or comments that
+; might be interspersed between the continuation lines.
+FixedFortranStatement = FixedFortranLineStart
+
+FixedFortranLineLstart = FixedContinuationLine FixedContinuationLineMess .
+
+FixedContinuationLineMess = (FixedCommentLine* FixedContinuationLine)* .
+
+FixedContinuationLine = FixedStatementNumber FortranChar* EOL .
+
+; Syntactically, a fixed-form statement number is any set of digits in
+; column 1-5, ignoring whitespace in determining the statement label.
+; Semantically, the number zero is not allowed to be a statement number.
+; The Conjoiner doesn't care.
+FixedStatementNumber = 5*5 (WS | "[0-9]") .
 
 
-[[bibliographystyle:alpha]]
-[[bibliography:references.bib]]
+
+;;;; Free-Form
+
+; Free-form source lines contain an optional statement number
+; followed by statement text. Comments can appear up to the end of the line.
+; We have to be a bit more careful here that in fixed-form, as there
+; may be strings that we have to scan correctly to avoid misinterpreting comments.
+; Continuation Lines end in "&", which may be followed by a comment.
+; Continued lines may begin with whitespace followed by "&", which is
+; stripped by the Conjoiner.
+FortranFreeFormSourceLine = [ StatementNumber ] FreeSourceFragment [ FreeComment ] EOL
+                          | [ StatementNumber ] ( FreeSourceFragment "&" [ Comment ] EOL)* FreeSourceFragment .
+
+StatementNumber = 1*5 Digit .
+FreeSourceFragment = ( FortranString | FortranChar - "[&'\"]" )* .
+
+; Fortran strings are delimited with either single of double quotes.
+; Doubled delimiters are allowed, representing a single delimiter.
+FortranString = "\"" ((AnyChar - "\"") | "\"\"") * "\""
+              | "'"  ((AnyChar - "'")  | "''")* "'" .
+
+
+
+;;;; Directives
+
+; A directive begins with a "#" preceded by optional whitespace.
+; and continues through escaped new-line characters until
+; a line with a non-escaped new-line character.
+DirectiveLine = optWS "#" DirectiveMaybeContinued .
+DirectiveMaybeContinued = { FortranChar* "\\" ?EOL? }*  DirectiveFinalLine .
+DirectiveFinalLine = FortranChar* ?EOL? .
+
+; The Fortran character set is any whitespace, alphanumeric character,
+; or one of the special symbols below. [F2023\S6.1 Processor character set].
+; This applies to both fixed-form and free-form source.
+FortranChar = WS | AlphaNumericChar | "[=+-*/()[]{},.:;!%&~<>?'`^|$#@]" .
+AlphaNumericChar = "[A-Za-z_]" | DigitChar .
+DigitChar = "[0-9]" .
+
+; Whitespace in Fortran is either a space character or tab character.
+WS = ( ?space? | ?tab? ) .
+
+; Optional whitespace is zero or more occurrences of whitespace.
+OptWS = WS* .
+
+; Some contexts allow any character. We represent this by
+; the characters of extended ASCII. The Fortran standard
+; does not mention anything like Unicode characters.
+Anything = "[\000-\377]" .
+#+end_src
+
+# [[bibliographystyle:alpha]]
+# [[bibliography:references.bib]]
