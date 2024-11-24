@@ -1,7 +1,7 @@
 :PROPERTIES:
-:ID:       20231024T112734.315362
+:ID:       20241123T191017.226413
 :END:
-#+title: Fortran Preprocessor High-Level Requirements
+#+title: FPP Phase 2 --- Handle Comments
 #+author: INCITS/Fortran JoR
 #+date: [2023-10-24 Tue 11:27]
 #+options: toc:nil
@@ -24,168 +24,14 @@
 
 
 * Introduction
-INCITS/Fortran has talked several times in Plenary, and the JoR subgroup has met several times, to lay down formal requirements for the proposed Fortran preprocessor (FPP) for Fortran 202y (presumably 2028).
-
-This paper lists the requirements and how JoR came to them.
-
-The first section, ``Guiding Principles'', describes the value system we use to evaluate which requirements are most import (or unimportant) for the Fortran preprocessor.
-
-The second section, ``On Fortran source form'', describes the peculiarities of Fortran source, C source, C preprocessor (CPP) directives, and which conventions we will follow for FPP.
-
-The third section describes phases of the translation process that lead up to preprocessing and subesequent processing by ``the processor'' itself.
-
-The last section details individual requirements.
-
-
-** Citing standards and /de facto/ standards
-For brevity we write references to the Fortran 2023 standard [[cite:&iso-iec-jtc1-2023-prog-lang-fortran]] as follows:
-    + =[F2023=,
-    + the section marker =§= and the clause number, then one of
-        - =R= followed by a rule number, or
-        - =C= followed by a constraint number, or
-        - =¶= followed by the paragraph number,  and (optionally) a bullet symbol =·= and the bullet number or letter
-    + (optionally) the section title for redundant context,
-    + a closing square bracket =]=.
-
-For example, =[F2023§13.2.1R1301 FORMAT statement]= refers to subclause 13.2.1 (=`FORMAT statement=') of the Fortran 2023 standard, rule 1301.
-
-We follow a similar convention for the 2018 C programming language standard [[cite:&iso-iec-2018-prog-lang-c]], starting with =[C2018=. So, =[C2018§5.1.1.2¶1·2 Translation phases]= refers to subclause 5.1.1.2 (``Translation phases'') of the C 2018 standard, paragraph 1, second bullet point.
-
-Likewise, for the GNUCC ``The C Preprocessor'' manual [[cite:&stallman-2024-c-preprocessor]], starting with =[G14=. So, =[G14§3.3¶2 Macro Arguments]= refers to paragraph 2 of section 3.3 (``Macro Arguments'') of version 13 of the GNU CPP reference.
-
-And for LLVM Flang's ``Fortran Preprocessing'' [[https://github.com/llvm/llvm-project/blob/main/flang/docs/Preprocessing.md][Preprocessing.md]] [[cite:&llvm-2024-flang-fortran-preproc]], starting with =Flpp=, and counting section numbers by level 2 headings. So, =[Flpp§2·1 Invoked macro names can straddle]= refers to the first bullet in the second section (``Behavior that is not consistent over all extant compilers but which probably should be uncontroversial'').
-
-
-* Guiding principles
-We start by deciding what is important and what is less important (or unimportant) up front for FPP. Guiding principles provide a /value system/ for evaluating technical alternatives.
-
-** Promote portability
-Many programs depend on some preprocessing capability. Most of these rely on a preprocessor that is, or behave much like, the C preprocessor (CPP) [[cite:&iso-iec-1999-prog-lang-c]]. Many of these Fortran preprocessors support different versions of the C preprocessor specification, or exhibit different behavior from each other.
-
-The main goal of this project is to promote the portability of programs that rely on CPP-like behavior by standardizing the semantics of a Fortran preprocessor and making it a mandatory feature of standards-complying processors.
-
-
-** Be ``Fortran-aware''
-Fortran is not C, and has certain issues in its source form that require special attention [[cite:&klimowicz-2024-fortran-awareness]] that aren't needed in CPP.
-- Fortran has two distinct source forms: fixed-form and free-form. FPP should support both.
-- Some Fortran tokens and C tokens have different meaning: =//= means concatenation in Fortran, but introduces comments in C; =!= is the `not' operator in C, but introduces comments in Fortran.
-- There are source statements in Fortran where we don't necessarily want macro expansion, such as in the =IMPLICIT= /implicit-spec-list/ ([[cite:&iso-iec-jtc1-2023-prog-lang-fortran]] §8.7) and in the =FORMAT= /format-items/ (§13.3).
-
-
-** Support a meaningful subset of CPP
-Deliver a viable product. Support the subset of CPP that used by existing Fortran projects. Add the minimum features necessary to support current and near-future use.
-
-Full compatibility with CPP [[cite:&iso-iec-2018-prog-lang-c]] §6.10 is not required.
-
-When Fortran conventions (such as case-insensitivity) conflict with CPP conventions, lean towards CPP.
-
-Accommodate existing use of CPP-like Fortran preprocessor when there is consensus among the existing processor implementations.
+TK
 
 
 * High-level requirements
 At a certain altitude, FPP will be an unholy marriage of  some of the syntax and semantics from the C standard, and some of the syntax an semantics from the Fortran standard.
 
-** CPP conventions we should follow
-As existing projects use CPP, or a variant of it, FPP should exhibit the following behaviors. [[cite:&iso-iec-2018-prog-lang-c]].
-*** Whitespace is significant in delimiting tokens
-Rationale: In CPP, the space character (hex 0x20), the tab character, and new-line delimit tokens.
 
-*** Case-sensitivity in directive names and token names
-Rationale: Macro variable names and directive commands are case-sensitive in CPP. The identifiers =i= and =I= are distinct. (In Fortran, identifiers are not case-sensitive:  =i= and =I= are the same identifier.) We are aware of at least one large application that relies on preprocessor identifiers being distinct that differ only in case.
-
-*** Line continuation with backslash new-line in directives
-The C convention is that the sequence of a backslash character (=\=) immediately followed by a new-line character is deleted.
-
-*** C expressions in =#if= and =#elif= directives
-C has no built-in Boolean type, so the expressions in conditional directives are C integer expressions. An integer zero value represents ``false'', and any non-zero value represents ``true''. (Fortran supports =LOGICAL= values as a separate type.)
-*** =/*= ... =*/= comments in directives
-CPP recognizes C-style comments. (Fortran introduces comments with exclamation marks (=!=).)
-*** =&= and =&&= operators in directives
-CPP has operators =&= and =&&= on integer expressions. (Fortran free-form lines use =&= at the end of a line to signal continuation.
-*** C tokens allowed in directives
-Recognize C tokens in macro definition and conditional directives.
-
-
-
-** CPP conventions we should /not/ follow
-FPP should not adopt the following behaviors from CPP.
-*** =//= introducing comments in directives
-Rationale: The =//= operator is the Fortran character concatenation operator, and is a valid token in FPP.
-
-
-** Fortran conventions we should follow
-*** Macro expansion in fixed-form Fortran
-Rationale: Fortran projects today still exist in the obsolescent fixed-form [[cite:&iso-iec-jtc1-2023-prog-lang-fortran]]. Roughly half the projects and lines of code we have collected so far, in fact contain fixed-form Fortran [[cite:&klimowicz-2024-preproc-direct-exist-fortran-program]].
-
-FPP must behave reasonably on this large body of code, but also must bend to conventions used by CPP.
-
-
-** Fortran conventions we should /not/ follow
-*** In fixed-form Fortran, blanks are not significant for determining token boundaries
-Rationale: CPP  treats blanks and comments as significant for determining token boundaries (they are significant up until translation phase 7 [C2018§5.1.1.2¶8·7]). We follow the CPP convention for tokenizing identifiers. Existing program surely rely on this, but we haven't analyzed this yet in the corpus of existing programs.
-
-*** =!= comments in directives
-Rationale: =!= introduces a comment in Fortran. Unfortunately, this is also the C `not' operator. To allow conditions with the C =!= not operator (such as below), FPP must treat =!= as the C `not' operator.
-#+begin_src c
-! defined(MY_FAVORITE_ID)
-#+end_src
-
-
-** Features to decide or revisit
-*** Fortran operators in directives
-For FPP directives, we should use C-style expressions, not Fortran expressions. Operators such as ===, =/==, =.AND.=, =.OR.=, =.NOT=., =**= should not appear in =#if= and =#elif= directives. These operators, of course, can appear in the replacement text of =#define= directives.
-
-*** Comments become spaces in Fortran source
-In C, a comment is replaced with a single space before it executes preprocessor directives. Since Fortran has never had any kind of formal =pragma= line in the language, programmers embed Fortran compiler directives (e.g., regarding vectorizing optimizations, OpenMP and OpenACC parallelism, and legacy extensions) in comments. FPP must in some way preserve these comment-based directives for the processor.
-
-
-* Translation phases
-The C standard [[cite:&iso-iec-2018-prog-lang-c]] defines eight translation phases. These phases each perform a well-defined set of operations on the C source code and intermediate representations.
-
-These phases describe how C compilers should behave. They do not describe how C compilers should be written.
-
-We will do the same for Fortran. For FPP, though, we are only concerned with phases 0 through 5. The rest of the Fortran standard defines the responsibilities of ``The Processor''.
-
-
-** Phase 1: Remove continuations
-For follow the column-6 conventions to produce a sequence of logical lines.
-
-For free-form source, follow the =&= conventions to produce a sequence of logical lines.
-
-
-
-** Phase 2: Translate comment directives
-For fixed and free-form source, translate comment-based directives (such as =!dir$=, =!omp$=, =!acc$=) into =#pragma= directives.
-
-Which comment-directives are translated to =#pragma= directives is processor-dependent.
-
-
-** Phase 3: Remove comments
-All remaining comments are replaced with a single space.
-
-
-** Phase 4: Tokenize the source into preprocessing tokens
-The output from Phase 3 is converted to preprocessor tokens according to the rules defined in ``On Fortran source form'' above.
-
-
-** Phase 5: Execute preprocessor directives
-Preprocessing directives in the output from Phase 4 are executed. Macros are expanded in directives and Fortran source.
-
-
-** Phase 6: Convert preprocessing tokens to tokens
-The output from Phase 5 is converted to tokens suitable for syntactic analysis.
-
-
-** Phase 7: ``The Processor''
-
-*** Analyze syntax
-Analyze the output from Phase 6 for syntactic correctness. Construct any necessary intermediate representation for semantic analysis.
-
-*** Analyze semantic correctness
-Find and report static semantic errors in the Fortran program. Check for Fortran constraint violations.
-
-*** Generate code
-Translate the output from Phase 7 to runnable code.
+#+include: "req-inc-phase-list.org" :minlevel 2
 
 
 * Detailed requirements
@@ -193,30 +39,14 @@ Translate the output from Phase 7 to runnable code.
 :COLUMNS:  %30reqid(ID) %6status(Status) %10TAGS(Export) %30csource(Sources) %60ITEM(Description)
 :END:
 
-We list the detailed requirements for the Fortran 202y preprocessor.
+We list the detailed requirements for the handling of preprocessor directives.
 
-Each requirement is a heading of the form ``One-line description''
+Each requirement is a heading of the form ``One-line description''. For each requirement, we include
+    - ID :: A requirement unique identifier in square brackets ~[~ ~]~.
+    - Status :: The current status (TBD, JoR yes, JoR no, WG 5 yes, WG 5 no, etc.).
+    - Sources :: Where the requirement came from in normative references (such as the C standard), J3 Fortran discussions and posts.
 
-Item properties for these headings contain
-    - A requirement unique identifier in square brackets =[= =]=.
-    - Current status (TBD, JoR yes, JoR no, WG 5 yes, WG 5 no, etc.).
-    - Normative references (such as the C standard).
-    - Where the requirement came from in normative references (such as the C standard), J3 Fortran discussions and posts.
-
-The requirements came from the following sources.
-- cpp :: The C standard [[cite:&iso-iec-2018-prog-lang-c]].
-- facpp :: The C standard, but made Fortran-aware.
-- ble1 :: JoR Email threads from Rich Bleikamp re: tutorial [2022-08-08 Mon 21:34].
-- che1 :: Email from Daniel Chen to JoR [2022-07-29 11:08].
-- clu1 :: Email from Tom Clune [2022-08-01 Mon 10:48].
-- gak :: Gary Klimowicz as he wrote these specifications.
-- jor1 :: JoR meeting on preprocessors [2022-08-22 Mon 10:00].
-- jor2 :: JoR meeting on preprocessors [2022-09-20 Tue 13:00].
-- jor3 :: JoR meeting on preprocessors [2023-11-07 Tue 12:00].
-- jor4 :: JoR meeting on preprocessors [2022-12-06 Tue 12:00].
-- lio1 :: Email from Steve Lionel [2022-08-01 Mon 13:52].
-- lio2 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=561]].
-- lio3 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=562]].
+#+include: "./req-inc-sources.org" :minlevel 2
 
 
 ** Phase 1 Remove continuations
