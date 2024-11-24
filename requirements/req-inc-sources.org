@@ -1,0 +1,17 @@
+* Requirement sources
+These requirements came from the following sources.
+- [C2024] :: The C standard [[cite:&iso-iec-2018-prog-lang-c]].
+- [F2023] :: The Fortran standard [[cite:&iso-iec-jtc1-2023-prog-lang-fortran]].
+- [G14] :: The C Preprocessor [[cite:&stallman-2024-c-preprocessor]].
+- facpp :: The C standard, but made Fortran-aware.
+- ble1 :: JoR Email threads from Rich Bleikamp re: tutorial [2022-08-08 Mon 21:34].
+- che1 :: Email from Daniel Chen to JoR [2022-07-29 11:08].
+- clu1 :: Email from Tom Clune [2022-08-01 Mon 10:48].
+- gak :: Gary Klimowicz as he wrote these specifications.
+- jor1 :: JoR meeting on preprocessors [2022-08-22 Mon 10:00].
+- jor2 :: JoR meeting on preprocessors [2022-09-20 Tue 13:00].
+- jor3 :: JoR meeting on preprocessors [2023-11-07 Tue 12:00].
+- jor4 :: JoR meeting on preprocessors [2022-12-06 Tue 12:00].
+- lio1 :: Email from Steve Lionel [2022-08-01 Mon 13:52].
+- lio2 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=561]].
+- lio3 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=562]].

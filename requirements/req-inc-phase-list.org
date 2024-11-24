@@ -1,0 +1,29 @@
+* Translation phases
+The C standard [[cite:&iso-iec-2024-prog-lang-c]] defines eight translation phases. These phases each perform a well-defined set of operations on the C source code and intermediate representations. They define a processing pipeline where one phase transforms its input in some way, and its output becomes the input to the next phase.
+
+While these phase descriptions explain how C compilers /should behave/, they do not prescribe how C compilers /should be written/.
+
+We do the same for Fortran. For FPP, though, we are only concerned with phases through interpreting preprocessor directives.
+
+** Phase 1: Remove continuations
+For fixed-form Fortran source, follow the column-6 conventions to produce a sequence of logical lines.
+
+For free-form Fortran source, follow the ~&~ conventions to produce a sequence of logical lines.
+
+In either form, remove continuations from directive lines (those lines beginning with ~#~).
+
+
+** Phase 2: Process comments
+For fixed and free-form source, translate comment-based directives (such as ~!dir$~, ~!omp$~, ~!acc$~, and ~CDIR$~, ~COMP$~, and ~Cacc$~) into some kind of formal pragma (such as a ~#pragma~ directive). Replace other comments with spaces.
+
+
+** Phase 3: Tokenize the source into preprocessing tokens
+The output from Phase 3 is converted to preprocessor tokens according to the rules defined in ``On Fortran source form'' above.
+
+
+** Phase 4: Execute preprocessor directives
+Preprocessing directives in the output from Phase 4 are executed. As in C, the execution of preprocessor directives and interpretation of macro definition and expansion is a /token-replacement/ process, not a /text replacement/ process.
+
+Macros are expanded in Fortran source.
+
+Source code is included, excluded, or modified based on the directives.

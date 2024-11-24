@@ -3,31 +3,17 @@
 :END:
 #+title: Fortran Preprocessor High-Level Requirements
 #+author: INCITS/Fortran JoR
-#+date: November 13, 2024
-#+options: toc:nil
-#+startup: showall
-#+options: toc:t H:5 num:4
-#+latex_header: \usepackage{titlesec}
-# #+latex_header: \usepackage{parskip}
-#+latex_header: \usepackage{hyperref}
-#+latex_header: \usepackage{textgreek}
-#+latex_header: \usepackage{listings}
-#+latex_header: \hypersetup{linktoc = all, colorlinks = true, urlcolor = blue, citecolor = blue, linkcolor = blue}
-#+latex_header: \titlespacing{\subsection}{0pt}{*4}{*1.5}
-#+latex_header: \titlespacing{\subsubsection}{0pt}{*4}{*1.5}
-# #+latex_header: \parindent=0pt
-#+latex_header: \setcounter{secnumdepth}{5}
-#+latex_header: \setcounter{tocdepth}{4}
-
+#+date: November 23, 2024
+#+include: "latex-options.org"
 
 #  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME apalike
 #  LocalWords:  parindent parskip usepackage
 
 
 * Introduction
-INCITS/Fortran has talked several times in Plenary, and the JoR subgroup has met several times, to lay down formal requirements for the proposed Fortran preprocessor (FPP) for Fortran 202y (presumably 2028).
+The INCITS/Fortran committee has discussed several times in the Plenary meetings, and the Journal of Requirements (JoR) subgroup has met several times, to lay down formal requirements for the proposed Fortran preprocessor (FPP) for Fortran 202y (presumably 2028).
 
-This paper lists the requirements and how JoR came to them.
+This paper lists the high-level requirements and how JoR came to them.
 
 The first section, ``Guiding Principles'', describes the value system we use to evaluate which requirements are most import (or unimportant) for the Fortran preprocessor.
 
@@ -38,31 +24,10 @@ The third section describes phases of the translation process that lead up to pr
 Finally, we identify next steps.
 
 
-** Citing standards and /de facto/ standards
-For brevity we write references to the Fortran 2023 standard [[cite:&iso-iec-jtc1-2023-prog-lang-fortran]] as follows:
-    + ~[F2023~,
-    + the section marker ~§~ and the clause number, then one of
-        - ~R~ followed by a rule number, or
-        - ~C~ followed by a constraint number, or
-        - ~¶~ followed by the paragraph number, and (optionally) a bullet symbol =·= and the bullet number or letter
-    + (optionally) the section title for redundant context,
-    + a closing square bracket ~]~.
-
-For example, =[F2023§13.2.1R1301 FORMAT statement]= refers to subclause 13.2.1 (``FORMAT statement'') of the Fortran 2023 standard, rule 1301.
-
-We follow a similar convention for the 2018 C programming language standard [[cite:&iso-iec-2018-prog-lang-c]], starting with ~[C2018~. So, =[C2018§5.1.1.2¶1·2 Translation phases]= refers to subclause 5.1.1.2 (``Translation phases'') of the C 2018 standard, paragraph 1, second bullet point.
-
-Likewise, for the GNUCC ``The C Preprocessor'' manual [[cite:&stallman-2024-c-preprocessor]], starting with ~[G14~. So, =[G14§3.3¶2 Macro Arguments]= refers to paragraph 2 of section 3.3 (``Macro Arguments'') of version 13 of the GNU CPP reference.
-
-And for LLVM Flang's ``Fortran Preprocessing'' summary, [[https://github.com/llvm/llvm-project/blob/main/flang/docs/Preprocessing.md][Preprocessing.md]], [[cite:&llvm-2024-flang-fortran-preproc]], starting with ~Flpp~, and counting section numbers by level 2 headings. So, =[Flpp§2·1 Invoked macro names can straddle]= refers to the first bullet in the second section (``Behavior that is not consistent over all extant compilers but which probably should be uncontroversial'').
-
-
-
 * Contributions
 This paper establishes the foundations for the detailed specification of the new Fortran preprocessor.
 
 It lays out the framing principles, the high-level requirements, and a phased definition model for specifying the detailed FPP requirements, syntax, and semantics.
-
 
 
 * Guiding principles
@@ -97,7 +62,6 @@ Accommodate existing use of CPP-like Fortran preprocessor when there is consensu
 ** (Additional principles to come)
 
 
-
 * High-level requirements
 At a certain altitude, FPP will look like an unholy marriage of some of the syntax and semantics from the C standard, and some of the syntax an semantics from the Fortran standard.
 
@@ -127,12 +91,12 @@ Recognize C tokens in macro definition and conditional directives.
 
 Rationale: Since macro definitions may include C tokens that will later be used in preprocessor expressions, defined macros need to be able to contain valid C tokens. For example,
 
-#+begin_src c
+#+begin_src c -n
 #ifdef SOMETHING
 #define condition (x == 1)
 #else
 #define condition (x == 2)
-
+#endif
 ...
 
 #if condition
@@ -145,7 +109,7 @@ Rationale: Since macro definitions may include C tokens that will later be used 
 ** CPP conventions we should /not/ follow
 FPP should not adopt the following behaviors from CPP.
 *** ~//~ introducing comments in directives
-Translation phases]]Rationale: The ~//~ operator is the Fortran character concatenation operator, and is a valid token in FPP.
+Rationale: The ~//~ operator is the Fortran character concatenation operator, and is a valid token in FPP.
 
 
 ** Fortran conventions we should follow
@@ -161,8 +125,9 @@ Rationale: CPP treats blanks and comments as significant for determining token b
 
 *** ~!~ comments in directives
 Rationale: ~!~ introduces a comment in Fortran. Unfortunately, this is also the C `not' operator. To allow conditions with the C ~!~ not operator (such as below), FPP must treat ~!~ as the C `not' operator.
-#+begin_src c
-! defined(MY_FAVORITE_ID)
+
+#+begin_src c -n
+#if ! defined(MY_FAVORITE_ID)
 #+end_src
 
 
@@ -172,13 +137,14 @@ For FPP directives, we should use C-style expressions, not Fortran expressions. 
 
 Rationale for using Fortran-style expressions in definitions: It can be useful to define macros that are legal Fortran and that can also be evaluated by the preprocessor.
 
-#+begin_src c
+#+begin_src c -n
 #define INTERESTING(x) ((x) > 1 .AND. (x) < 8)
 
 #if INTERESTING(SOMETHING)
         IF (INTERESTING(ANOTHER_THING)) THEN
             ...
         END IF
+#endif
 #+end_src
 
 *** Should comments become spaces in Fortran source?
@@ -191,11 +157,10 @@ We may define a mechanism for converting these comments into proper directives, 
 Or we may decide that passing directives through is implementation-defined behavior.
 
 
-
 * Translation phases
-The C standard [[cite:&iso-iec-2018-prog-lang-c]] defines eight translation phases. These phases each perform a well-defined set of operations on the C source code and intermediate representations. They define a processing pipeline where one phase transforms its input in some way, and its output becomes the input to the next phase.
+The C standard [[cite:&iso-iec-2024-prog-lang-c]] defines eight translation phases. These phases each perform a well-defined set of operations on the C source code and intermediate representations. They define a processing pipeline where one phase transforms its input in some way, and its output becomes the input to the next phase.
 
-While these phase descriptions explain how C compilers /should behave/, they do not /prescribe/ how C compilers should /be written/.
+While these phase descriptions explain how C compilers /should behave/, they do not prescribe how C compilers should /be written/.
 
 We do the same for Fortran. For FPP, though, we are only concerned with phases through interpreting preprocessor directives. (The rest of the Fortran standard defines the responsibilities of ``The Processor'' that validates and transforms Fortran source.)
 
@@ -208,23 +173,21 @@ For free-form Fortran source, follow the ~&~ conventions to produce a sequence o
 In either form, remove continuations from directive lines (those lines beginning with ~#~).
 
 
-** Phase 2: Translate comment directives
+** Phase 2: process comments
 For fixed and free-form source, translate comment-based directives (such as ~!dir$~, ~!omp$~, ~!acc$~, and ~CDIR$~, ~COMP$~, and ~Cacc$~) into some kind of formal pragma (such as a ~#pragma~ directive).
 
 The Fortran standard should specify whether and how macros are expanded in pragmas.
 
 Which comment-directives are translated to pragmas is processor-dependent.
 
-
-** Phase 3: Remove comments
 All remaining comments are replaced with a single space. (This may be combined with the previous phase, to simplify the definition of the preprocessing pipeline.)
 
 
-** Phase 4: Tokenize the source into preprocessing tokens
+** Phase 3: Tokenize the source into preprocessing tokens
 The output from Phase 3 is converted to preprocessor tokens according to the rules defined in ``On Fortran source form'' above.
 
 
-** Phase 5: Execute preprocessor directives
+** Phase 4: Execute preprocessor directives
 Preprocessing directives in the output from Phase 4 are executed. As in C, the execution of preprocessor directives and interpretation of macro definition and expansion is a /token-replacement/ process, not a /text replacement/ process.
 
 Macros are expanded in Fortran source.
@@ -233,43 +196,8 @@ Source code is included, excluded, or modified based on the directives.
 
 This phase removes all directives before generating output for subsequent processor phases.
 
-
-* Detailed requirements
-In the next papers, we list the detailed requirements for the Fortran 202y preprocessor.
-
-Each requirement is a heading of the form ``One-line description''
-
-Item properties for these headings contain
-    - A requirement unique identifier in square brackets ~[~ ~]~.
-    - Current status (TBD, JoR yes, JoR no, WG 5 yes, WG 5 no, etc.).
-    - Normative references (such as the C standard).
-    - Where the requirement came from in normative references (such as the C standard), J3 Fortran discussions and posts.
-
-
-** Requirement sources
-The requirements came from the following sources.
-- cpp :: The C standard [[cite:&iso-iec-2018-prog-lang-c]].
-- facpp :: The C standard, but made Fortran-aware.
-- ble1 :: JoR Email threads from Rich Bleikamp re: tutorial [2022-08-08 Mon 21:34].
-- che1 :: Email from Daniel Chen to JoR [2022-07-29 11:08].
-- clu1 :: Email from Tom Clune [2022-08-01 Mon 10:48].
-- gak :: Gary Klimowicz as he wrote these specifications.
-- jor1 :: JoR meeting on preprocessors [2022-08-22 Mon 10:00].
-- jor2 :: JoR meeting on preprocessors [2022-09-20 Tue 13:00].
-- jor3 :: JoR meeting on preprocessors [2023-11-07 Tue 12:00].
-- jor4 :: JoR meeting on preprocessors [2022-12-06 Tue 12:00].
-- lio1 :: Email from Steve Lionel [2022-08-01 Mon 13:52].
-- lio2 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=561]].
-- lio3 :: JoR discussion forum [[https://j3-fortran.org/forum/viewtopic.php?p=562]].
-
-
-
-
 * Next steps
-Additional documents describe the requirements, syntax, and specifications for the above phases.
-
-Each phase will have a separate document that defines the required behavior to transform the output from the prior phase into the input for the subsequent phase.
-
+In subsequent papers, we list the detailed requirements for each phase of the Fortran 202y preprocessor.
 
 
 [[bibliographystyle:alpha]]
