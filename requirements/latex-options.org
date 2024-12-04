@@ -7,6 +7,6 @@
 #+latex_header: \hypersetup{linktoc = all, colorlinks = true, urlcolor = blue, citecolor = blue, linkcolor = blue}
 #+latex_header: \usepackage{textgreek}
 #+latex_header: \usepackage{listings}
-#+latex_header: \lstset{basicstyle=\small, numbers=left, numberstyle=\tiny, frame=single}
+#+latex_header: \lstset{basicstyle=\tiny, numbers=left, numberstyle=\tiny, frame=single}
 # #+latex_header: \setcounter{secnumdepth}{5}
 # #+latex_header: \setcounter{tocdepth}{4}
