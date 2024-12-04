@@ -1,0 +1,295 @@
+#+begin_src c
+/*
+ ,* An EBNF grammar for Phase 4 of the Fortran preprocessor.
+ ,*
+ ,* This grammar assumes the tokenization of the input stream
+ ,* performed in Phase 3. As such, we don't see whitespace
+ ,* or comments. We do see identifiers, whole and real numbers,
+ ,* and strings as tokens that carry additional information.
+ ,*
+ ,* The dialect of EBNF used is the W3C dialect as defined
+ ,* in Section 6 Notation in https://www.w3.org/TR/xml/.
+ ,*     - Rule names are in CamelCase.
+ ,*     - 'string'         matches the ``string'' (that contains no apostrophe).
+ ,*     - "string"         matches the ``string'' (that contains no quote mark).
+ ,*     - #xN              matches the ISO/IEC 10646 code point N.
+ ,*     - [characters]     matches any of the ``characters'' (with ranges).
+ ,*     - [^characters]    matches any characters not in ``characters''.
+ ,*     - stuff?           matches ``stuff'' or nothing (optional ``stuff'').
+ ,*     - stuff*           matches zero or more occurences of ``stuff''.
+ ,*     - stuff+           matches one or more occurences of ``stuff''.
+ ,*     - stuff-notstuff   matches ``stuff', unless it matches ``notstuff''.
+ ,*
+ ,* In general, the grammar rules follow Clause 6.10 of
+ ,* the C programming language standard (ISO/IEC 9899:2018, IDT).
+ ,*
+ ,* The grammar rules for expressions represent the Fortran
+ ,* standard's expression rules in clause 10.1.2.
+ ,*
+ ,* Where necessary, we add commentary before a rule
+ ,* to provide rationale for what might be in or left out.
+ ,*/
+
+ExecutableProgram = CommandLineDefinition* .
+CommandLineDefinition = IncludePath
+                      | DefineArgument
+                      | UndefineArgument .
+
+IncludePath = DASHI Path .
+DefineArgument = DASHD ID "=" ReplacementText
+               | DASHD ID LambdaList ReplacementText .
+UndefineArgument = DASHU ID .
+
+LambdaList = LPAREN ID (COMMA ID)*)? (COMMA ELLIPSES)? RPAREN
+           | LPAREN (COMMA ELLIPSES)? RPAREN .
+
+
+PreprocessingFile = GroupPart* .
+
+/* A GroupPart is some directive, or some Fortran text. */
+GroupPart = IfSection
+          | ControlLine
+          | NonDirective
+          | FortranSourceLine .
+
+IfSection = IfGroup ElifGroup* ElseGroup? EndifLine .
+
+/* Preprocessor keywords are usually followed by whitespace. */
+IfGroup = IF Expression EOL GroupPart*
+        | IFDEF ID EOL GroupPart*
+        | IFNDEF ID EOL GroupPart* .
+
+
+ElifGroup = ELIF ConditionExpession OptWS EOL GroupPart* .
+
+ElseGroup = ELSE EOL GroupPart* .
+
+EndifLine = ENDIF EOL .
+
+ControlLine = IncludeControlLine
+            | DefineIdControlLine
+            | DefineFunctionControlLine
+            | LineControlLine
+            | ErrorControlLine
+            | WarningControlLine
+            | PragmaControlLine
+            | NonDirective .
+
+/* May not need preprocessor token strings in real code? */
+IncludeControlLine = INCLUDE STRING EOL .
+
+DefineIdControlLine = DEFINE ID EOL
+                    | DEFINE ID PPToken* EOL .
+
+/*
+ ,* Parameter lists on macro functions are comma-separated
+ ,* identifiers.
+ ,*/
+DefineFunctionControlLine = DEFINE ID LambdaList LambdaBody EOL .
+
+LineControlLine = LINE STRING WHOLE_NUMBER EOL
+                | LINE WHOLE_NUMBER EOL .
+
+ErrorControlLine = ERROR STRING EOL .
+
+WarningControlLine = WARNING STRING EOL .
+
+PragmaControlLine = PRAGMA Anything EOL .
+
+NonDirective = POUND PPToken* .
+
+
+/*
+ ,* '#' and '##' operators can only appear in the replacement
+ ,* text in #define directives.
+ ,*/
+ReplacementText = (PPToken | HASH | HASH_HASH)*
+
+PPToken = FortranToken
+        | CPPToken .
+
+/*
+ ,* This should include every token that the tokenizer
+ ,* could recognize. The tokenizer has to do some recognition
+ ,* of Fortran operators (such as .AND.) and places where
+ ,* preprocessing expansion should not * occur (such as FORMAT
+ ,* and IMPLICIT).
+ ,*/
+FortranToken = AT
+             | COLON
+             | COLON_COLON
+             | COLON_QUESTION
+             | COMMA
+             | DOLLAR
+             | EQ
+             | EQ_EQ
+             | EOL
+             | FORMAT
+             | GT
+             | GT_EQ
+             | ID
+             | IMPLICIT
+             | LBRACKET
+             | LPAREN
+             | LPAREN_QUESTION
+             | LT
+             | LT_EQ
+             | MINUS
+             | PERCENT
+             | PERIOD
+             | PERIOD_AND_PERIOD
+             | PERIOD_EQ_PERIOD
+             | PERIOD_EQV_PERIOD
+             | PERIOD_FALSE_PERIOD
+             | PERIOD_GE_PERIOD
+             | PERIOD_GT_PERIOD
+             | PERIOD_ID_PERIOD                /* user-defined operator */
+             | PERIOD_LE_PERIOD
+             | PERIOD_LT_PERIOD
+             | PERIOD_NE_PERIOD
+             | PERIOD_NEQV_PERIOD
+             | PERIOD_NOT_PERIOD
+             | PERIOD_OR_PERIOD
+             | PERIOD_TRUE_PERIOD
+             | PLUS
+             | POINTS
+             | QUESTION
+             | RBRACKET
+             | REAL_NUMBER
+             | RPAREN
+             | RPAREN_QUESTION
+             | SEMICOLON
+             | SLASH
+             | SLASH_EQ
+             | SLASH_SLASH
+             | STRING
+             | TIMES
+             | TIMES_TIMES
+             | UNDERSCORE                      /* for _KIND, not ID */
+             | WHOLE_NUMBER .
+
+/*
+ ,* Tokens that can appear in C preprocessor replacement text
+ ,* in addition to the Fortran tokens.
+ ,*/
+CPPToken = AMPERSAND
+         | AMPERSAND_AMPERSAND
+         | BANG
+         | BANG_EQ
+         | BAR
+         | BAR_BAR
+         | CARET
+         | HASH
+         | HASH_HASH
+         | TILDE .
+
+
+/* Following Fortran ISO/IEC 1539-1:2023 Clause 10.1.2.
+ ,* modified for C-like syntax.
+ ,*
+ ,* INCITS and WG5 have agreed (so far) that the preprocessor
+ ,* should conform to a subset of the C preprocessor
+ ,* expression syntax. There has been no consensus
+ ,* to include the standard Fortran operators, but
+ ,* we include them here for completeness. (It is easier
+ ,* to discuss removing them than adding them.)
+ ,*
+ ,* Note that operator precedence differs between C
+ ,* and Fortran. The grammar below attempts to merge
+ ,* these precedence lists, leaning towards C's
+ ,* operator precedence.
+ ,*/
+Expession = ConditionalExpr (EquivOp ConditionalExpr)* .
+
+EquivOp = PERIOD_EQV_PERIOD
+        | PERIOD_NEQV_PERIOD .
+
+ConditionalExpr = LogicalOrExpr (QUESTION Expression COLON ConditionalExpr)? .
+
+LogicalOrExpr = LogicalAndExpr (OrOp LogicalAndExpr)* .
+OrOp = BAR_BAR
+     | PERIOD_OR_PERIOD .
+
+
+LogicalAndExpr = InclusiveOrExpr (AndOp InclusiveOrExpr)* .
+AndOp = AMPERSAND_AMPERSAND
+      | PERIOD_AND_PERIOD .
+
+InclusiveOrExpr = ExclusiveOrExpr (BAR ExclusiveOrExpr)* .
+
+ExclusiveOrExpr = AndExpr (CARET AndExpr)* .
+
+AndExpr = EqualityExpr (AMPERSAND EqualityExpr)* .
+
+EqualityExpr = RelationalExpr (EqualityOp RelationalExpr)* .
+EqualityOp = PERIOD_EQ_PERIOD
+           | PERIOD_NE_PERIOD
+           | EQ_EQ
+           | SLASH_EQ
+           | BANG_EQ .
+
+RelationalExpr = ShiftExpr (RelationalOp ShiftExpr)* .
+RelationalOp =  PERIOD_LE_PERIOD
+             | PERIOD_LT_PERIOD
+             | PERIOD_GE_PERIOD
+             | PERIOD_NE_PERIOD
+             | LT
+             | GT
+             | LT_EQ
+             | GT_EQ .
+
+ShiftExpr = CharactereExpr (ShiftOp CharactereExpr)* .
+ShiftOp = LT_LT
+        | GT_GT .
+
+CharacterExpr = AdditiveExpr (SLASH_SLASH AdditiveExpr)* .
+
+AdditiveExpr = MultiplicativeExpr (AddOp MultiplicativeExpr)* .
+AddOp = PLUS
+      | MINUS .
+
+MultiplicativeExpr = PowerExpr (MultOp PowerExpr)* .
+MultOp = TIMES
+       | SLASH
+       | PERCENT .
+
+PowerExpr = UnaryExpr (TIMES_TIMES UnaryExpr)* .
+
+UnaryExpr = UnaryOp? PostfixExpr .
+UnaryOp = PLUS
+        | MINUS
+        | PERIOD_NOT_PERIOD
+        | BANG
+        | TILDE .
+
+PostfixExpr = PrimaryExpr (LPAREN ActualArgumentList RPAREN)? .
+ActualArgumentList = PPToken+ ( COMMA PPToken+ )* .
+
+/* Real numbers aren't allowed in conditional explessions */
+PrimaryExpr = WHOLE_NUMBER
+            | ID
+            | PERIOD_FALSE_PERIOD
+            | PERIOD_TRUE_PERIOD
+            | LPAREN Expession RPAREN
+            | PredefinedIdentifier .
+
+
+/* Identifiers known to the preprocessor (such as __FILE__) */
+PredefinedIdentifier = UND_UND_FILE
+                     | UND_UND_LINE
+                     | UND_UND_DATE
+                     | UND_UND_TIME
+                     | UND_UND_STDFORTRAN
+                     | UND_UND_STDFORTRAN_VERSION
+                     | UND_UND_VA_ARGS
+                     | UND_UND_VA_OPT
+                     | ProcessorDefinedPPIdentifier .
+
+/* Implementation-defined predefined identifiers */
+ProcessorDefinedPPIdentifier = .
+
+FortranSourceLine = FORMAT FortranToken* EOL
+                  | IMPLICIT FortranToken* EOL
+                  | FortranToken* EOL .
+
+#+end_src

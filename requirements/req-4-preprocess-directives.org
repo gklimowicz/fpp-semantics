@@ -3,22 +3,11 @@
 :END:
 #+title: FPP Phase 4 -- Preprocess Directives
 #+author: INCITS/Fortran JoR
-#+date: [2023-10-24 Tue 11:27]
+#+date: November 26, 2024
 #+options: toc:nil
 #+startup: showall
+#+include: "latex-options.org"
 #+options: toc:t H:5 num:4
-#+latex_header: \usepackage{titlesec}
-# #+latex_header: \usepackage{parskip}
-#+latex_header: \usepackage{hyperref}
-#+latex_header: \usepackage{textgreek}
-#+latex_header: \usepackage{listings}
-#+latex_header: \hypersetup{linktoc = all, colorlinks = true, urlcolor = blue, citecolor = blue, linkcolor = blue}
-#+latex_header: \titlespacing{\subsection}{0pt}{*4}{*1.5}
-#+latex_header: \titlespacing{\subsubsection}{0pt}{*4}{*1.5}
-# #+latex_header: \parindent=0pt
-#+latex_header: \setcounter{secnumdepth}{5}
-#+latex_header: \setcounter{tocdepth}{4}
-
 
 #  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME
 
@@ -31,439 +20,436 @@ This paper lists the requirements and syntax for Phase 4 of the preprocessor, wh
 #+include: "req-inc-phase-list.org" :only-contents :minlevel 1
 
 
-
-
 * High-level requirements
+Steve Lionel, the ISO WG 5 (Fortran) Convenor, presented this list of high-level requirements at INCITS/Fortran meeting #232, February 2024 [[cite:&j3-jor-2024-preproc-take-2]]
+
+Fortran programmers use preprocessing for several reasons:
+- Adjusting external names for C interoperability (largely obviated by C interop features in the language)
+- Platform/OS specific code
+- Debug or other variants of code
+- A crude way of implementing templates
+
+Explicit goals for Fortran 202y were
+- Define cpp-style preprocessor in the standard
+- Ideally, most existing uses of preprocessing will "just work", or need minimal changes
+- Feature will not be optional, but implementations are encouraged to offer an option to "do it the old way"
+- "Minimum Viable Product" – don't try to do everything
+
+Features should have the same semantics as the C preprocessor, except as noted.
+- =__LINE__= and =__FILE__= defined macros
+- =#line=
+- =#ifdef=, =#ifndef=, =#endif=
+- =#if=, =#elif=, =#else=, =#endif=
+- =#define= and =#undef=
+- =#include=
+- =#error=
+- =#= operator (character literal from token)
+- =##= operator (token concatenation)
+- =/* ... */= C-style comments are allowed in directives (including multi-line comments)
+- =\= new-line continuations allowed in directives
+- =#pragma= directive for implementation-specific directives
+
+- Macro expansion
+    - tokens are case-sensitive
+    - tokens are not replaced in character literals
+    - tokens are not replaced in Hollerith strings
+    - tokens are not replaced in /letter-spec-list/ of =IMPLICIT= statements
+    - tokens are not replaced in column 6 in fixed-form source
+    - tokens are replaced in comment-style directives (such as =!omp$=, =!dir$=)
+
+- Expressions
+    - =defined= operator
+    - =//= is the Fortran concatenation operator; it does not introduce a C-style comment
+    - =!= is the C ``not'' operator; it does not introduce a Fortran comment
 
 
 * Detailed requirements
-:PROPERTIES:
-:COLUMNS:  %30reqid(ID) %6status(Status) %10TAGS(Export) %30csource(Sources) %60ITEM(Description)
-:END:
-
 We list the detailed requirements for handling preprocessor directives.
 
-Each requirement is a heading of the form ``One-line description'', and includes a unique identifier, its current status in the INCITS/Fortran approval process, and where the requirement came from (such as a standard, a meeting, email conversation).
+Each requirement is a heading with a ``One-line description'', followed by a short table that contains  a unique identifier, the requirement's current status in the INCITS/Fortran approval process, and where the requirement came from (such as a C or Fortran standard, an INCITS meeting, or on email conversation).
+
+[Note: Most of the detailed requirements here are still being worked...]
 
 #+include: "req-inc-sources.org" :only-contents :minlevel 2
 
 
-** # non-directive
-:PROPERTIES:
-:reqid: [non-directive]
-:status: TBD
-:source: [C§6.10 Preprocessing directives]
-:END:
+** # non-directive                                          :noexport:
+|-----------------+--------+-----------------------------------|
+| *ID*              | *Status* | *Sources*                           |
+|-----------------+--------+-----------------------------------|
+| [non-directive] | TBD    | [C§6.10 Preprocessing directives] |
+|-----------------+--------+-----------------------------------|
 
-** Conditional inclusion
+
+** Conditional inclusion                                          :noexport:
 *** # if /constant-expression/
-:PROPERTIES:
-:reqid: [#if]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|-------+--------+----------------------------------|
+| *ID*    | *Status* | *Sources*                          |
+|-------+--------+----------------------------------|
+| [#if] | TBD    | [C§6.10.1 Conditional inclusion] |
+|-------+--------+----------------------------------|
+
 
 
 *** # ifdef /identifier/
-:PROPERTIES:
-:reqid: [#ifdef]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|----------+--------+----------------------------------|
+| *ID*       | *Status* | *Sources*                          |
+|----------+--------+----------------------------------|
+| [#ifdef] | TBD    | [C§6.10.1 Conditional inclusion] |
+|----------+--------+----------------------------------|
 
 
 *** # ifndef /identifier/
-:PROPERTIES:
-:reqid: [#ifndef]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|-----------+--------+----------------------------------|
+| *ID*        | *Status* | *Sources*                          |
+|-----------+--------+----------------------------------|
+| [#ifndef] | TBD    | [C§6.10.1 Conditional inclusion] |
+|-----------+--------+----------------------------------|
 
 
 *** # elif /constant-expression/
-:PROPERTIES:
-:reqid: [#elif]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|---------+--------+----------------------------------|
+| *ID*    | *Status* | *Sources*                          |
+|---------+--------+----------------------------------|
+| [#elif] | TBD    | [C§6.10.1 Conditional inclusion] |
+|---------+--------+----------------------------------|
 
 
 *** # else
-:PROPERTIES:
-:reqid: [#else]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|---------+--------+----------------------------------|
+| *ID*      | *Status* | *Sources*                          |
+|---------+--------+----------------------------------|
+| [#else] | TBD    | [C§6.10.1 Conditional inclusion] |
+|---------+--------+----------------------------------|
 
 
 *** # endif
-:PROPERTIES:
-:reqid: [#endif]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|----------+--------+----------------------------------|
+| *ID*       | *Status* | *Sources*                          |
+|----------+--------+----------------------------------|
+| [#endif] | TBD    | [C§6.10.1 Conditional inclusion] |
+|----------+--------+----------------------------------|
 
 
-** Source file inclusion
+** Source file inclusion                                          :noexport:
 *** # include /char-literal-constant/
-:PROPERTIES:
-:reqid: [#include]
-:status: TBD
-:source: [C§6.10.2 Source file inclusion], [F2023§7.4.4.3 Character literal constant], [F2023§6.4 Including source text]
-:END:
+|------------+--------+--------------------------------------------|
+| *ID*         | *Status* | *Sources*                                    |
+|------------+--------+--------------------------------------------|
+| [#include] | TBD    | [C§6.10.2 Source file inclusion]           |
+|            |        | [F2023§7.4.4.3 Character literal constant] |
+|            |        | [F2023§6.4 Including source text]          |
+|------------+--------+--------------------------------------------|
 
 
 *** # include /pp-tokens/
-:PROPERTIES:
-:reqid: [#include-computed]
-:status: TBD
-:source: [C§6.10.2 Source file inclusion]
-:END:
+|---------------------+--------+----------------------------------|
+| *ID*                  | *Status* | *Sources*                          |
+|---------------------+--------+----------------------------------|
+| [#include-computed] | TBD    | [C§6.10.2 Source file inclusion] |
+|---------------------+--------+----------------------------------|
 
 
-** Macro replacement
+** Macro definition                                               :noexport:
 *** # define id replacement-list
-:PROPERTIES:
-:reqid: [#define-id]
-:status: TBD
-:source: [C§6.10.3 Macro replacement]
-:END:
+|--------------+--------+------------------------------|
+| *ID*           | *Status* | *Sources*                      |
+|--------------+--------+------------------------------|
+| [#define-id] | TBD    | [C§6.10.3 Macro replacement] |
+|--------------+--------+------------------------------|
 
 
 *** # define id ( id-list ) replacement-list
-:PROPERTIES:
-:reqid: [#define-id-function]
-:status: TBD
-:source: [C§6.10.3 Macro replacement]
-:END:
+|-----------------------+--------+------------------------------|
+| *ID*                    | *Status* | *Sources*                      |
+|-----------------------+--------+------------------------------|
+| [#define-id-function] | TBD    | [C§6.10.3 Macro replacement] |
+|-----------------------+--------+------------------------------|
 
 
 *** # define id ( ... ) replacement-list
-:PROPERTIES:
-:reqid: [#define-id-0-varargs]
-:status: TBD
-:source: [C§6.10.3 Macro replacement]
-:END:
+|------------------------+--------+------------------------------|
+| *ID*                     | *Status* | *Sources*                      |
+|------------------------+--------+------------------------------|
+| [#define-id-0-varargs] | TBD    | [C§6.10.3 Macro replacement] |
+|------------------------+--------+------------------------------|
 
 
 *** # define id ( id-list , ... ) replacement-list
-:PROPERTIES:
-:reqid: [#define-id-n-varargs]
-:status: TBD
-:source: [C§6.10.3 Macro replacement]
-:END:
+|------------------------+--------+------------------------------|
+| *ID*                     | *Status* | *Sources*                      |
+|------------------------+--------+------------------------------|
+| [#define-id-n-varargs] | TBD    | [C§6.10.3 Macro replacement] |
+|------------------------+--------+------------------------------|
 
 
 *** # undef
-:PROPERTIES:
-:reqid: [#undef]
-:status: TBD
-:source: [C§6.10.3.5 Macro replacement]
-:END:
+|----------+--------+--------------------------------|
+| *ID*       | *Status* | *Sources*                        |
+|----------+--------+--------------------------------|
+| [#undef] | TBD    | [C§6.10.3.5 Macro replacement] |
+|----------+--------+--------------------------------|
 
 
-** Line control
+** Line control                                          :noexport:
 *** # line
-:PROPERTIES:
-:reqid: [#line]
-:status: TBD
-:source: [C§6.10.4 Line control]
-:END:
+|---------+--------+-------------------------|
+| *ID*      | *Status* | *Sources*                 |
+|---------+--------+-------------------------|
+| [#line] | TBD    | [C§6.10.4 Line control] |
+|---------+--------+-------------------------|
 
 
-** Error directive
+** Error directive                                          :noexport:
 *** # error
-:PROPERTIES:
-:reqid: [#error]
-:status: TBD
-:source: [C§6.10.5 Error directive]
-:END:
+|----------+--------+----------------------------|
+| *ID*       | *Status* | *Sources*                    |
+|----------+--------+----------------------------|
+| [#error] | TBD    | [C§6.10.5 Error directive] |
+|----------+--------+----------------------------|
 
-** Error directive
 *** # warning
-:PROPERTIES:
-:reqid: [#warning]
-:status: TBD
-:source: [C§6.10.5 Error directive]
-:END:
+|------------+--------+----------------------------|
+| *ID*         | *Status* | *Sources*                    |
+|------------+--------+----------------------------|
+| [#warning] | TBD    | [C§6.10.5 Error directive] |
+|------------+--------+----------------------------|
 
-** Pragma directive
+
+** Pragma directive                                          :noexport:
 *** # pragma
-:PROPERTIES:
-:reqid: [#pragma]
-:status: TBD
-:source: [C§6.10.6 Pragma directive]
-:END:
+|-----------+--------+-----------------------------|
+| *ID*        | *Status* | *Sources*                     |
+|-----------+--------+-----------------------------|
+| [#pragma] | TBD    | [C§6.10.6 Pragma directive] |
+|-----------+--------+-----------------------------|
 
 
-** Null directive
+** Null directive                                          :noexport:
 
 *** # newline
-:PROPERTIES:
-:reqid: [#null]
-:status: TBD
-:source: [C§6.10.7 Null directive]
-:END:
+|------------+--------+---------------------------|
+| *ID*         | *Status* | *Sources*                   |
+|------------+--------+---------------------------|
+| [#newline] | TBD    | [C§6.10.7 Null directive] |
+|------------+--------+---------------------------|
 
 
-** Predefined macros
+** Predefined macros                                          :noexport:
 
 *** =__FILE__= Current file name
-:PROPERTIES:
-:reqid: [macro-file-name-context]
-:status: TBD
-:source: [C§6.10.8 Predefined macro names]
-:END:
+|---------------------------+--------+-----------------------------------|
+| *ID*                        | *Status* | *Sources*                           |
+|---------------------------+--------+-----------------------------------|
+| [macro-file-name-context] | TBD    | [C§6.10.8 Predefined macro names] |
+|---------------------------+--------+-----------------------------------|
 
 
 *** =__LINE__= Current line number
-:PROPERTIES:
-:reqid: [macro-line-number-context]
-:status: TBD
-:source: [C§6.10.8 Predefined macro names]
-:END:
+|-----------------------------+--------+-----------------------------------|
+| *ID*                          | *Status* | *Sources*                           |
+|-----------------------------+--------+-----------------------------------|
+| [macro-line-number-context] | TBD    | [C§6.10.8 Predefined macro names] |
+|-----------------------------+--------+-----------------------------------|
 
 
-*** =__STDF__= Fortran compiler (1)
-:PROPERTIES:
-:reqid: [macro-stdf]
-:status: TBD
-:source: fa[C§6.10.8 Predefined macro names]
-:END:
+*** =__STDFORTRAN__= Fortran compiler (1)
+|--------------+--------+-------------------------------------|
+| *ID*           | *Status* | *Sources*                             |
+|--------------+--------+-------------------------------------|
+| [macro-stdf] | TBD    | fa[C§6.10.8 Predefined macro names] |
+|--------------+--------+-------------------------------------|
 
 
 *** =__STDF_HOSTED__= Compiler is hosted cross-compiler (e.g., 202311)
-:PROPERTIES:
-:reqid: [macro-stdf-hosted]
-:status: Not accepted
-:source: fa[C§6.10.8 Predefined macro names]
-:END:
+|---------------------+--------------+-------------------------------------|
+| *ID*                  | *Status*       | *Sources*                             |
+|---------------------+--------------+-------------------------------------|
+| [macro-stdf-hosted] | Not accepted | fa[C§6.10.8 Predefined macro names] |
+|---------------------+--------------+-------------------------------------|
 
 
-*** =__STDF_VERSION__= Fortran standard conformance
-:PROPERTIES:
-:reqid: [macro-stdf-version]
-:status: TBD
-:source: fa[C§6.10.8 Predefined macro names]
-:END:
+*** =__STDFORTRAN_VERSION__= Fortran standard conformance
+|----------------------+--------+-------------------------------------|
+| *ID*                   | *Status* | *Sources*                             |
+|----------------------+--------+-------------------------------------|
+| [macro-stdf-version] | TBD    | fa[C§6.10.8 Predefined macro names] |
+|----------------------+--------+-------------------------------------|
 
 
 *** =__DATE__= of processing
-:PROPERTIES:
-:reqid: [macro-file-process-date]
-:status: TBD
-:source: [C§6.10.8 Predefined macro names]
-:END:
+|---------------------------+--------+-----------------------------------|
+| *ID*                        | *Status* | *Sources*                           |
+|---------------------------+--------+-----------------------------------|
+| [macro-file-process-date] | TBD    | [C§6.10.8 Predefined macro names] |
+|---------------------------+--------+-----------------------------------|
 
 
 *** =__TIME__= time of processing
-:PROPERTIES:
-:reqid: [macro-file-process-time]
-:status: TBD
-:source: [C§6.10.8 Predefined macro names]
-:END:
+|---------------------------+--------+-----------------------------------|
+| *ID*                        | *Status* | *Sources*                           |
+|---------------------------+--------+-----------------------------------|
+| [macro-file-process-time] | TBD    | [C§6.10.8 Predefined macro names] |
+|---------------------------+--------+-----------------------------------|
 
 
 *** =STRINGIFY= macro function
-:PROPERTIES:
-:reqid: [macro-stringify-function]
-:status: JoR No
-:source: clu1
-:END:
+|----------------------------+--------+---------|
+| *ID*                         | *Status* | *Sources* |
+|----------------------------+--------+---------|
+| [macro-stringify-function] | JoR No | clu1    |
+|----------------------------+--------+---------|
 
 Tom Clune requested a macro named =stringify=, which apparently is commonly used in some codes. There is no stadard =stringify= macro, so JoR declined to add one.
 
 
 *** =__SCOPE__= defines current lexical scope
-:PROPERTIES:
-:reqid: [macro-lexical-scope-name]
-:status: JoR No
-:source: clu1, lio1
-:END:
+|----------------------------+--------+------------|
+| *ID*                         | *Status* | *Sources*    |
+|----------------------------+--------+------------|
+| [macro-lexical-scope-name] | JoR No | clu1, lio1 |
+|----------------------------+--------+------------|
 
 
 *** =__VENDOR__=
-:PROPERTIES:
-:reqid: [macro-vendor-name]
-:status: Not accepted
-:source: clu1
-:END:
+|---------------------+--------------+---------|
+| *ID*                  | *Status*       | *Sources* |
+|---------------------+--------------+---------|
+| [macro-vendor-name] | Not accepted | clu1    |
+|---------------------+--------------+---------|
 
 
 *** No undecorated names (no =_=) defined by preprocessor
-:PROPERTIES:
-:reqid: [macro-no-undecorated]
-:status: TBD
-:source: lio2
-:END:
+|------------------------+--------+---------|
+| *ID*                     | *Status* | *Sources* |
+|------------------------+--------+---------|
+| [macro-no-undecorated] | TBD    | lio2    |
+|------------------------+--------+---------|
 
-** Expressions
+
+** Expressions                                          :noexport:
 
 *** =#=
-:PROPERTIES:
-:reqid: [#-operator]
-:status: TBD
-:source: [C§6.10.3.2 The # operator]
-:END:
+|--------------+--------+-----------------------------|
+| *ID*           | *Status* | *Sources*                     |
+|--------------+--------+-----------------------------|
+| [#-operator] | TBD    | [C§6.10.3.2 The # operator] |
+|--------------+--------+-----------------------------|
 
 
 *** =##=
-:PROPERTIES:
-:reqid: [##-operator]
-:status: TBD
-:source: [C§6.10.3.3 The ## operator]
-:END:
+|---------------+--------+------------------------------|
+| *ID*            | *Status* | *Sources*                      |
+|---------------+--------+------------------------------|
+| [##-operator] | TBD    | [C§6.10.3.3 The ## operator] |
+|---------------+--------+------------------------------|
 
 
 *** =defined= /identifier/
-:PROPERTIES:
-:reqid: [defined-operator]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|--------------------+--------+----------------------------------|
+| *ID*                 | *Status* | *Sources*                          |
+|--------------------+--------+----------------------------------|
+| [defined-operator] | TBD    | [C§6.10.1 Conditional inclusion] |
+|--------------------+--------+----------------------------------|
 
 
 *** =defined= =(= /identifier/ =)=
-:PROPERTIES:
-:reqid: [defined-operator]
-:status: TBD
-:source: [C§6.10.1 Conditional inclusion]
-:END:
+|--------------------+--------+----------------------------------|
+| *ID*                 | *Status* | *Sources*                          |
+|--------------------+--------+----------------------------------|
+| [defined-operator] | TBD    | [C§6.10.1 Conditional inclusion] |
+|--------------------+--------+----------------------------------|
 
 
 *** =!=
-:PROPERTIES:
-:reqid: [bang-operator]
-:status: TBD
-:source: [C§6.10 Preprocessing directives]
-:END:
+|-----------------+--------+-----------------------------------|
+| *ID*              | *Status* | *Sources*                           |
+|-----------------+--------+-----------------------------------|
+| [bang-operator] | TBD    | [C§6.10 Preprocessing directives] |
+|-----------------+--------+-----------------------------------|
 
 
 *** [c-expressions] C-style expressions
-:PROPERTIES:
-:status: TBD, [C§6.10 Preprocessing directives]
-:END:
-
-This is problematic, in that there are many files in the wild that have the =!= not operator in =#if= and =#elif= directives. This is a Fortran comment character.
+|-----------------+--------+-----------------------------------|
+| *ID*              | *Status* | *Sources*                           |
+|-----------------+--------+-----------------------------------|
+| [c-expressions] | TBD    | [C§6.10 Preprocessing directives] |
+|-----------------+--------+-----------------------------------|
 
 
 *** [fortran-expressions] Fortran-style expressions
-:PROPERTIES:
-:status: TBD, [C§6.10 Preprocessing directives]
-:END:
+|-----------------------+--------+-----------------------------------|
+| *ID*                    | *Status* | *Sources*                           |
+|-----------------------+--------+-----------------------------------|
+| [fortran-expressions] | TBD    | [C§6.10 Preprocessing directives] |
+|-----------------------+--------+-----------------------------------|
 
 
 
 ** Expansion
-*** No expansion of =C= in column 1
-:PROPERTIES:
-:reqid: [fixed-no-expand-c-col-1]
-:status: TBD
-:source: ble1, [C§6.10 Preprocessing directives]
-:END:
-
-In fixed-form, =C= or =c= in column 1 indicates a comment.
-No identifier that begins with a =C= or =c= in column 1 is expanded.
-
-
-*** No expansion of =D= in column 1
-:PROPERTIES:
-:reqid: [fixed-no-expand-d-col-1]
-:status: TBD
-:source: ble1, [Flpp§], [C§6.10 Preprocessing directives]
-:END:
-
-In fixed-form, =D= in column 1 is a common extension to indicate a comment.
-No identifier that begins with a =D= in column is expanded.
-
-
-*** No expansion of column 6
-:PROPERTIES:
-:reqid: [fixed-no-expand-col-6]
-:status: TBD
-:source: gak, [C§6.10 Preprocessing directives]
-:END:
-
-In fixed-form, a character in column 6 that is not blank or zero indicates a continuation line.
-No identifier that begins in column 6 is expanded.
-
-[Note that since we define expansion to occur after continuation handling, this requirement is not necessary.]
-
-
-*** Strip column 1 =C= comments from expanded text
-:PROPERTIES:
-:reqid: [fixed-strip-col-1-comments]
-:status: TBD
-:source: [Flpp§], [C§6.10 Preprocessing directives]
-:END:
-
-
-*** Pass comments from expanded text to the processor
-:PROPERTIES:
-:reqid: [pass-comments]
-:status: TBD
-:source: [Flpp§]
-:END:
-
-This is necessary to pass comments with directives to the Fortran processor.
-
 
 *** No expansion of function macro names not followed by parenthesis
-:PROPERTIES:
-:reqid: [no-expand-function-non-function]
-:status: TBD
-:source: [C§6.10 Preprocessing directives], [G14§3.3 Macro Arguments]
-:END:
+|-----------------------------------+--------+-----------------------------------|
+| *ID*                                | *Status* | *Sources*                           |
+|-----------------------------------+--------+-----------------------------------|
+| [no-expand-function-non-function] | TBD    | [C§6.10 Preprocessing directives] |
+|                                   |        | [G14§3.3 Macro Arguments]         |
+|-----------------------------------+--------+-----------------------------------|
 
 String constants are output without being examined for macro expansion.
 
 
-*** Function macro name invocation may cross logical line boundaries
-:PROPERTIES:
-:reqid: [expand-function-macro-invocation-multiline]
-:status: TBD
-:source: [C§6.10 Preprocessing directives], [G§3.3 Macro Arguments], [G14§3.10.5 Self-Referential Macros]
-:END:
+*** Function macro invocation may cross logical line boundaries
+|-----------------------------------+--------+--------------------------------------|
+| *ID*                                | *Status* | *Sources*                              |
+|-----------------------------------+--------+--------------------------------------|
+| [expand-function-macro-multiline] | TBD    | [C§6.10 Preprocessing directives]    |
+|                                   |        | [G§3.3 Macro Arguments]              |
+|                                   |        | [G14§3.10.5 Self-Referential Macros] |
+|-----------------------------------+--------+--------------------------------------|
 
 String constants are output without being examined for macro expansion.
 
 
 *** No expansion of self-referential macro names
-:PROPERTIES:
-:reqid: [no-expand-self-reference]
-:status: TBD
-:source: [C§6.10 Preprocessing directives], [G14§3.10.5 Self-Referential Macros]
-:END:
+|----------------------------+--------+--------------------------------------|
+| *ID*                         | *Status* | *Sources*                              |
+|----------------------------+--------+--------------------------------------|
+| [no-expand-self-reference] | TBD    | [C§6.10 Preprocessing directives]   |
+|                            |        | [G14§3.10.5 Self-Referential Macros] |
+|----------------------------+--------+--------------------------------------|
 
 String constants are output without being examined for macro expansion.
 
 
 *** No expansion in strings
-:PROPERTIES:
-:reqid: [no-expand-string]
-:status: TBD
-:source: ble1, [Flpp§], [C§6.10 Preprocessing directives]
-:END:
+|--------------------+--------+-----------------------------------|
+| *ID*                 | *Status* | *Sources*                           |
+|--------------------+--------+-----------------------------------|
+| [no-expand-string] | TBD    | ble1, [Flpp§]                     |
+|                    |        | [C§6.10 Preprocessing directives] |
+|--------------------+--------+-----------------------------------|
 
 String constants are output without being examined for macro expansion.
 
 
 *** No expansion in Hollerith
-:PROPERTIES:
-:reqid: [no-expand-hollerith]
-:status: TBD
-:source: ble1, [C§6.10 Preprocessing directives]
-:END:
+|-----------------------+--------+-----------------------------------|
+| *ID*                    | *Status* | *Sources*                           |
+|-----------------------+--------+-----------------------------------|
+| [no-expand-hollerith] | TBD    | ble1                              |
+|                       |        | [C§6.10 Preprocessing directives] |
+|-----------------------+--------+-----------------------------------|
 
 No expansion occurs in the string contained in a Hollerith constant.
 
 
 *** No expansion in =IMPLICIT= single-character specifiers
-:PROPERTIES:
-:reqid: [no-expand-implicit-char-list]
-:status: TBD
-:source: ble1
-:END:
+|--------------------------------+--------+---------|
+| *ID*                             | *Status* | *Sources* |
+|--------------------------------+--------+---------|
+| [no-expand-implicit-char-list] | TBD    | ble1    |
+|--------------------------------+--------+---------|
 
 The letters in an =IMPLICIT= statement are not considered for macro expansion.
 
@@ -471,45 +457,25 @@ Note that this implies the preprocessor recognizes =IMPLICIT= statements.
 
 
 *** No expansion in =FORMAT= specifiers
-:PROPERTIES:
-:reqid: [no-expand-format]
-:status: TBD
-:source: ble1, [Flpp§], [F20123§13.2.1R1301]
-:END:
+|--------------------+--------+----------------------|
+| *ID*                 | *Status* | *Sources*              |
+|--------------------+--------+----------------------|
+| [no-expand-format] | TBD    | ble1,                |
+|                    |        | [Flpp§]              |
+|                    |        | [F20123§13.2.1R1301] |
+|--------------------+--------+----------------------|
 
 In =FORMAT= statements, there is no macro expansion in the /format-specification/..
 
 Note that this implies the preprocessor recognizes =FORMAT= statements.
 
 
-*** Expansion in comments
-:PROPERTIES:
-:reqid: [expand-comments]
-:status: TBD
-:source: ble1
-:END:
-
-Outside the exceptions noted elsewhere, the preprocessor expands macros in the text of comments.
-
-[This may be the way the preprocessor preserves directives (such as OpenMP and OpenACC) in the program. We have heard from at least one J3 member that this is on important feature. The good news is that expanding macros always will handle directives, without having to do special processing for all manner of directives. The other good news in that comments without directives are ignored by the processor, so we don't care (maybe) how they are mangled.]
-
-
-*** Expansion in directives (e.g., OpenMP)
-:PROPERTIES:
-:reqid: [expand-directives]
-:status: TBD
-:source: ble1
-:END:
-
-This is problematic, as how does the preprocessor know which comments are directives?
-
-
 *** Expand =INCLUDE= lines as if =#include=
-:PROPERTIES:
-:reqid: [preprocess-fortran-include]
-:status: TBD
-:source: [Flpp§], jor1, JoR4
-:END:
+|------------------------------+--------+---------------------|
+| *ID*                           | *Status* | *Sources*             |
+|------------------------------+--------+---------------------|
+| [preprocess-fortran-include] | TBD    | [Flpp§], jor1, JoR4 |
+|------------------------------+--------+---------------------|
 
 Assuming the preprocessor is a mandatory part of the Fortran standard, preprocessor directives are allowed in the file specified in a Fortran =INCLUDE= line. Therefore, the preprocessor should process the =INCLUDE=-ed file as if it had been invoked via the =#include= directive.
 
@@ -517,44 +483,54 @@ Otherwise, where will the handling of directives the included file be handled, a
 
 
 *** Expand macro names in /kind-param/ in literal constants
-:PROPERTIES:
-:reqid: [expand-kind-param]
-:status: TBD
-:source: JoR3, [F2023§7.4.3.1R709 Integer type], [F2023§7.4.3.2R714 Real type], [F2023§7.4.4.3R724 Character literal constant], [F2023§7.4.5R725 Logical type]
-:END:
+|---------------------+--------+-------------------------------------------------|
+| *ID*                  | *Status* | *Sources*                                         |
+|---------------------+--------+-------------------------------------------------|
+| [expand-kind-param] | TBD    | JoR3                                            |
+|                     |        | [F2023§7.4.3.1R709 Integer type]                |
+|                     |        | [F2023§7.4.3.2R714 Real type]                   |
+|                     |        | [F2023§7.4.4.3R724 Character literal constant], |
+|                     |        | [F2023§7.4.5R725 Logical type]                  |
+|---------------------+--------+-------------------------------------------------|
 
 If the /kind-param/ is a /scalar-int-constant-name/ following the underscore in an /int-literal-constant/, /real-literal-constant/, and /logical-literal-constant/, that constant name is subject to macro expansion. This needs to be explicit, as otherwise the preprocessor might treat =_kind-name= as an identifier, as many preprocessor predefined macro names begin with an underscore.
 
 In a /char-literal-constant/, if the /kind-param/ preceding the underscore (=_=) is a /scalar-int-constant-name/, that constant name is subject to macro expansion. This needs to be explicit, as otherwise the preprocessor might treat =kind-name_= as an identifier.
 
 
-**  Output form
+**  Output form                   :noexport:
 The user may request the preprocessor to produce the source representation after preprocessing. How this is requested is processor-dependent. If provided, the source form of the preprocessor output shall be bound by the following requirements.
 
 *** =#line= and =#file= directives in the output
-:PROPERTIES:
-:reqid: [output-provenance-directives]
-:status: TBD
-:source: [Flpp§], jor4, [F2023§6.3.2 Free source form]
-:END:
+|--------------------------------+--------+--------------------------------|
+| *ID*                             | *Status* | *Sources*                        |
+|--------------------------------+--------+--------------------------------|
+| [output-provenance-directives] | TBD    | [Flpp§]                        |
+|                                |        | jor4                           |
+|                                |        | [F2023§6.3.2 Free source form] |
+|--------------------------------+--------+--------------------------------|
 
 To show source code origin information (such as for error messages), the preprocessor may generate such origin information in the form of =#line= and =#file= directives. These directive lines may be up to 10,000 characters long, as in free-form Fortran input.
 
 
 *** Directive lines begin with a =#= in column 1
-:PROPERTIES:
-:reqid: [output-directives-column-1]
-:status: TBD
-:source: [Flpp§], jor4, [F2023§6.3.3 Fixed source form]
-:END:
+|------------------------------+--------+---------------------------------|
+| *ID*                           | *Status* | *Sources*                         |
+|------------------------------+--------+---------------------------------|
+| [output-directives-column-1] | TBD    | [Flpp§]                         |
+|                              |        | jor4                            |
+|                              |        | [F2023§6.3.3 Fixed source form] |
+|------------------------------+--------+---------------------------------|
 
 
 *** Fixed-form input becomes fixed-form output
-:PROPERTIES:
-:reqid: [output-fixed-to-fixed]
-:status: TBD
-:source: [Flpp§], jor4, [F2023§6.3.3 Fixed source form]
-:END:
+|-------------------------+--------+---------------------------------|
+| *ID*                      | *Status* | *Sources*                         |
+|-------------------------+--------+---------------------------------|
+| [output-fixed-to-fixed] | TBD    | [Flpp§]                         |
+|                         |        | jor4                            |
+|                         |        | [F2023§6.3.3 Fixed source form] |
+|-------------------------+--------+---------------------------------|
 
 When the preprocessor produces output corresponding to fixed-form Fortran input (such as with the =-E= option supported by some C compilers), it must produce valid Fortran fixed-form source code. This may require re-flowing the preprocessed output to the 72-column boundary.
 
@@ -565,11 +541,12 @@ When the preprocessor produces output corresponding to fixed-form Fortran input 
 
 
 *** Free-form input becomes free-form output
-:PROPERTIES:
-:reqid: [output-free-to-free]
-:status: TBD
-:source: [Flpp§], [F2023§6.3.2 Free source form]
-:END:
+|-----------------------+--------+--------------------------------|
+| *ID*                    | *Status* | *Sources*                        |
+|-----------------------+--------+--------------------------------|
+| [output-free-to-free] | TBD    | [Flpp§]                        |
+|                       |        | [F2023§6.3.2 Free source form] |
+|-----------------------+--------+--------------------------------|
 
 When the preprocessor produces output corresponding to free-form Fortran input (such as with the =-E= option supported by some C compilers), it must produce valid free-form Fortran source code. This may require re-flowing the preprocessed output to the 10,000-column boundary.
 
@@ -577,22 +554,581 @@ When the preprocessor produces output corresponding to free-form Fortran input (
 
 
 
-** Phase 6 Convert preprocessing tokens to tokens
-With a suitable representation for preprocessing tokens, this phase may be unnecessary.
+* Syntax
+The EBNF grammar recognized in Phase 4.
+
+#+begin_src c
+/*
+ * A Bison grammar for Phase 4 of the Fortran preprocessor.
+ *
+ * This grammar assumes the tokenization of the input stream
+ * performed in Phase 3. As such, we don't see whitespace
+ * or comments. We do see identifiers, whole and real numbers,
+ * and tokens that carry additional information.
+ *
+ * In general, the grammar rules follow Clause 6.10 of
+ * the C programming language standard (ISO/IEC 9899:2018, IDT).
+ *
+ * The grammar rules for expressions represent the Fortran
+ * standard's expression rules in clause 10.1.2.
+ */
+
+%token                  HASH_DEFINE "#define"
+%token                  HASH_ELIF "#elif"
+%token                  HASH_ELSE "#else"
+%token                  HASH_ENDIF "#endif"
+%token                  HASH_ERROR "#error"
+%token                  HASH_IF "#if"
+%token                  HASH_IFDEF "#ifdef"
+%token                  HASH_IFNDEF "#ifndef"
+%token                  HASH_INCLUDE "#include"
+%token                  HASH_LINE "#line"
+%token                  HASH_PRAGMA "#pragma"
+%token                  HASH_UNDEF "#undef"
+%token                  HASH_WARNING "#warning"
+
+%left                   AMPERSAND "&"
+%left                   AMPERSAND_AMPERSAND "&&"
+%token                  AT "@"
+%token                  BANG "!"
+%left                   BANG_EQ "!="
+%left                   BAR "|"
+%left                   BAR_BAR "||"
+%left                   CARET "^"
+%token                  COLON ":"
+%token                  COLON_COLON "::"
+%token                  COMMA ","
+%token                  DOLLAR "$"
+%token                  ELLIPSES "..."
+%token                  EO_ARGS
+%token                  EOL
+%left                   EQ "="
+%left                   EQ_EQ "=="
+%token                  FORMAT "format"
+%left                   GT ">"
+%left                   GT_EQ ">="
+%left                   GT_GT ">>"
+%left                   HASH "#"
+%left                   HASH_HASH "##"
+%token                  ID
+%token                  ID_LPAREN                       /* only on #define */
+%token                  IMPLICIT "implicit"
+%token                  LBRACKET "["
+%token                  LPAREN "("
+%token                  LPAREN_SLASH "(/"
+%left                   LT "<"
+%left                   LT_EQ "<="
+%left                   LT_LT "<<"
+%left                   MINUS "-"
+%left                   PERCENT "%"
+%token                  PERIOD "."
+%left                   PERIOD_AND_PERIOD ".and."
+%left                   PERIOD_EQ_PERIOD ".eq."
+%left                   PERIOD_EQV_PERIOD ".eqv."
+%token                  PERIOD_FALSE_PERIOD ".false."
+%left                   PERIOD_GE_PERIOD ".ge."
+%left                   PERIOD_GT_PERIOD ".gt."
+%left                   PERIOD_ID_PERIOD                /* user-defined operator */
+%left                   PERIOD_LE_PERIOD ".le."
+%left                   PERIOD_LT_PERIOD ".lt."
+%left                   PERIOD_NE_PERIOD ".ne."
+%left                   PERIOD_NEQV_PERIOD ".neqv."
+%token                  PERIOD_NIL_PERIOD "nil."
+%left                   PERIOD_NOT_PERIOD ".not."
+%left                   PERIOD_OR_PERIOD ".or."
+%token                  PERIOD_TRUE_PERIOD ".true."
+%left                   PLUS "+"
+%left                   POINTS "=>"
+%token                  QUESTION "?"
+%token                  RBRACKET "]"
+%token                  REAL_NUMBER
+%token                  RPAREN ")"
+%left                   SEMICOLON ";"
+%left                   SLASH "/"
+%left                   SLASH_EQ "/="
+%token                  SLASH_RPAREN "/)"
+%left                   SLASH_SLASH "//"
+%token                  STRING
+%token                  TILDE "~"
+%left                   TIMES "*"
+%right                  TIMES_TIMES "**"
+%token                  UNDERSCORE  "_"                 /* for _KIND, not ID */
+%token                  WHOLE_NUMBER
+
+%token                  UND_UND_FILE "__FILE__"
+%token                  UND_UND_LINE "__LINE__"
+%token                  UND_UND_DATE "__DATE__"
+%token                  UND_UND_TIME "__TIME__"
+%token                  UND_UND_STDFORTRAN "__STDFORTRAN__"
+%token                  UND_UND_STDFORTRAN_VERSION "__STDFORTRAN_VERSION__"
+%token                  UND_UND_VA_ARGS "VA_ARGS"
+%token                  UND_UND_VA_OPT "VA_OPT"
 
 
+%%
 
-* Further investigation of existing Fortran projects
 
-** Add directives found inside =#include= files
+ExecutableProgram:
+      CommandLineDefinitionList EO_ARGS PreprocessingFile
+      ;
 
-** Add directives found inside =INCLUDE= files
+CommandLineDefinitionList:
+      /* empty */
+    | CommandLineDefinitionList CommandLineDefinition
+      ;
 
-** Add whether directives found inside =INCLUDE= files
+CommandLineDefinition:
+      IncludePath EOL
+    | DefineArgument EOL
+    | UndefineArgument EOL
+      ;
 
-** What projects depend on not expanding in =INCLUDE= files (besides VASP)?
+IncludePath:
+      HASH_INCLUDE STRING
+      ;
 
-** What projects depend on not preprocessing =INCLUDE= files
+DefineArgument:
+      HASH_DEFINE ID ReplacementText
+    | HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText
+      ;
+
+UndefineArgument:
+      HASH_UNDEF ID
+      ;
+
+PreprocessingFile:
+      /* empty */
+    | GroupPartList
+      ;
+
+/* A GroupPart is some directive, or some Fortran text. */
+GroupPartList:
+      GroupPart
+    | GroupPartList GroupPart
+      ;
+
+GroupPart:
+      IfSection
+    | ControlLine
+    | NonDirective
+    | FortranSourceLine
+      ;
+
+IfSection:
+      HASH_IF Expression EOL HASH_ENDIF EOL
+    | HASH_IF Expression EOL ElseGroup HASH_ENDIF EOL
+    | HASH_IF Expression EOL ElifGroupList HASH_ENDIF EOL
+    | HASH_IF Expression EOL ElifGroupList ElseGroup HASH_ENDIF EOL
+    | HASH_IFDEF ID EOL GroupPartList HASH_ENDIF EOL
+    | HASH_IFNDEF ID EOL GroupPartList HASH_ENDIF EOL
+      ;
+
+ElifGroupList:
+      HASH_ELIF ID EOL GroupPartList
+    | ElifGroupList HASH_ELIF ID EOL GroupPartList
+      ;
+
+ElseGroup:
+      HASH_ELSE EOL GroupPartList
+      ;
+
+ControlLine:
+      IncludeControlLine
+    | DefineIdControlLine
+    | DefineFunctionControlLine
+    | LineControlLine
+    | ErrorControlLine
+    | WarningControlLine
+    | PragmaControlLine
+      ;
+
+/* TODO Add PPTokens as alternative. */
+IncludeControlLine:
+      HASH_INCLUDE STRING EOL
+      ;
+
+DefineIdControlLine:
+      HASH_DEFINE ID EOL
+    | HASH_DEFINE ID PPTokenList EOL
+      ;
+
+/*
+ * Parameter lists on macro functions are comma-separated
+ * identifiers.
+ */
+DefineFunctionControlLine:
+      HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL
+    | HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL
+      ;
+
+LambdaList:
+      /* empty */
+    | ELLIPSES
+    | IDList
+    | IDList COMMA ELLIPSES
+      ;
+
+IDList:
+      ID
+    | IDList COMMA ID
+      ;
+
+LineControlLine:
+      HASH_LINE STRING WHOLE_NUMBER EOL
+    | HASH_LINE WHOLE_NUMBER EOL
+      ;
+
+ErrorControlLine:
+      HASH_ERROR STRING EOL
+      ;
+
+WarningControlLine:
+      HASH_WARNING STRING EOL
+      ;
+
+PragmaControlLine:
+      HASH_PRAGMA PPTokenList EOL
+      ;
+
+NonDirective:
+      HASH PPTokenList EOL
+      ;
+
+ReplacementText:
+      ReplacementToken
+    | ReplacementText ReplacementToken
+      ;
+
+/*
+ * '#' and '##' operators can only appear in the replacement
+ * text in #define directives.
+ */
+ReplacementToken:
+      PPToken
+    | HASH
+    | HASH_HASH
+      ;
+
+PPTokenList:
+      PPToken
+    | PPTokenList PPToken
+      ;
+
+PPToken:
+      FortranToken
+    | CPPToken
+      ;
+
+PPTokenListExceptCommaRParen:
+      PPTokenExceptCommaRParen
+    | PPTokenListExceptCommaRParen PPTokenExceptCommaRParen
+    ;
+
+PPTokenExceptCommaRParen:
+      FortranTokenExceptCommaRParen
+    | CPPToken
+      ;
+
+/*
+ * This should include every token that the tokenizer
+ * could recognize. The tokenizer has to do some recognition
+ * of Fortran operators (such as .AND.) and places where
+ * preprocessing expansion should not * occur (such as FORMAT
+ * and IMPLICIT).
+ */
+
+FortranTokenList:
+      FortranToken
+    | FortranTokenList FortranToken
+    ;
+
+FortranToken:
+      FortranTokenAnywhere
+    | COMMA
+    | RPAREN
+    | FORMAT
+    | IMPLICIT
+    ;
+
+FortranTokenExceptCommaRParen:
+      FortranTokenAnywhere
+    | FORMAT
+    | IMPLICIT
+    ;
+
+FortranTokenExceptFormatExplicit:
+      FortranTokenAnywhere
+    | COMMA
+    | RPAREN
+    ;
+
+FortranTokenAnywhere:
+      AT
+    | COLON
+    | COLON_COLON
+    | DOLLAR
+    | EQ
+    | EQ_EQ
+    | GT
+    | GT_EQ
+    | ID
+    | LBRACKET
+    | LPAREN
+    | LT
+    | LT_EQ
+    | MINUS
+    | PERCENT
+    | PERIOD
+    | PERIOD_AND_PERIOD
+    | PERIOD_EQ_PERIOD
+    | PERIOD_EQV_PERIOD
+    | PERIOD_FALSE_PERIOD
+    | PERIOD_GE_PERIOD
+    | PERIOD_GT_PERIOD
+    | PERIOD_ID_PERIOD                /* user-defined operator */
+    | PERIOD_LE_PERIOD
+    | PERIOD_LT_PERIOD
+    | PERIOD_NE_PERIOD
+    | PERIOD_NEQV_PERIOD
+    | PERIOD_NIL_PERIOD
+    | PERIOD_NOT_PERIOD
+    | PERIOD_OR_PERIOD
+    | PERIOD_TRUE_PERIOD
+    | PLUS
+    | POINTS
+    | QUESTION
+    | RBRACKET
+    | REAL_NUMBER
+    | SEMICOLON
+    | SLASH
+    | SLASH_EQ
+    | SLASH_SLASH
+    | STRING
+    | TIMES
+    | TIMES_TIMES
+    | UNDERSCORE                      /* for _KIND, not within ID */
+    | WHOLE_NUMBER
+      ;
+
+FortranTokenListExceptFormatExplicit:
+      FortranTokenExceptFormatExplicit
+    | FortranTokenListExceptFormatExplicit FortranTokenExceptFormatExplicit
+      ;
+
+/*
+ * Tokens that can appear in C preprocessor replacement text
+ * in addition to the Fortran tokens.
+ */
+CPPToken:
+      AMPERSAND
+    | AMPERSAND_AMPERSAND
+    | BANG
+    | BANG_EQ
+    | BAR
+    | BAR_BAR
+    | CARET
+    | GT_GT
+    | LT_LT
+    | TILDE
+      ;
+
+/* Following Fortran ISO/IEC 1539-1:2023 Clause 10.1.2
+ *
+ * modified for C-like syntax
+ *
+ *
+ * INCITS and WG5 have agreed (so far) that the preprocessor
+ * should conform to a subset of the C preprocessor
+ * expression syntax. There has been no consensus
+ * to include the standard Fortran operators, but
+ * we include them here for completeness. (It is easier
+ * to discuss removing them than adding them.)
+ *
+ * Note that operator precedence differs between C
+ * and Fortran. The grammar below attempts to merge
+ * these precedence lists, leaning towards C's
+ * operator precedence.
+ */
+Expression:
+      ConditionalExpr
+    | Expression EquivOp ConditionalExpr
+      ;
+
+EquivOp:
+      PERIOD_EQV_PERIOD
+    | PERIOD_NEQV_PERIOD
+      ;
+
+ConditionalExpr:
+      LogicalOrExpr QUESTION Expression COLON ConditionalExpr
+    | LogicalOrExpr
+      ;
+
+LogicalOrExpr:
+      LogicalAndExpr
+    | LogicalOrExpr OrOp LogicalAndExpr
+      ;
+
+OrOp:
+      BAR_BAR
+    | PERIOD_OR_PERIOD
+      ;
+
+LogicalAndExpr:
+      InclusiveOrExpr
+    | LogicalAndExpr AndOp InclusiveOrExpr
+      ;
+
+AndOp:
+      AMPERSAND_AMPERSAND
+    | PERIOD_AND_PERIOD
+      ;
+
+InclusiveOrExpr:
+      ExclusiveOrExpr
+    | InclusiveOrExpr BAR ExclusiveOrExpr
+      ;
+
+ExclusiveOrExpr:
+      AndExpr
+    | ExclusiveOrExpr CARET AndExpr
+      ;
+
+AndExpr:
+      EqualityExpr
+    | AndExpr AMPERSAND EqualityExpr
+      ;
+
+EqualityExpr:
+      RelationalExpr
+    | EqualityExpr EqualityOp RelationalExpr
+      ;
+
+EqualityOp:
+      PERIOD_EQ_PERIOD
+    | PERIOD_NE_PERIOD
+    | EQ_EQ
+    | SLASH_EQ
+    | BANG_EQ
+      ;
+
+RelationalExpr:
+      ShiftExpr
+    | RelationalExpr RelationalOp ShiftExpr
+      ;
+
+RelationalOp:
+      PERIOD_LE_PERIOD
+    | PERIOD_LT_PERIOD
+    | PERIOD_GE_PERIOD
+    | PERIOD_GT_PERIOD
+    | LT
+    | GT
+    | LT_EQ
+    | GT_EQ
+      ;
+
+ShiftExpr:
+      CharacterExpr
+    | ShiftExpr ShiftOp CharacterExpr
+      ;
+
+ShiftOp:
+      LT_LT
+    | GT_GT
+      ;
+
+CharacterExpr:
+      AdditiveExpr
+    | CharacterExpr SLASH_SLASH AdditiveExpr
+      ;
+
+AdditiveExpr:
+      MultiplicativeExpr
+    | AdditiveExpr AddOp MultiplicativeExpr
+      ;
+
+AddOp:
+      PLUS
+    | MINUS
+      ;
+
+MultiplicativeExpr:
+      PowerExpr
+    | MultiplicativeExpr MultOp PowerExpr
+      ;
+
+MultOp:
+      TIMES
+    | SLASH
+    | PERCENT
+      ;
+
+PowerExpr:
+      UnaryExpr
+    | UnaryExpr TIMES_TIMES PowerExpr
+      ;
+
+UnaryExpr:
+      UnaryOp PostfixExpr
+    | PostfixExpr
+      ;
+
+UnaryOp:
+      PLUS
+    | MINUS
+    | PERIOD_NOT_PERIOD
+    | BANG
+    | TILDE
+      ;
+
+PostfixExpr:
+      PrimaryExpr
+    | ID LPAREN RPAREN
+    | ID LPAREN ActualArgumentList RPAREN
+      ;
+
+/* TODO: Really this should be properly nested parenthesized lists */
+ActualArgumentList:
+      PPTokenListExceptCommaRParen
+    | ActualArgumentList COMMA PPTokenListExceptCommaRParen
+      ;
+
+/* Real numbers aren't allowed in conditional explessions */
+PrimaryExpr:
+      WHOLE_NUMBER
+    | ID
+    | PERIOD_FALSE_PERIOD
+    | PERIOD_NIL_PERIOD
+    | PERIOD_TRUE_PERIOD
+    | LPAREN Expression RPAREN
+    | PredefinedIdentifier
+      ;
+
+/* Identifiers known to the preprocessor (such as __FILE__) */
+PredefinedIdentifier:
+      UND_UND_FILE
+    | UND_UND_LINE
+    | UND_UND_DATE
+    | UND_UND_TIME
+    | UND_UND_STDFORTRAN
+    | UND_UND_STDFORTRAN_VERSION
+    | UND_UND_VA_ARGS
+    | UND_UND_VA_OPT
+    /* | ProcessorDefinedPPIdentifier */
+      ;
+
+/* /\* Implementation-defined predefined identifiers *\/ */
+/* ProcessorDefinedPPIdentifier: */
+/*       ; */
+
+FortranSourceLine:
+      EOL
+    | FORMAT FortranTokenList EOL
+    | IMPLICIT FortranTokenList EOL
+    | FortranTokenListExceptFormatExplicit EOL
+      ;
+#+end_src
 
 
 [[bibliographystyle:alpha]]
