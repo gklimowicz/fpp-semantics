@@ -11,7 +11,7 @@
 
 
 * Introduction
-The INCITS/Fortran committee has discussed several times in the Plenary meetings, and the JoR subgroup has met several times, to lay down formal requirements for the proposed Fortran preprocessor (FPP) for Fortran 202y (presumably 2028).
+The INCITS/Fortran committee has discussed several times in the Plenary meetings, and the JoR subgroup has also met several times, to lay down formal requirements for the proposed Fortran preprocessor (FPP) for Fortran 202y (presumably 2028).
 
 This paper lists the requirements and syntax for Phase 0 of the preprocessor, the Line Conjoiner.
 
