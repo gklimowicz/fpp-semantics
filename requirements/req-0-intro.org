@@ -17,7 +17,7 @@ This paper lists the high-level requirements and how JoR came to them.
 
 The first section, ``Guiding Principles'', describes the value system we use to evaluate which requirements are most import (or unimportant) for the Fortran preprocessor.
 
-The second section, ``On Fortran source form'', describes the peculiarities of Fortran source, C source, C preprocessor (CPP) directives, and which conventions we will follow for FPP. Many of the differences between CPP and FPP arise from these peculiarities.
+The second section, ``High-level requirements'', describes the peculiarities of Fortran source, C source, C preprocessor (CPP) directives, and which conventions we will follow for FPP. Many of the differences between CPP and FPP arise from these peculiarities.
 
 The third section describes phases of the translation process that lead up to preprocessing and subsequent processing by ``the processor'' itself. As we have these phase out, the phase for directive execution in FPP should be identical to CPP.
 
@@ -173,18 +173,18 @@ For free-form Fortran source, follow the ~&~ conventions to produce a sequence o
 In either form, remove continuations from directive lines (those lines beginning with ~#~).
 
 
-** Phase 2: process comments
+** Phase 2: Process comments
 For fixed and free-form source, translate comment-based directives (such as ~!dir$~, ~!omp$~, ~!acc$~, and ~CDIR$~, ~COMP$~, and ~Cacc$~) into some kind of formal pragma (such as a ~#pragma~ directive).
-
-The Fortran standard should specify whether and how macros are expanded in pragmas.
 
 Which comment-directives are translated to pragmas is processor-dependent.
 
-All remaining comments are replaced with a single space. (This may be combined with the previous phase, to simplify the definition of the preprocessing pipeline.)
+The Fortran standard should specify whether and how macros are expanded in pragmas.
+
+All remaining comments are replaced with a single space.
 
 
 ** Phase 3: Tokenize the source into preprocessing tokens
-The output from Phase 3 is converted to preprocessor tokens according to the rules defined in ``On Fortran source form'' above.
+The output from Phase 2 is converted to preprocessor tokens according to the rules defined in the Fortran standard and in ``High-level requirements'' above.
 
 
 ** Phase 4: Execute preprocessor directives
