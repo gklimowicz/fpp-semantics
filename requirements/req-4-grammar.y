@@ -108,166 +108,108 @@
 %%
 
 
-ExecutableProgram:
-      CommandLineDefinitionList EO_ARGS PreprocessingFile
-      ;
+ExecutableProgram: CommandLineDefinitionList EO_ARGS PreprocessingFile;
 
-CommandLineDefinitionList:
-      %empty
-    | CommandLineDefinitionList CommandLineDefinition
-      ;
+CommandLineDefinitionList: %empty;
+CommandLineDefinitionList: CommandLineDefinitionList CommandLineDefinition;
 
-CommandLineDefinition:
-      IncludePath EOL
-    | DefineArgument EOL
-    | UndefineArgument EOL
-      ;
+CommandLineDefinition: IncludePath EOL;
+CommandLineDefinition: DefineArgument EOL;
+CommandLineDefinition: UndefineArgument EOL;
 
-IncludePath:
-      HASH_INCLUDE STRING
-      ;
+IncludePath: HASH_INCLUDE STRING;
 
-DefineArgument:
-      HASH_DEFINE ID ReplacementText
-    | HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText
-      ;
+DefineArgument: HASH_DEFINE ID ReplacementText;
+DefineArgument: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText;
 
-UndefineArgument:
-      HASH_UNDEF ID
-      ;
+UndefineArgument: HASH_UNDEF ID;
 
-PreprocessingFile:
-      %empty
-    | GroupPartList
-      ;
+PreprocessingFile: %empty;
+PreprocessingFile: GroupPartList;
 
 /* A GroupPart is some directive, or some Fortran text. */
-GroupPartList:
-      GroupPart
-    | GroupPartList GroupPart
-      ;
+GroupPartList: GroupPart;
+GroupPartList: GroupPartList GroupPart;
 
-GroupPart:
-      IfSection
-    | ControlLine
-    | NonDirective
-    | FortranSourceLine
-      ;
+GroupPart: IfSection;
+GroupPart: ControlLine;
+GroupPart: NonDirective;
+GroupPart: FortranSourceLine;
 
-IfSection:
-      HASH_IF Expression EOL HASH_ENDIF EOL
-    | HASH_IF Expression EOL ElseGroup HASH_ENDIF EOL
-    | HASH_IF Expression EOL ElifGroupList HASH_ENDIF EOL
-    | HASH_IF Expression EOL ElifGroupList ElseGroup HASH_ENDIF EOL
-    | HASH_IFDEF ID EOL GroupPartList HASH_ENDIF EOL
-    | HASH_IFNDEF ID EOL GroupPartList HASH_ENDIF EOL
-      ;
+IfSection: HASH_IF Expression EOL HASH_ENDIF EOL;
+IfSection: HASH_IF Expression EOL ElseGroup HASH_ENDIF EOL;
+IfSection: HASH_IF Expression EOL ElifGroupList HASH_ENDIF EOL;
+IfSection: HASH_IF Expression EOL ElifGroupList ElseGroup HASH_ENDIF EOL;
+IfSection: HASH_IFDEF ID EOL GroupPartList HASH_ENDIF EOL;
+IfSection: HASH_IFNDEF ID EOL GroupPartList HASH_ENDIF EOL;
 
-ElifGroupList:
-      HASH_ELIF ID EOL GroupPartList
-    | ElifGroupList HASH_ELIF ID EOL GroupPartList
-      ;
+ElifGroupList: HASH_ELIF ID EOL GroupPartList;
+ElifGroupList: ElifGroupList HASH_ELIF ID EOL GroupPartList;
 
-ElseGroup:
-      HASH_ELSE EOL GroupPartList
-      ;
+ElseGroup: HASH_ELSE EOL GroupPartList;
 
-ControlLine:
-      IncludeControlLine
-    | DefineIdControlLine
-    | DefineFunctionControlLine
-    | LineControlLine
-    | ErrorControlLine
-    | WarningControlLine
-    | PragmaControlLine
-      ;
+ControlLine: IncludeControlLine;
+ControlLine: DefineIdControlLine;
+ControlLine: DefineFunctionControlLine;
+ControlLine: LineControlLine;
+ControlLine: ErrorControlLine;
+ControlLine: WarningControlLine;
+ControlLine: PragmaControlLine;
 
 /* TODO Add PPTokens as alternative. */
-IncludeControlLine:
-      HASH_INCLUDE STRING EOL
-      ;
+IncludeControlLine: HASH_INCLUDE STRING EOL;
 
-DefineIdControlLine:
-      HASH_DEFINE ID EOL
-    | HASH_DEFINE ID PPTokenList EOL
-      ;
+DefineIdControlLine: HASH_DEFINE ID EOL;
+DefineIdControlLine: HASH_DEFINE ID PPTokenList EOL;
 
 /*
  * Parameter lists on macro functions are comma-separated
  * identifiers.
  */
-DefineFunctionControlLine:
-      HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL
-    | HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL
-      ;
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL;
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL;
 
-LambdaList:
-      %empty
-    | ELLIPSES
-    | IDList
-    | IDList COMMA ELLIPSES
-      ;
+LambdaList: %empty;
+LambdaList: ELLIPSES;
+LambdaList: IDList;
+LambdaList: IDList COMMA ELLIPSES;
 
-IDList:
-      ID
-    | IDList COMMA ID
-      ;
+IDList: ID;
+IDList: IDList COMMA ID;
 
-LineControlLine:
-      HASH_LINE STRING WHOLE_NUMBER EOL
-    | HASH_LINE WHOLE_NUMBER EOL
-      ;
+LineControlLine: HASH_LINE STRING WHOLE_NUMBER EOL;
+LineControlLine: HASH_LINE WHOLE_NUMBER EOL;
 
-ErrorControlLine:
-      HASH_ERROR STRING EOL
-      ;
+ErrorControlLine: HASH_ERROR STRING EOL;
 
-WarningControlLine:
-      HASH_WARNING STRING EOL
-      ;
+WarningControlLine: HASH_WARNING STRING EOL;
 
-PragmaControlLine:
-      HASH_PRAGMA PPTokenList EOL
-      ;
+PragmaControlLine: HASH_PRAGMA PPTokenList EOL;
 
-NonDirective:
-      HASH PPTokenList EOL
-      ;
+NonDirective: HASH PPTokenList EOL;
 
-ReplacementText:
-      ReplacementToken
-    | ReplacementText ReplacementToken
-      ;
+ReplacementText: ReplacementToken;
+ReplacementText: ReplacementText ReplacementToken;
 
 /*
  * '#' and '##' operators can only appear in the replacement
  * text in #define directives.
  */
-ReplacementToken:
-      PPToken
-    | HASH
-    | HASH_HASH
-      ;
+ReplacementToken: PPToken;
+ReplacementToken: HASH;
+ReplacementToken: HASH_HASH;
 
-PPTokenList:
-      PPToken
-    | PPTokenList PPToken
-      ;
+PPTokenList: PPToken;
+PPTokenList: PPTokenList PPToken;
 
-PPToken:
-      FortranToken
-    | CPPToken
-      ;
+PPToken: FortranToken;
+PPToken: CPPToken;
 
-PPTokenListExceptCommaRParen:
-      PPTokenExceptCommaRParen
-    | PPTokenListExceptCommaRParen PPTokenExceptCommaRParen
-    ;
+PPTokenListExceptCommaRParen: PPTokenExceptCommaRParen;
+PPTokenListExceptCommaRParen: PPTokenListExceptCommaRParen PPTokenExceptCommaRParen;
 
-PPTokenExceptCommaRParen:
-      FortranTokenExceptCommaRParen
-    | CPPToken
-      ;
+PPTokenExceptCommaRParen: FortranTokenExceptCommaRParen;
+PPTokenExceptCommaRParen: CPPToken;
 
 /*
  * This should include every token that the tokenizer
@@ -277,100 +219,86 @@ PPTokenExceptCommaRParen:
  * and IMPLICIT).
  */
 
-FortranTokenList:
-      FortranToken
-    | FortranTokenList FortranToken
-    ;
+FortranTokenList: FortranToken;
+FortranTokenList: FortranTokenList FortranToken;
 
-FortranToken:
-      FortranTokenAnywhere
-    | COMMA
-    | RPAREN
-    | FORMAT
-    | IMPLICIT
-    ;
+FortranToken: FortranTokenAnywhere;
+FortranToken: COMMA;
+FortranToken: RPAREN;
+FortranToken: FORMAT;
+FortranToken: IMPLICIT;
 
-FortranTokenExceptCommaRParen:
-      FortranTokenAnywhere
-    | FORMAT
-    | IMPLICIT
-    ;
+FortranTokenExceptCommaRParen: FortranTokenAnywhere;
+FortranTokenExceptCommaRParen: FORMAT;
+FortranTokenExceptCommaRParen: IMPLICIT;
 
-FortranTokenExceptFormatExplicit:
-      FortranTokenAnywhere
-    | COMMA
-    | RPAREN
-    ;
+FortranTokenExceptFormatExplicit: FortranTokenAnywhere;
+FortranTokenExceptFormatExplicit: COMMA;
+FortranTokenExceptFormatExplicit: RPAREN;
 
-FortranTokenAnywhere:
-      AT
-    | COLON
-    | COLON_COLON
-    | DOLLAR
-    | EQ
-    | EQ_EQ
-    | GT
-    | GT_EQ
-    | ID
-    | LBRACKET
-    | LPAREN
-    | LT
-    | LT_EQ
-    | MINUS
-    | PERCENT
-    | PERIOD
-    | PERIOD_AND_PERIOD
-    | PERIOD_EQ_PERIOD
-    | PERIOD_EQV_PERIOD
-    | PERIOD_FALSE_PERIOD
-    | PERIOD_GE_PERIOD
-    | PERIOD_GT_PERIOD
-    | PERIOD_ID_PERIOD                /* user-defined operator */
-    | PERIOD_LE_PERIOD
-    | PERIOD_LT_PERIOD
-    | PERIOD_NE_PERIOD
-    | PERIOD_NEQV_PERIOD
-    | PERIOD_NIL_PERIOD
-    | PERIOD_NOT_PERIOD
-    | PERIOD_OR_PERIOD
-    | PERIOD_TRUE_PERIOD
-    | PLUS
-    | POINTS
-    | QUESTION
-    | RBRACKET
-    | REAL_NUMBER
-    | SEMICOLON
-    | SLASH
-    | SLASH_EQ
-    | SLASH_SLASH
-    | STRING
-    | TIMES
-    | TIMES_TIMES
-    | UNDERSCORE                      /* for _KIND, not within ID */
-    | WHOLE_NUMBER
-      ;
+FortranTokenAnywhere: AT;
+FortranTokenAnywhere: COLON;
+FortranTokenAnywhere: COLON_COLON;
+FortranTokenAnywhere: DOLLAR;
+FortranTokenAnywhere: EQ;
+FortranTokenAnywhere: EQ_EQ;
+FortranTokenAnywhere: GT;
+FortranTokenAnywhere: GT_EQ;
+FortranTokenAnywhere: ID;
+FortranTokenAnywhere: LBRACKET;
+FortranTokenAnywhere: LPAREN;
+FortranTokenAnywhere: LT;
+FortranTokenAnywhere: LT_EQ;
+FortranTokenAnywhere: MINUS;
+FortranTokenAnywhere: PERCENT;
+FortranTokenAnywhere: PERIOD;
+FortranTokenAnywhere: PERIOD_AND_PERIOD;
+FortranTokenAnywhere: PERIOD_EQ_PERIOD;
+FortranTokenAnywhere: PERIOD_EQV_PERIOD;
+FortranTokenAnywhere: PERIOD_FALSE_PERIOD;
+FortranTokenAnywhere: PERIOD_GE_PERIOD;
+FortranTokenAnywhere: PERIOD_GT_PERIOD;
+FortranTokenAnywhere: PERIOD_ID_PERIOD                /* user-defined operator */;
+FortranTokenAnywhere: PERIOD_LE_PERIOD;
+FortranTokenAnywhere: PERIOD_LT_PERIOD;
+FortranTokenAnywhere: PERIOD_NE_PERIOD;
+FortranTokenAnywhere: PERIOD_NEQV_PERIOD;
+FortranTokenAnywhere: PERIOD_NIL_PERIOD;
+FortranTokenAnywhere: PERIOD_NOT_PERIOD;
+FortranTokenAnywhere: PERIOD_OR_PERIOD;
+FortranTokenAnywhere: PERIOD_TRUE_PERIOD;
+FortranTokenAnywhere: PLUS;
+FortranTokenAnywhere: POINTS;
+FortranTokenAnywhere: QUESTION;
+FortranTokenAnywhere: RBRACKET;
+FortranTokenAnywhere: REAL_NUMBER;
+FortranTokenAnywhere: SEMICOLON;
+FortranTokenAnywhere: SLASH;
+FortranTokenAnywhere: SLASH_EQ;
+FortranTokenAnywhere: SLASH_SLASH;
+FortranTokenAnywhere: STRING;
+FortranTokenAnywhere: TIMES;
+FortranTokenAnywhere: TIMES_TIMES;
+FortranTokenAnywhere: UNDERSCORE                      /* for _KIND, not within ID */;
+FortranTokenAnywhere: WHOLE_NUMBER;
 
-FortranTokenListExceptFormatExplicit:
-      FortranTokenExceptFormatExplicit
-    | FortranTokenListExceptFormatExplicit FortranTokenExceptFormatExplicit
-      ;
+FortranTokenListExceptFormatExplicit: FortranTokenExceptFormatExplicit;
+FortranTokenListExceptFormatExplicit: FortranTokenListExceptFormatExplicit FortranTokenExceptFormatExplicit;
 
 /*
  * Tokens that can appear in C preprocessor replacement text
  * in addition to the Fortran tokens.
  */
-CPPToken:
-      AMPERSAND
-    | AMPERSAND_AMPERSAND
-    | BANG
-    | BANG_EQ
-    | BAR
-    | BAR_BAR
-    | CARET
-    | GT_GT
-    | LT_LT
-    | TILDE
-      ;
+CPPToken: AMPERSAND;
+CPPToken: AMPERSAND_AMPERSAND;
+CPPToken: BANG;
+CPPToken: BANG_EQ;
+CPPToken: BAR;
+CPPToken: BAR_BAR;
+CPPToken: CARET;
+CPPToken: GT_GT;
+CPPToken: LT_LT;
+CPPToken: TILDE;
 
 /* Following Fortran ISO/IEC 1539-1:2023 Clause 10.1.2
  *
@@ -389,182 +317,124 @@ CPPToken:
  * these precedence lists, leaning towards C's
  * operator precedence.
  */
-Expression:
-      ConditionalExpr
-    | Expression EquivOp ConditionalExpr
-      ;
+Expression: ConditionalExpr;
+Expression: Expression EquivOp ConditionalExpr;
 
-EquivOp:
-      PERIOD_EQV_PERIOD
-    | PERIOD_NEQV_PERIOD
-      ;
+EquivOp: PERIOD_EQV_PERIOD;
+EquivOp: PERIOD_NEQV_PERIOD;
 
-ConditionalExpr:
-      LogicalOrExpr QUESTION Expression COLON ConditionalExpr
-    | LogicalOrExpr
-      ;
+ConditionalExpr: LogicalOrExpr QUESTION Expression COLON ConditionalExpr;
+ConditionalExpr: LogicalOrExpr;
 
-LogicalOrExpr:
-      LogicalAndExpr
-    | LogicalOrExpr OrOp LogicalAndExpr
-      ;
+LogicalOrExpr: LogicalAndExpr;
+LogicalOrExpr: LogicalOrExpr OrOp LogicalAndExpr;
 
-OrOp:
-      BAR_BAR
-    | PERIOD_OR_PERIOD
-      ;
+OrOp: BAR_BAR;
+OrOp: PERIOD_OR_PERIOD;
 
-LogicalAndExpr:
-      InclusiveOrExpr
-    | LogicalAndExpr AndOp InclusiveOrExpr
-      ;
+LogicalAndExpr: InclusiveOrExpr;
+LogicalAndExpr: LogicalAndExpr AndOp InclusiveOrExpr;
 
-AndOp:
-      AMPERSAND_AMPERSAND
-    | PERIOD_AND_PERIOD
-      ;
+AndOp: AMPERSAND_AMPERSAND;
+AndOp: PERIOD_AND_PERIOD;
 
-InclusiveOrExpr:
-      ExclusiveOrExpr
-    | InclusiveOrExpr BAR ExclusiveOrExpr
-      ;
+InclusiveOrExpr: ExclusiveOrExpr;
+InclusiveOrExpr: InclusiveOrExpr BAR ExclusiveOrExpr;
 
-ExclusiveOrExpr:
-      AndExpr
-    | ExclusiveOrExpr CARET AndExpr
-      ;
+ExclusiveOrExpr: AndExpr;
+ExclusiveOrExpr: ExclusiveOrExpr CARET AndExpr;
 
-AndExpr:
-      EqualityExpr
-    | AndExpr AMPERSAND EqualityExpr
-      ;
+AndExpr: EqualityExpr;
+AndExpr: AndExpr AMPERSAND EqualityExpr;
 
-EqualityExpr:
-      RelationalExpr
-    | EqualityExpr EqualityOp RelationalExpr
-      ;
+EqualityExpr: RelationalExpr;
+EqualityExpr: EqualityExpr EqualityOp RelationalExpr;
 
-EqualityOp:
-      PERIOD_EQ_PERIOD
-    | PERIOD_NE_PERIOD
-    | EQ_EQ
-    | SLASH_EQ
-    | BANG_EQ
-      ;
+EqualityOp: PERIOD_EQ_PERIOD;
+EqualityOp: PERIOD_NE_PERIOD;
+EqualityOp: EQ_EQ;
+EqualityOp: SLASH_EQ;
+EqualityOp: BANG_EQ;
 
-RelationalExpr:
-      ShiftExpr
-    | RelationalExpr RelationalOp ShiftExpr
-      ;
+RelationalExpr: ShiftExpr;
+RelationalExpr: RelationalExpr RelationalOp ShiftExpr;
 
-RelationalOp:
-      PERIOD_LE_PERIOD
-    | PERIOD_LT_PERIOD
-    | PERIOD_GE_PERIOD
-    | PERIOD_GT_PERIOD
-    | LT
-    | GT
-    | LT_EQ
-    | GT_EQ
-      ;
+RelationalOp: PERIOD_LE_PERIOD;
+RelationalOp: PERIOD_LT_PERIOD;
+RelationalOp: PERIOD_GE_PERIOD;
+RelationalOp: PERIOD_GT_PERIOD;
+RelationalOp: LT;
+RelationalOp: GT;
+RelationalOp: LT_EQ;
+RelationalOp: GT_EQ;
 
-ShiftExpr:
-      CharacterExpr
-    | ShiftExpr ShiftOp CharacterExpr
-      ;
+ShiftExpr: CharacterExpr;
+ShiftExpr: ShiftExpr ShiftOp CharacterExpr;
 
-ShiftOp:
-      LT_LT
-    | GT_GT
-      ;
+ShiftOp: LT_LT;
+ShiftOp: GT_GT;
 
-CharacterExpr:
-      AdditiveExpr
-    | CharacterExpr SLASH_SLASH AdditiveExpr
-      ;
+CharacterExpr: AdditiveExpr;
+CharacterExpr: CharacterExpr SLASH_SLASH AdditiveExpr;
 
-AdditiveExpr:
-      MultiplicativeExpr
-    | AdditiveExpr AddOp MultiplicativeExpr
-      ;
+AdditiveExpr: MultiplicativeExpr;
+AdditiveExpr: AdditiveExpr AddOp MultiplicativeExpr;
 
-AddOp:
-      PLUS
-    | MINUS
-      ;
+AddOp: PLUS;
+AddOp: MINUS;
 
-MultiplicativeExpr:
-      PowerExpr
-    | MultiplicativeExpr MultOp PowerExpr
-      ;
+MultiplicativeExpr: PowerExpr;
+MultiplicativeExpr: MultiplicativeExpr MultOp PowerExpr;
 
-MultOp:
-      TIMES
-    | SLASH
-    | PERCENT
-      ;
+MultOp: TIMES;
+MultOp: SLASH;
+MultOp: PERCENT;
 
-PowerExpr:
-      UnaryExpr
-    | UnaryExpr TIMES_TIMES PowerExpr
-      ;
+PowerExpr: UnaryExpr;
+PowerExpr: UnaryExpr TIMES_TIMES PowerExpr;
 
-UnaryExpr:
-      UnaryOp PostfixExpr
-    | PostfixExpr
-      ;
+UnaryExpr: UnaryOp PostfixExpr;
+UnaryExpr: PostfixExpr;
 
-UnaryOp:
-      PLUS
-    | MINUS
-    | PERIOD_NOT_PERIOD
-    | BANG
-    | TILDE
-      ;
+UnaryOp: PLUS;
+UnaryOp: MINUS;
+UnaryOp: PERIOD_NOT_PERIOD;
+UnaryOp: BANG;
+UnaryOp: TILDE;
 
-PostfixExpr:
-      PrimaryExpr
-    | ID LPAREN RPAREN
-    | ID LPAREN ActualArgumentList RPAREN
-      ;
+PostfixExpr: PrimaryExpr;
+PostfixExpr: ID LPAREN RPAREN;
+PostfixExpr: ID LPAREN ActualArgumentList RPAREN;
 
 /* TODO: Really this should be properly nested parenthesized lists */
-ActualArgumentList:
-      PPTokenListExceptCommaRParen
-    | ActualArgumentList COMMA PPTokenListExceptCommaRParen
-      ;
+ActualArgumentList: PPTokenListExceptCommaRParen;
+ActualArgumentList: ActualArgumentList COMMA PPTokenListExceptCommaRParen;
 
 /* Real numbers aren't allowed in conditional explessions */
-PrimaryExpr:
-      WHOLE_NUMBER
-    | ID
-    | PERIOD_FALSE_PERIOD
-    | PERIOD_NIL_PERIOD
-    | PERIOD_TRUE_PERIOD
-    | LPAREN Expression RPAREN
-    | PredefinedIdentifier
-      ;
+PrimaryExpr: WHOLE_NUMBER;
+PrimaryExpr: ID;
+PrimaryExpr: PERIOD_FALSE_PERIOD;
+PrimaryExpr: PERIOD_NIL_PERIOD;
+PrimaryExpr: PERIOD_TRUE_PERIOD;
+PrimaryExpr: LPAREN Expression RPAREN;
+PrimaryExpr: PredefinedIdentifier;
 
 /* Identifiers known to the preprocessor (such as __FILE__) */
-PredefinedIdentifier:
-      UND_UND_FILE
-    | UND_UND_LINE
-    | UND_UND_DATE
-    | UND_UND_TIME
-    | UND_UND_STDFORTRAN
-    | UND_UND_STDFORTRAN_VERSION
-    | UND_UND_VA_ARGS
-    | UND_UND_VA_OPT
+PredefinedIdentifier: UND_UND_FILE;
+PredefinedIdentifier: UND_UND_LINE;
+PredefinedIdentifier: UND_UND_DATE;
+PredefinedIdentifier: UND_UND_TIME;
+PredefinedIdentifier: UND_UND_STDFORTRAN;
+PredefinedIdentifier: UND_UND_STDFORTRAN_VERSION;
+PredefinedIdentifier: UND_UND_VA_ARGS;
+PredefinedIdentifier: UND_UND_VA_OPT;
     /* | ProcessorDefinedPPIdentifier */
-      ;
 
 /* /\* Implementation-defined predefined identifiers *\/ */
 /* ProcessorDefinedPPIdentifier: */
 /*       ; */
 
-FortranSourceLine:
-      EOL
-    | FORMAT FortranTokenList EOL
-    | IMPLICIT FortranTokenList EOL
-    | FortranTokenListExceptFormatExplicit EOL
-      ;
+FortranSourceLine: EOL;
+FortranSourceLine: FORMAT FortranTokenList EOL;
+FortranSourceLine: IMPLICIT FortranTokenList EOL;
+FortranSourceLine: FortranTokenListExceptFormatExplicit EOL;
