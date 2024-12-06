@@ -113,7 +113,7 @@ ExecutableProgram:
       ;
 
 CommandLineDefinitionList:
-      /* empty */
+      %empty
     | CommandLineDefinitionList CommandLineDefinition
       ;
 
@@ -137,7 +137,7 @@ UndefineArgument:
       ;
 
 PreprocessingFile:
-      /* empty */
+      %empty
     | GroupPartList
       ;
 
@@ -202,7 +202,7 @@ DefineFunctionControlLine:
       ;
 
 LambdaList:
-      /* empty */
+      %empty
     | ELLIPSES
     | IDList
     | IDList COMMA ELLIPSES
