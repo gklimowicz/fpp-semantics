@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+trap "exit 1" HUP INT QUIT TERM
+
+set -e -u -o pipefail
+
+CMD="$(basename $0)"
+CMD_DIR="$(dirname $0)"
+function usage {
+    (echo "Usage: $CMD [-hnv] grammar.y"
+     echo "-h        Print this help message."
+     echo "-n        Dry run. Don't execute commands."
+     echo "-v        Verbose. Print extra information if appropriate."
+     echo "Given a Bison grammar file, split '|' into separate rules.") 1>&2
+}
+
+DRY_RUN=
+VFLAG=
+while getopts hnv OPTCHAR; do
+    case $OPTCHAR in
+        h)  usage; exit 0;;
+        n)  DRY_RUN=1;;
+        v)  VFLAG=1;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+case $# in
+    1)  GRAMMAR="$1";;
+    *)  usage; exit 1;;
+esac
+
+gawk '
+/^  *;$/ {
+    next
+}
+
+/^[A-Za-z][A-Za-z0-9]*:$/ {
+    rule = $1 " "
+    printf("  rule only '%s'\n", rule) >> "/dev/stderr"
+    next
+}
+
+/^[A-Za-z%][A-Za-z0-9]*: .*$/ {
+    rule = $1 " "
+    printf("  rule+body: '%s'\n", rule) >> "/dev/stderr"
+    print
+    next
+}
+
+/^  *[A-Za-z%][A-Za-z0-9]*/ {
+    sub(/^  */, rule, $0)
+    printf("  rule '%s' body '%s'\n", rule, $0) >> "/dev/stderr"
+    print $0 ";"
+    next
+}
+
+/^ *[|] / {
+    sub(/^  *[|] /, rule, $0)
+    printf("  rule '%s' body '%s'\n", rule, $0) >> "/dev/stderr"
+    print $0 ";"
+    next
+}
+
+{ print }' <"$GRAMMAR"
