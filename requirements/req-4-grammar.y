@@ -136,17 +136,19 @@ GroupPart: ControlLine;
 GroupPart: NonDirective;
 GroupPart: FortranSourceLine;
 
-IfSection: HASH_IF Expression EOL HASH_ENDIF EOL;
-IfSection: HASH_IF Expression EOL ElseGroup HASH_ENDIF EOL;
-IfSection: HASH_IF Expression EOL ElifGroupList HASH_ENDIF EOL;
-IfSection: HASH_IF Expression EOL ElifGroupList ElseGroup HASH_ENDIF EOL;
-IfSection: HASH_IFDEF ID EOL GroupPartList HASH_ENDIF EOL;
-IfSection: HASH_IFNDEF ID EOL GroupPartList HASH_ENDIF EOL;
+IfSection: HASH_IF Expression EOL GroupPartList EndifLine;
+IfSection: HASH_IF Expression EOL GroupPartList ElseGroup EndifLine;
+IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList EndifLine;
+IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList ElseGroup EndifLine;
+IfSection: HASH_IFDEF ID EOL GroupPartList EndifLine;
+IfSection: HASH_IFNDEF ID EOL GroupPartList EndifLine;
 
 ElifGroupList: HASH_ELIF ID EOL GroupPartList;
 ElifGroupList: ElifGroupList HASH_ELIF ID EOL GroupPartList;
 
 ElseGroup: HASH_ELSE EOL GroupPartList;
+
+EndifLine: HASH_ENDIF EOL;
 
 ControlLine: IncludeControlLine;
 ControlLine: DefineIdControlLine;
