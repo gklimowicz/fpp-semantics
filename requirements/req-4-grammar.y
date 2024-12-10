@@ -13,185 +13,435 @@
  * standard's expression rules in clause 10.1.2.
  */
 
-%token                  HASH_DEFINE "#define"
-%token                  HASH_ELIF "#elif"
-%token                  HASH_ELSE "#else"
-%token                  HASH_ENDIF "#endif"
-%token                  HASH_ERROR "#error"
-%token                  HASH_IF "#if"
-%token                  HASH_IFDEF "#ifdef"
-%token                  HASH_IFNDEF "#ifndef"
-%token                  HASH_INCLUDE "#include"
-%token                  HASH_LINE "#line"
-%token                  HASH_PRAGMA "#pragma"
-%token                  HASH_UNDEF "#undef"
-%token                  HASH_WARNING "#warning"
+%code top {
+    #define _GNU_SOURCE
+    #include <stdio.h>
 
-%token                  AMPERSAND "&"
-%token                  AMPERSAND_AMPERSAND "&&"
-%token                  AT "@"
-%token                  BANG "!"
-%token                  BANG_EQ "!="
-%token                  BAR "|"
-%token                  BAR_BAR "||"
-%token                  CARET "^"
-%token                  COLON ":"
-%token                  COLON_COLON "::"
-%token                  COMMA ","
-%token                  DOLLAR "$"
-%token                  ELLIPSES "..."
-%token                  EO_ARGS
-%token                  EOL
-%token                  EQ "="
-%token                  EQ_EQ "=="
-%token                  FORMAT "format"
-%token                  GT ">"
-%token                  GT_EQ ">="
-%token                  GT_GT ">>"
-%token                  HASH "#"
-%token                  HASH_HASH "##"
-%token                  ID
-%token                  ID_LPAREN                       /* only on #define */
-%token                  IMPLICIT "implicit"
-%token                  LBRACKET "["
-%token                  LPAREN "("
-%token                  LPAREN_SLASH "(/"
-%token                  LT "<"
-%token                  LT_EQ "<="
-%token                  LT_LT "<<"
-%token                  MINUS "-"
-%token                  PERCENT "%"
-%token                  PERIOD "."
-%token                  PERIOD_AND_PERIOD ".and."
-%token                  PERIOD_EQ_PERIOD ".eq."
-%token                  PERIOD_EQV_PERIOD ".eqv."
-%token                  PERIOD_FALSE_PERIOD ".false."
-%token                  PERIOD_GE_PERIOD ".ge."
-%token                  PERIOD_GT_PERIOD ".gt."
-%token                  PERIOD_ID_PERIOD                /* user-defined operator */
-%token                  PERIOD_LE_PERIOD ".le."
-%token                  PERIOD_LT_PERIOD ".lt."
-%token                  PERIOD_NE_PERIOD ".ne."
-%token                  PERIOD_NEQV_PERIOD ".neqv."
-%token                  PERIOD_NIL_PERIOD "nil."
-%token                  PERIOD_NOT_PERIOD ".not."
-%token                  PERIOD_OR_PERIOD ".or."
-%token                  PERIOD_TRUE_PERIOD ".true."
-%token                  PLUS "+"
-%token                  POINTS "=>"
-%token                  QUESTION "?"
-%token                  RBRACKET "]"
-%token                  REAL_NUMBER
-%token                  RPAREN ")"
-%token                  SEMICOLON ";"
-%token                  SLASH "/"
-%token                  SLASH_EQ "/="
-%token                  SLASH_RPAREN "/)"
-%token                  SLASH_SLASH "//"
-%token                  STRING
-%token                  TILDE "~"
-%token                  TIMES "*"
-%token                  TIMES_TIMES "**"
-%token                  UNDERSCORE  "_"                 /* for _KIND, not ID */
-%token                  WHOLE_NUMBER
+    int yylex (void);
+    void yyerror (char const *);
+}
 
-%token                  UND_UND_FILE "__FILE__"
-%token                  UND_UND_LINE "__LINE__"
-%token                  UND_UND_DATE "__DATE__"
-%token                  UND_UND_TIME "__TIME__"
-%token                  UND_UND_STDFORTRAN "__STDFORTRAN__"
-%token                  UND_UND_STDFORTRAN_VERSION "__STDFORTRAN_VERSION__"
-%token                  UND_UND_VA_ARGS "VA_ARGS"
-%token                  UND_UND_VA_OPT "VA_OPT"
+%code requires {
+    #define YYLTYPE YYLTYPE
+    /* Location type, for source code origin of tokens */
+    typedef struct YYLTYPE
+    {
+        int first_line;
+        int first_column;
+        int last_line;
+        int last_column;
+        char *filename;
+    } YYLTYPE;
 
+}
+
+%code {
+    /* Parse stack values:
+     * - nothing of interest
+     * - an integer
+     * - a string
+     * - a token list
+     * - an environment: scope + current ast
+     */
+    typedef union YYSTYPE {
+        int               y_noval;
+        yytoken_kind_t    y_token;
+        int               y_ival;
+        char              *y_sval;
+        struct token_list *y_tokens;
+        struct ast        *y_ast;
+        struct scope      *y_scope;
+        struct env        *y_env;
+        struct def        *y_def;
+        struct path_list  *y_paths;
+        YYLTYPE           y_loc;
+    } YYSTYPE;
+
+    /* Tokens have a type, a location, and possibly an additional value. */
+    typedef struct token {
+        yytoken_kind_t  t_token;
+        YYLTYPE         t_loc;
+        YYSTYPE         t_val;
+    } token_t;
+
+    /* Macro definitions are made up of lists of tokens (to expand later).
+     * Represented as a queue.
+     */
+    typedef struct token_list {
+        struct token_elt    *t_first;
+        struct token_elt    *t_last;
+    } token_list_t;
+
+    typedef struct token_elt {
+        YYSTYPE             *t_token;
+        struct token_elt    *t_next;
+    } token_elt_t;
+
+    token_list_t *new_token_list();
+    token_list_t *append_token(token_list_t *token_list, token_t token, );
+    token_list_t *append_token_list(token_list_t *head, token_list_t *tail);
+    token_list_t *cons_token(token_t token, token_list_t *token_list);
+
+    /* Path lists as defined by preprocessor and command arguments.
+     * Represented as a queue.
+     */
+    typedef struct path_list {
+        struct path_elt    *t_first;
+        struct path_elt    *t_last;
+    } path_list_t;
+
+    typedef struct path_elt {
+        char                *t_path;
+        struct path_elt     *t_next;
+    } path_elt_t;
+
+    path_list_t *append_path(char *path, path_list_t *path_list);
+
+    /* Abstract syntax tree: an op, a location, and a set of operands. */
+    typedef struct ast {
+        int         a_op;
+        YYLTYPE     a_loc;
+        YYSTYPE     a_v1, a_v2, a_v3;
+    } ast_t;
+
+    ast_t *new_ast(token_t op, YYLTYPE loc; YYSTYPE *v1, YYSTYPE *v2, YYSTYPE *v3);
+
+    /* Macro definition: an id, a list of arguments, and a token-list definition. */
+    typedef struct def {
+        char         *d_id;
+        int          d_nargs;   /* -1 if no arg list, even empty */
+        token_list_t *d_args;
+        token_list_t *d_defn;
+    } def_t;
+
+    /* List of macro definitions within a scope. */
+    typedef struct defs_list {
+        def_t        *d_def;
+        struct defs_list *d_next;
+    } def_list_t;
+
+    /* Scope stack, separating definitions in each scope.
+     * Represented as a stack.
+     * I think there are only two:
+     * - From the command line
+     * - From within the file (and all its included files)
+     */
+    typedef struct scope {
+        struct scope     *s_outer;
+        struct path_list *s_paths;
+        def_list_t       *s_defs;
+    } scope_t;
+
+    scope_t *create_empty_scope();
+    scope_t *add_path(scope_t *cur, char *path);
+    scope_t *add_defn(scope_t *cur, char *id, token_list_t *text);
+    scope_t *add_defn_fin(scope_t *cur, char *id, token_list_t *args, token_list_t *text);
+    scope_t *rm_defn(scope_t *cur, char *id);
+
+    /* The environment, passed from production to production. */
+    typedef struct env {
+        struct scope      *e_scope;
+        struct ast        *e_ast;
+        struct token_list *e_tokens;
+    } env_t;
+
+    env_t *new_env(scope_t *scope);
+    env_t *update_env(scope_t *scope, ast_t *ast);
+    env_t *eval(ast_t *ast, env_t env);
+    token_list_t *expand_tokens(env_t *env, token_list_t *tokens);
+
+}
+
+%define api.value.type {union YYSTYPE}
+
+%token  <y_noval>       HASH_DEFINE "#define"
+%token  <y_noval>       HASH_ELIF "#elif"
+%token  <y_noval>       HASH_ELSE "#else"
+%token  <y_noval>       HASH_ENDIF "#endif"
+%token  <y_noval>       HASH_ERROR "#error"
+%token  <y_noval>       HASH_IF "#if"
+%token  <y_noval>       HASH_IFDEF "#ifdef"
+%token  <y_noval>       HASH_IFNDEF "#ifndef"
+%token  <y_noval>       HASH_INCLUDE "#include"
+%token  <y_noval>       HASH_LINE "#line"
+%token  <y_noval>       HASH_PRAGMA "#pragma"
+%token  <y_noval>       HASH_UNDEF "#undef"
+%token  <y_noval>       HASH_WARNING "#warning"
+
+%token  <y_noval>       AMPERSAND "&"
+%token  <y_noval>       AMPERSAND_AMPERSAND "&&"
+%token  <y_noval>       AT "@"
+%token  <y_noval>       BANG "!"
+%token  <y_noval>       BANG_EQ "!="
+%token  <y_noval>       BAR "|"
+%token  <y_noval>       BAR_BAR "||"
+%token  <y_noval>       CARET "^"
+%token  <y_noval>       COLON ":"
+%token  <y_noval>       COLON_COLON "::"
+%token  <y_noval>       COMMA ","
+%token  <y_noval>       DOLLAR "$"
+%token  <y_noval>       ELLIPSES "..."
+%token  <y_noval>       EO_ARGS
+%token  <y_noval>       EOL
+%token  <y_noval>       EQ "="
+%token  <y_noval>       EQ_EQ "=="
+%token  <y_noval>       FORMAT "format"
+%token  <y_noval>       GT ">"
+%token  <y_noval>       GT_EQ ">="
+%token  <y_noval>       GT_GT ">>"
+%token  <y_noval>       HASH "#"
+%token  <y_noval>       HASH_HASH "##"
+%token  <y_sval>        ID
+%token  <y_sval>        ID_LPAREN                       /* only on #define */
+%token  <y_noval>       IMPLICIT "implicit"
+%token  <y_noval>       LBRACKET "["
+%token  <y_noval>       LPAREN "("
+%token  <y_noval>       LPAREN_SLASH "(/"
+%token  <y_noval>       LT "<"
+%token  <y_noval>       LT_EQ "<="
+%token  <y_noval>       LT_LT "<<"
+%token  <y_noval>       MINUS "-"
+%token  <y_noval>       PERCENT "%"
+%token  <y_noval>       PERIOD "."
+%token  <y_noval>       PERIOD_AND_PERIOD ".and."
+%token  <y_noval>       PERIOD_EQ_PERIOD ".eq."
+%token  <y_noval>       PERIOD_EQV_PERIOD ".eqv."
+%token  <y_noval>       PERIOD_FALSE_PERIOD ".false."
+%token  <y_noval>       PERIOD_GE_PERIOD ".ge."
+%token  <y_noval>       PERIOD_GT_PERIOD ".gt."
+%token  <y_sval>        PERIOD_ID_PERIOD                /* user-defined operator */
+%token  <y_noval>       PERIOD_LE_PERIOD ".le."
+%token  <y_noval>       PERIOD_LT_PERIOD ".lt."
+%token  <y_noval>       PERIOD_NE_PERIOD ".ne."
+%token  <y_noval>       PERIOD_NEQV_PERIOD ".neqv."
+%token  <y_noval>       PERIOD_NIL_PERIOD "nil."
+%token  <y_noval>       PERIOD_NOT_PERIOD ".not."
+%token  <y_noval>       PERIOD_OR_PERIOD ".or."
+%token  <y_noval>       PERIOD_TRUE_PERIOD ".true."
+%token  <y_noval>       PLUS "+"
+%token  <y_noval>       POINTS "=>"
+%token  <y_noval>       QUESTION "?"
+%token  <y_noval>       RBRACKET "]"
+%token  <y_noval>       REAL_NUMBER
+%token  <y_noval>       RPAREN ")"
+%token  <y_noval>       SEMICOLON ";"
+%token  <y_noval>       SLASH "/"
+%token  <y_noval>       SLASH_EQ "/="
+%token  <y_noval>       SLASH_RPAREN "/)"
+%token  <y_noval>       SLASH_SLASH "//"
+%token  <y_sval>        STRING
+%token  <y_noval>       TILDE "~"
+%token  <y_noval>       TIMES "*"
+%token  <y_noval>       TIMES_TIMES "**"
+%token  <y_noval>       UNDERSCORE  "_"                 /* for _KIND, not ID */
+%token  <y_ival>        WHOLE_NUMBER
+
+%token  <y_sval>        UND_UND_FILE "__FILE__"
+%token  <y_sval>        UND_UND_LINE "__LINE__"
+%token  <y_sval>        UND_UND_DATE "__DATE__"
+%token  <y_sval>        UND_UND_TIME "__TIME__"
+%token  <y_sval>        UND_UND_STDFORTRAN "__STDFORTRAN__"
+%token  <y_sval>        UND_UND_STDFORTRAN_VERSION "__STDFORTRAN_VERSION__"
+%token  <y_sval>        UND_UND_VA_ARGS "VA_ARGS"
+%token  <y_sval>        UND_UND_VA_OPT "VA_OPT"
+
+%type   <y_env>         ExecutableProgram
+%type   <y_scope>       CommandLineDefinitionList
+%type   <y_env>         GroupPartList
+%type   <y_env>         GroupPart
+%type   <y_ast>         IfSection
+%type   <y_ast>         ElifGroupList
+%type   <y_ast>         ElseGroup
+%type   <y_noval>       EndifLine
+%type   <y_env>         ControlLine
+%type   <y_env>         IncludeControlLine
+%type   <y_env>         DefineIdControlLine
+%type   <y_env>         DefineFunctionControlLine
+%type   <y_tokens>      LambdaList
+%type   <y_tokens>      IDList
+%type   <y_loc>         LineControlLine
+%type   <y_env>         ErrorControlLine
+%type   <y_env>         WarningControlLine
+%type   <y_env>         PragmaControlLine
+%type   <y_env>         NonDirective
+%type   <y_tokens>      ReplacementText
+%type   <y_token>       ReplacementToken
+%type   <y_tokens>      PPTokenList
+%type   <y_token>       PPToken
+%type   <y_tokens>      PPTokenListExceptCommaRParen
+%type   <y_token>       PPTokenExceptCommaRParen
+%type   <y_tokens>      FortranTokenList
+%type   <y_token>       FortranToken
+%type   <y_token>       FortranTokenExceptCommaRParen
+%type   <y_token>       FortranTokenExceptFormatImplicit
+%type   <y_token>       FortranTokenAnywhere
+%type   <y_tokens>      FortranTokenListExceptFormatImplicit
+%type   <y_token>       CPPToken
+%type   <y_ast>         Expression
+%type   <y_token>       EquivOp
+%type   <y_ast>         ConditionalExpr
+%type   <y_ast>         LogicalOrExpr
+%type   <y_token>       OrOp
+%type   <y_ast>         LogicalAndExpr
+%type   <y_token>       AndOp
+%type   <y_ast>         InclusiveOrExpr
+%type   <y_ast>         ExclusiveOrExpr
+%type   <y_ast>         AndExpr
+%type   <y_ast>         EqualityExpr
+%type   <y_token>       EqualityOp
+%type   <y_ast>         RelationalExpr
+%type   <y_token>       RelationalOp
+%type   <y_ast>         ShiftExpr
+%type   <y_token>       ShiftOp
+%type   <y_ast>         CharacterExpr
+%type   <y_ast>         AdditiveExpr
+%type   <y_token>       AddOp
+%type   <y_ast>         MultiplicativeExpr
+%type   <y_token>       MultOp
+%type   <y_ast>         PowerExpr
+%type   <y_ast>         UnaryExpr
+%type   <y_token>       UnaryOp
+%type   <y_ast>         PostfixExpr
+%type   <y_ast>         ActualArgumentList
+%type   <y_ast>         PrimaryExpr
+%type   <y_token>       PredefinedIdentifier
+%type   <y_tokens>      FortranSourceLine
 
 %%
 
 
-ExecutableProgram: CommandLineDefinitionList EO_ARGS PreprocessingFile;
+ExecutableProgram:
+      CommandLineDefinitionList EO_ARGS {
+          $$ = new_env($1);
+      };
+ExecutableProgram: ExecutableProgram GroupPart {
+            $$ = update_env($1, $2);
+      };
 
-CommandLineDefinitionList: %empty;
-CommandLineDefinitionList: CommandLineDefinitionList CommandLineDefinition;
-
-CommandLineDefinition: IncludePath EOL;
-CommandLineDefinition: DefineArgument EOL;
-CommandLineDefinition: UndefineArgument EOL;
-
-IncludePath: HASH_INCLUDE STRING;
-
-DefineArgument: HASH_DEFINE ID ReplacementText;
-DefineArgument: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText;
-
-UndefineArgument: HASH_UNDEF ID;
-
-PreprocessingFile: %empty;
-PreprocessingFile: GroupPartList;
+CommandLineDefinitionList:
+      %empty {
+          $$ = create_empty_scope();
+      };
+CommandLineDefinitionList:
+       CommandLineDefinitionList HASH_INCLUDE STRING EOL {
+          $$ = add_path($1, $3);
+      };
+CommandLineDefinitionList:
+      CommandLineDefinitionList HASH_DEFINE ID ReplacementText EOL {
+          $$ = add_defn($1, $3, $4);
+      };
+CommandLineDefinitionList:
+      CommandLineDefinitionList HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL {
+          $$ = add_defn_args($1, $3, $4, $6);
+      };
+CommandLineDefinitionList:
+      CommandLineDefinitionList HASH_UNDEF ID EOL {
+          $$ = rm_defn($1, $3);
+      };
 
 /* A GroupPart is some directive, or some Fortran text. */
 GroupPartList: GroupPart;
 GroupPartList: GroupPartList GroupPart;
 
-GroupPart: IfSection;
-GroupPart: ControlLine;
-GroupPart: NonDirective;
-GroupPart: FortranSourceLine;
+GroupPart: IfSection {
+               $$ = eval($1, cur_env);
+      };
+GroupPart: ControlLine {
+               $$ = cur_env;
+               $$.y_loc = $1;
+      };
+GroupPart: NonDirective {
+               $$ = cur_env;
+      };
+GroupPart: FortranSourceLine {
+               $$ = cur_env;
+               $$.e_tokens = append_token_list(cur_env.e_tokens,
+                                               expand_tokens(cur_env, $1.y_tokens));
+      };
 
-IfSection: HASH_IF Expression EOL GroupPartList EndifLine;
-IfSection: HASH_IF Expression EOL GroupPartList ElseGroup EndifLine;
-IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList EndifLine;
-IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList ElseGroup EndifLine;
-IfSection: HASH_IFDEF ID EOL GroupPartList EndifLine;
-IfSection: HASH_IFNDEF ID EOL GroupPartList EndifLine;
+/* TODO: Need to break this up to keep IF value available
+ * Probably need to turn these into an AST of some kind and evaluate accordingly.
+ */
+IfSection: HASH_IF Expression EOL GroupPartList EndifLine {
+               $$ = new_ast(HASH_IF, $1.a_loc, $2, NULL, NULL);
+      };
+IfSection: HASH_IF Expression EOL GroupPartList ElseGroup EndifLine {
+               $$ = new_ast(HASH_IF, $1.a_loc, $2, NULL, $5);
+      };
+IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList EndifLine {
+               $$ = new_ast(HASH_IF, $1.a_loc, $2, $5, NULL);
+      };
+IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList ElseGroup EndifLine {
+               $$ = new_ast(HASH_IF, $1.a_loc, $2, $5, $6);
+      };
+IfSection: HASH_IFDEF ID EOL GroupPartList EndifLine {
+               $$ = new_ast(HASH_IFDEF, $1.a_loc, new_ast(ID, $2, $3);
+      };
+IfSection: HASH_IFNDEF ID EOL GroupPartList EndifLine {
+               $$ = new_ast(HASH_IFNDEF, $1.a_loc, new_ast(ID, $2, $3), NULL, NULL;
+      };
+/* These are constructed such that we need depth-first eval :-( */
+ElifGroupList: HASH_ELIF Expression EOL GroupPartList {
+                   $$ = new_ast(HASH_ELIF, $1.a_loc, $2, $4, NULL);
+      };
+ElifGroupList: ElifGroupList HASH_ELIF Expression EOL GroupPartList {
+                   $$ = new_ast(HASH_ELIF, $1.a_loc, $3, $5, NULL);
+      };
 
-ElifGroupList: HASH_ELIF ID EOL GroupPartList;
-ElifGroupList: ElifGroupList HASH_ELIF ID EOL GroupPartList;
-
-ElseGroup: HASH_ELSE EOL GroupPartList;
+ElseGroup: HASH_ELSE EOL GroupPartList {
+                   $$ = new_ast(HASH_ELSE, $1.loc, $3, NULL, NULL);
+      };
 
 EndifLine: HASH_ENDIF EOL;
 
-ControlLine: IncludeControlLine;
-ControlLine: DefineIdControlLine;
-ControlLine: DefineFunctionControlLine;
-ControlLine: LineControlLine;
-ControlLine: ErrorControlLine;
-ControlLine: WarningControlLine;
-ControlLine: PragmaControlLine;
+ControlLine: IncludeControlLine;        /* TODO */
+ControlLine: DefineIdControlLine;        /* TODO */
+ControlLine: DefineFunctionControlLine;        /* TODO */
+ControlLine: LineControlLine;        /* TODO */
+ControlLine: ErrorControlLine;        /* TODO */
+ControlLine: WarningControlLine;        /* TODO */
+ControlLine: PragmaControlLine;        /* TODO */
 
 /* TODO Add PPTokens as alternative. */
-IncludeControlLine: HASH_INCLUDE STRING EOL;
+IncludeControlLine: HASH_INCLUDE STRING EOL;        /* TODO */
 
-DefineIdControlLine: HASH_DEFINE ID EOL;
-DefineIdControlLine: HASH_DEFINE ID PPTokenList EOL;
+DefineIdControlLine: HASH_DEFINE ID EOL;        /* TODO */
+DefineIdControlLine: HASH_DEFINE ID PPTokenList EOL;        /* TODO */
 
 /*
  * Parameter lists on macro functions are comma-separated
  * identifiers.
  */
-DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL;
-DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL;
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL;        /* TODO */
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL;        /* TODO */
 
-LambdaList: %empty;
-LambdaList: ELLIPSES;
-LambdaList: IDList;
-LambdaList: IDList COMMA ELLIPSES;
+LambdaList: %empty;        /* TODO */
+LambdaList: ELLIPSES;        /* TODO */
+LambdaList: IDList;        /* TODO */
+LambdaList: IDList COMMA ELLIPSES;        /* TODO */
 
-IDList: ID;
-IDList: IDList COMMA ID;
+IDList: ID;        /* TODO */
+IDList: IDList COMMA ID;        /* TODO */
 
-LineControlLine: HASH_LINE STRING WHOLE_NUMBER EOL;
-LineControlLine: HASH_LINE WHOLE_NUMBER EOL;
+LineControlLine: HASH_LINE STRING WHOLE_NUMBER EOL;        /* TODO */
+LineControlLine: HASH_LINE WHOLE_NUMBER EOL;        /* TODO */
 
-ErrorControlLine: HASH_ERROR STRING EOL;
+ErrorControlLine: HASH_ERROR STRING EOL;        /* TODO */
 
-WarningControlLine: HASH_WARNING STRING EOL;
+WarningControlLine: HASH_WARNING STRING EOL;        /* TODO */
 
-PragmaControlLine: HASH_PRAGMA PPTokenList EOL;
+PragmaControlLine: HASH_PRAGMA PPTokenList EOL;        /* TODO */
 
-NonDirective: HASH PPTokenList EOL;
+NonDirective: HASH PPTokenList EOL {
+                  $$ = $2;
+      };
 
-ReplacementText: ReplacementToken;
-ReplacementText: ReplacementText ReplacementToken;
+ReplacementText: ReplacementToken {
+                   $$ = append_token(new_token_list(), $1);
+      };
+ReplacementText: ReplacementText ReplacementToken {
+                   $$ = append_token($1, $2);
+      };
 
 /*
  * '#' and '##' operators can only appear in the replacement
@@ -201,14 +451,22 @@ ReplacementToken: PPToken;
 ReplacementToken: HASH;
 ReplacementToken: HASH_HASH;
 
-PPTokenList: PPToken;
-PPTokenList: PPTokenList PPToken;
+PPTokenList: PPToken {
+                   $$ = append_token(new_token_list(), $1);
+      };
+PPTokenList: PPTokenList PPToken {
+                   $$ = append_token($1, $2);
+      };
 
 PPToken: FortranToken;
 PPToken: CPPToken;
 
-PPTokenListExceptCommaRParen: PPTokenExceptCommaRParen;
-PPTokenListExceptCommaRParen: PPTokenListExceptCommaRParen PPTokenExceptCommaRParen;
+PPTokenListExceptCommaRParen: PPTokenExceptCommaRParen {
+                   $$ = append_token(new_token_list(), $1);
+      };
+PPTokenListExceptCommaRParen: PPTokenListExceptCommaRParen PPTokenExceptCommaRParen {
+                   $$ = append_token($1, $2);
+      };
 
 PPTokenExceptCommaRParen: FortranTokenExceptCommaRParen;
 PPTokenExceptCommaRParen: CPPToken;
@@ -221,8 +479,12 @@ PPTokenExceptCommaRParen: CPPToken;
  * and IMPLICIT).
  */
 
-FortranTokenList: FortranToken;
-FortranTokenList: FortranTokenList FortranToken;
+FortranTokenList: FortranToken {
+                   $$ = append_token(new_token_list(), $1);
+      };
+FortranTokenList: FortranTokenList FortranToken {
+                   $$ = append_token($1, $2);
+      };
 
 FortranToken: FortranTokenAnywhere;
 FortranToken: COMMA;
@@ -234,58 +496,63 @@ FortranTokenExceptCommaRParen: FortranTokenAnywhere;
 FortranTokenExceptCommaRParen: FORMAT;
 FortranTokenExceptCommaRParen: IMPLICIT;
 
-FortranTokenExceptFormatExplicit: FortranTokenAnywhere;
-FortranTokenExceptFormatExplicit: COMMA;
-FortranTokenExceptFormatExplicit: RPAREN;
+FortranTokenExceptFormatImplicit: FortranTokenAnywhere;
+FortranTokenExceptFormatImplicit: COMMA;
+FortranTokenExceptFormatImplicit: RPAREN;
 
-FortranTokenAnywhere: AT;
-FortranTokenAnywhere: COLON;
-FortranTokenAnywhere: COLON_COLON;
-FortranTokenAnywhere: DOLLAR;
-FortranTokenAnywhere: EQ;
-FortranTokenAnywhere: EQ_EQ;
-FortranTokenAnywhere: GT;
-FortranTokenAnywhere: GT_EQ;
-FortranTokenAnywhere: ID;
-FortranTokenAnywhere: LBRACKET;
-FortranTokenAnywhere: LPAREN;
-FortranTokenAnywhere: LT;
-FortranTokenAnywhere: LT_EQ;
-FortranTokenAnywhere: MINUS;
-FortranTokenAnywhere: PERCENT;
-FortranTokenAnywhere: PERIOD;
-FortranTokenAnywhere: PERIOD_AND_PERIOD;
-FortranTokenAnywhere: PERIOD_EQ_PERIOD;
-FortranTokenAnywhere: PERIOD_EQV_PERIOD;
-FortranTokenAnywhere: PERIOD_FALSE_PERIOD;
-FortranTokenAnywhere: PERIOD_GE_PERIOD;
-FortranTokenAnywhere: PERIOD_GT_PERIOD;
-FortranTokenAnywhere: PERIOD_ID_PERIOD                /* user-defined operator */;
-FortranTokenAnywhere: PERIOD_LE_PERIOD;
-FortranTokenAnywhere: PERIOD_LT_PERIOD;
-FortranTokenAnywhere: PERIOD_NE_PERIOD;
-FortranTokenAnywhere: PERIOD_NEQV_PERIOD;
-FortranTokenAnywhere: PERIOD_NIL_PERIOD;
-FortranTokenAnywhere: PERIOD_NOT_PERIOD;
-FortranTokenAnywhere: PERIOD_OR_PERIOD;
-FortranTokenAnywhere: PERIOD_TRUE_PERIOD;
-FortranTokenAnywhere: PLUS;
-FortranTokenAnywhere: POINTS;
-FortranTokenAnywhere: QUESTION;
-FortranTokenAnywhere: RBRACKET;
-FortranTokenAnywhere: REAL_NUMBER;
-FortranTokenAnywhere: SEMICOLON;
-FortranTokenAnywhere: SLASH;
-FortranTokenAnywhere: SLASH_EQ;
-FortranTokenAnywhere: SLASH_SLASH;
-FortranTokenAnywhere: STRING;
-FortranTokenAnywhere: TIMES;
-FortranTokenAnywhere: TIMES_TIMES;
-FortranTokenAnywhere: UNDERSCORE                      /* for _KIND, not within ID */;
-FortranTokenAnywhere: WHOLE_NUMBER;
+FortranTokenAnywhere:
+      AT
+    | COLON
+    | COLON_COLON
+    | DOLLAR
+    | EQ
+    | EQ_EQ
+    | GT
+    | GT_EQ
+    | ID
+    | LBRACKET
+    | LPAREN
+    | LT
+    | LT_EQ
+    | MINUS
+    | PERCENT
+    | PERIOD
+    | PERIOD_AND_PERIOD
+    | PERIOD_EQ_PERIOD
+    | PERIOD_EQV_PERIOD
+    | PERIOD_FALSE_PERIOD
+    | PERIOD_GE_PERIOD
+    | PERIOD_GT_PERIOD
+    | PERIOD_ID_PERIOD                /* user-defined operator */
+    | PERIOD_LE_PERIOD
+    | PERIOD_LT_PERIOD
+    | PERIOD_NE_PERIOD
+    | PERIOD_NEQV_PERIOD
+    | PERIOD_NIL_PERIOD
+    | PERIOD_NOT_PERIOD
+    | PERIOD_OR_PERIOD
+    | PERIOD_TRUE_PERIOD
+    | PLUS
+    | POINTS
+    | QUESTION
+    | RBRACKET
+    | REAL_NUMBER
+    | SEMICOLON
+    | SLASH
+    | SLASH_EQ
+    | SLASH_SLASH
+    | STRING
+    | TIMES
+    | TIMES_TIMES
+    | UNDERSCORE                      /* for _KIND, not within ID */
+    | WHOLE_NUMBER;
 
-FortranTokenListExceptFormatExplicit: FortranTokenExceptFormatExplicit;
-FortranTokenListExceptFormatExplicit: FortranTokenListExceptFormatExplicit FortranTokenExceptFormatExplicit;
+FortranTokenListExceptFormatImplicit: FortranTokenExceptFormatImplicit {
+                   $$ = append_token(new_token_list(), $1);
+      };
+FortranTokenListExceptFormatImplicit: FortranTokenListExceptFormatImplicit FortranTokenExceptFormatImplicit {
+                   $$ = append_token($1, $2);
+      };
 
 /*
  * Tokens that can appear in C preprocessor replacement text
@@ -320,37 +587,37 @@ CPPToken: TILDE;
  * operator precedence.
  */
 Expression: ConditionalExpr;
-Expression: Expression EquivOp ConditionalExpr;
+Expression: Expression EquivOp ConditionalExpr;        /* TODO */
 
 EquivOp: PERIOD_EQV_PERIOD;
 EquivOp: PERIOD_NEQV_PERIOD;
 
-ConditionalExpr: LogicalOrExpr QUESTION Expression COLON ConditionalExpr;
+ConditionalExpr: LogicalOrExpr QUESTION Expression COLON ConditionalExpr;        /* TODO */
 ConditionalExpr: LogicalOrExpr;
 
 LogicalOrExpr: LogicalAndExpr;
-LogicalOrExpr: LogicalOrExpr OrOp LogicalAndExpr;
+LogicalOrExpr: LogicalOrExpr OrOp LogicalAndExpr;        /* TODO */
 
 OrOp: BAR_BAR;
 OrOp: PERIOD_OR_PERIOD;
 
 LogicalAndExpr: InclusiveOrExpr;
-LogicalAndExpr: LogicalAndExpr AndOp InclusiveOrExpr;
+LogicalAndExpr: LogicalAndExpr AndOp InclusiveOrExpr;        /* TODO */
 
 AndOp: AMPERSAND_AMPERSAND;
 AndOp: PERIOD_AND_PERIOD;
 
 InclusiveOrExpr: ExclusiveOrExpr;
-InclusiveOrExpr: InclusiveOrExpr BAR ExclusiveOrExpr;
+InclusiveOrExpr: InclusiveOrExpr BAR ExclusiveOrExpr;        /* TODO */
 
 ExclusiveOrExpr: AndExpr;
-ExclusiveOrExpr: ExclusiveOrExpr CARET AndExpr;
+ExclusiveOrExpr: ExclusiveOrExpr CARET AndExpr;        /* TODO */
 
 AndExpr: EqualityExpr;
-AndExpr: AndExpr AMPERSAND EqualityExpr;
+AndExpr: AndExpr AMPERSAND EqualityExpr;        /* TODO */
 
-EqualityExpr: RelationalExpr;
-EqualityExpr: EqualityExpr EqualityOp RelationalExpr;
+EqualityExpr: RelationalExpr;        /* TODO */
+EqualityExpr: EqualityExpr EqualityOp RelationalExpr;        /* TODO */
 
 EqualityOp: PERIOD_EQ_PERIOD;
 EqualityOp: PERIOD_NE_PERIOD;
@@ -359,7 +626,7 @@ EqualityOp: SLASH_EQ;
 EqualityOp: BANG_EQ;
 
 RelationalExpr: ShiftExpr;
-RelationalExpr: RelationalExpr RelationalOp ShiftExpr;
+RelationalExpr: RelationalExpr RelationalOp ShiftExpr;        /* TODO */
 
 RelationalOp: PERIOD_LE_PERIOD;
 RelationalOp: PERIOD_LT_PERIOD;
@@ -371,31 +638,31 @@ RelationalOp: LT_EQ;
 RelationalOp: GT_EQ;
 
 ShiftExpr: CharacterExpr;
-ShiftExpr: ShiftExpr ShiftOp CharacterExpr;
+ShiftExpr: ShiftExpr ShiftOp CharacterExpr;        /* TODO */
 
 ShiftOp: LT_LT;
 ShiftOp: GT_GT;
 
 CharacterExpr: AdditiveExpr;
-CharacterExpr: CharacterExpr SLASH_SLASH AdditiveExpr;
+CharacterExpr: CharacterExpr SLASH_SLASH AdditiveExpr;        /* TODO */
 
 AdditiveExpr: MultiplicativeExpr;
-AdditiveExpr: AdditiveExpr AddOp MultiplicativeExpr;
+AdditiveExpr: AdditiveExpr AddOp MultiplicativeExpr;        /* TODO */
 
 AddOp: PLUS;
 AddOp: MINUS;
 
 MultiplicativeExpr: PowerExpr;
-MultiplicativeExpr: MultiplicativeExpr MultOp PowerExpr;
+MultiplicativeExpr: MultiplicativeExpr MultOp PowerExpr;        /* TODO */
 
 MultOp: TIMES;
 MultOp: SLASH;
 MultOp: PERCENT;
 
 PowerExpr: UnaryExpr;
-PowerExpr: UnaryExpr TIMES_TIMES PowerExpr;
+PowerExpr: UnaryExpr TIMES_TIMES PowerExpr;        /* TODO */
 
-UnaryExpr: UnaryOp PostfixExpr;
+UnaryExpr: UnaryOp PostfixExpr;        /* TODO */
 UnaryExpr: PostfixExpr;
 
 UnaryOp: PLUS;
@@ -405,38 +672,45 @@ UnaryOp: BANG;
 UnaryOp: TILDE;
 
 PostfixExpr: PrimaryExpr;
-PostfixExpr: ID LPAREN RPAREN;
-PostfixExpr: ID LPAREN ActualArgumentList RPAREN;
+PostfixExpr: ID LPAREN RPAREN;        /* TODO */
+PostfixExpr: ID LPAREN ActualArgumentList RPAREN;        /* TODO */
 
 /* TODO: Really this should be properly nested parenthesized lists */
-ActualArgumentList: PPTokenListExceptCommaRParen;
-ActualArgumentList: ActualArgumentList COMMA PPTokenListExceptCommaRParen;
+ActualArgumentList: PPTokenListExceptCommaRParen;        /* TODO */
+ActualArgumentList: ActualArgumentList COMMA PPTokenListExceptCommaRParen;        /* TODO */
 
 /* Real numbers aren't allowed in conditional explessions */
-PrimaryExpr: WHOLE_NUMBER;
-PrimaryExpr: ID;
-PrimaryExpr: PERIOD_FALSE_PERIOD;
-PrimaryExpr: PERIOD_NIL_PERIOD;
-PrimaryExpr: PERIOD_TRUE_PERIOD;
-PrimaryExpr: LPAREN Expression RPAREN;
-PrimaryExpr: PredefinedIdentifier;
+PrimaryExpr: WHOLE_NUMBER;        /* TODO */
+PrimaryExpr: ID;        /* TODO */
+PrimaryExpr: PERIOD_FALSE_PERIOD;        /* TODO */
+PrimaryExpr: PERIOD_NIL_PERIOD;        /* TODO */
+PrimaryExpr: PERIOD_TRUE_PERIOD;        /* TODO */
+PrimaryExpr: LPAREN Expression RPAREN;        /* TODO */
+PrimaryExpr: PredefinedIdentifier;        /* TODO */
 
 /* Identifiers known to the preprocessor (such as __FILE__) */
-PredefinedIdentifier: UND_UND_FILE;
-PredefinedIdentifier: UND_UND_LINE;
-PredefinedIdentifier: UND_UND_DATE;
-PredefinedIdentifier: UND_UND_TIME;
-PredefinedIdentifier: UND_UND_STDFORTRAN;
-PredefinedIdentifier: UND_UND_STDFORTRAN_VERSION;
-PredefinedIdentifier: UND_UND_VA_ARGS;
-PredefinedIdentifier: UND_UND_VA_OPT;
-    /* | ProcessorDefinedPPIdentifier */
+PredefinedIdentifier: UND_UND_FILE;        /* TODO */
+PredefinedIdentifier: UND_UND_LINE;        /* TODO */
+PredefinedIdentifier: UND_UND_DATE;        /* TODO */
+PredefinedIdentifier: UND_UND_TIME;        /* TODO */
+PredefinedIdentifier: UND_UND_STDFORTRAN;        /* TODO */
+PredefinedIdentifier: UND_UND_STDFORTRAN_VERSION;        /* TODO */
+PredefinedIdentifier: UND_UND_VA_ARGS;        /* TODO */
+PredefinedIdentifier: UND_UND_VA_OPT;        /* TODO */
 
-/* /\* Implementation-defined predefined identifiers *\/ */
-/* ProcessorDefinedPPIdentifier: */
-/*       ; */
-
-FortranSourceLine: EOL;
-FortranSourceLine: FORMAT FortranTokenList EOL;
-FortranSourceLine: IMPLICIT FortranTokenList EOL;
-FortranSourceLine: FortranTokenListExceptFormatExplicit EOL;
+FortranSourceLine: EOL {
+                   $$ = append_token(new_token_list(), $1);
+      };
+FortranSourceLine: FORMAT FortranTokenList EOL {
+                       $$ = append_token(new_token_list(), $1)
+                       $$ = append_token_list($$, $2);
+                       $$ = append_token($$, $3);
+      };
+FortranSourceLine: IMPLICIT FortranTokenList EOL {
+                       $$ = append_token(new_token_list(), $1)
+                       $$ = append_token_list($$, $2);
+                       $$ = append_token($$, $3);
+      };
+FortranSourceLine: FortranTokenListExceptFormatImplicit EOL {
+                   $$ = append_token($1, $2);
+      };

@@ -1,10 +1,11 @@
 :PROPERTIES:
 :ID:       20241123T190954.523134
 :END:
-#+title: FPP Phase 0 --- Conjoin Lines
+#+title: FPP Phase 1: Conjoin Lines
 #+author: INCITS/Fortran JoR
-#+date: November 23, 2024
+#+date: {{{modification-time(%B %d\, %Y)}}}
 #+include: "latex-options.org"
+#+options: toc:t H:5 num:4
 
 
 #  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME

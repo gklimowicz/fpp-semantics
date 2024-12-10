@@ -1,10 +1,11 @@
 :PROPERTIES:
 :ID:       20231024T112734.315362
 :END:
-#+title: Fortran Preprocessor High-Level Requirements
+#+title: Fortran Preprocessor: Introduction
 #+author: INCITS/Fortran JoR
-#+date: November 23, 2024
+#+date: {{{modification-time(%B %d\, %Y)}}}
 #+include: "latex-options.org"
+#+options: toc:t H:5 num:4
 
 #  LocalWords:  Clu Lio Ble Kli Fortranized Jor VARNAME apalike
 #  LocalWords:  parindent parskip usepackage

@@ -48,6 +48,28 @@ INCITS+ISO+IEC+9899-2018-6.10-from-all.org: INCITS+ISO+IEC+9899-all-6.10.org Mak
 	    <INCITS+ISO+IEC+9899-all-6.10.org \
 	    >"$@"
 
+# Preprocessor grammar and semantics
+BISON=/opt/homebrew/opt/bison/bin/bison
+
+ALL_GEN_CODE = req-4-nonterminals.y req-4-grammar.tab.c req-4-grammar.tab.o
+
+req-4:	req-4-grammar.tab.c req-4-grammar.tab.o
+
+req-4-grammar.tab.c:	req-4-grammar.y
+	 ${BISON} -Wempty-rule -Wcounterexamples req-4-grammar.y
+
+req-4-grammar.tab.o:	req-4-grammar.tab.c
+
+# Sometimes I need a list of nonterminals in the order
+# they appear in the grammar...
+req-4-nonterminals.y:	req-4-grammar.y
+	sed -n -e 's/^\([A-Z][A-Za-z0-9_]*\):.*/\1/p' <req-4-grammar.y \
+	| awk '$$1 in dups { next } \
+	       { dups[$$1] = 1; print "%type  <t>              " $$0}' \
+	>"$@"
+
+
+# File admin
 clean:
 	rm -f .DS_Store *.aux *.fdb_latexmk *.fls *.log *.out *.tex \
-	   ${ALL_GEN_STD}
+	   ${ALL_GEN_STD} ${ALL_GEN_CODE}

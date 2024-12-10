@@ -686,7 +686,7 @@ This is problematic, in that there are many files in the wild that have the =!= 
 
 
 
-*** Expansion
+*** Expansion                                                    :noexport:
 **** No expansion of =C= in column 1
 :PROPERTIES:
 :reqid: [fixed-no-expand-c-col-1]
