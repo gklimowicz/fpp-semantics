@@ -57,14 +57,16 @@
         YYLTYPE           y_loc;
     } YYSTYPE;
 
-    /* Tokens have a type, a location, and possibly an additional value. */
+    /* Tokens have a type, a location, and possibly
+                        an additional value. */
     typedef struct token {
         yytoken_kind_t  t_token;
         YYLTYPE         t_loc;
         YYSTYPE         t_val;
     } token_t;
 
-    /* Macro definitions are made up of lists of tokens (to expand later).
+    /* Macro definitions are made up of lists of tokens
+     * (to expand later).
      * Represented as a queue.
      */
     typedef struct token_list {
@@ -78,8 +80,9 @@
     } token_elt_t;
 
     token_list_t *new_token_list();
-    token_list_t *append_token(token_list_t *token_list, token_t token, );
-    token_list_t *append_token_list(token_list_t *head, token_list_t *tail);
+    token_list_t *append_token(token_list_t *token_list, token_t token);
+    token_list_t *append_token_list(token_list_t *head,
+                        token_list_t *new_tail);
     token_list_t *cons_token(token_t token, token_list_t *token_list);
 
     /* Path lists as defined by preprocessor and command arguments.
@@ -104,9 +107,12 @@
         YYSTYPE     a_v1, a_v2, a_v3;
     } ast_t;
 
-    ast_t *new_ast(token_t op, YYLTYPE loc; YYSTYPE *v1, YYSTYPE *v2, YYSTYPE *v3);
+    ast_t *new_ast(token_t op, YYLTYPE loc;
+                        YYSTYPE *v1, YYSTYPE *v2, YYSTYPE *v3);
 
-    /* Macro definition: an id, a list of arguments, and a token-list definition. */
+    /* Macro definition: an id, a list of arguments,
+     * and a token-list definition.
+     */
     typedef struct def {
         char         *d_id;
         int          d_nargs;   /* -1 if no arg list, even empty */
@@ -135,7 +141,8 @@
     scope_t *create_empty_scope();
     scope_t *add_path(scope_t *cur, char *path);
     scope_t *add_defn(scope_t *cur, char *id, token_list_t *text);
-    scope_t *add_defn_fin(scope_t *cur, char *id, token_list_t *args, token_list_t *text);
+    scope_t *add_defn_fin(scope_t *cur, char *id,
+                        token_list_t *args, token_list_t *text);
     scope_t *rm_defn(scope_t *cur, char *id);
 
     /* The environment, passed from production to production. */
@@ -192,7 +199,7 @@
 %token  <y_noval>       HASH "#"
 %token  <y_noval>       HASH_HASH "##"
 %token  <y_sval>        ID
-%token  <y_sval>        ID_LPAREN                       /* only on #define */
+%token  <y_sval>        ID_LPAREN                 /* only on #define */
 %token  <y_noval>       IMPLICIT "implicit"
 %token  <y_noval>       LBRACKET "["
 %token  <y_noval>       LPAREN "("
@@ -209,7 +216,7 @@
 %token  <y_noval>       PERIOD_FALSE_PERIOD ".false."
 %token  <y_noval>       PERIOD_GE_PERIOD ".ge."
 %token  <y_noval>       PERIOD_GT_PERIOD ".gt."
-%token  <y_sval>        PERIOD_ID_PERIOD                /* user-defined operator */
+%token  <y_sval>        PERIOD_ID_PERIOD       /* user-defined operator */
 %token  <y_noval>       PERIOD_LE_PERIOD ".le."
 %token  <y_noval>       PERIOD_LT_PERIOD ".lt."
 %token  <y_noval>       PERIOD_NE_PERIOD ".ne."
@@ -233,7 +240,7 @@
 %token  <y_noval>       TILDE "~"
 %token  <y_noval>       TIMES "*"
 %token  <y_noval>       TIMES_TIMES "**"
-%token  <y_noval>       UNDERSCORE  "_"                 /* for _KIND, not ID */
+%token  <y_noval>       UNDERSCORE  "_"           /* for _KIND, not ID */
 %token  <y_ival>        WHOLE_NUMBER
 
 %token  <y_sval>        UND_UND_FILE "__FILE__"
@@ -331,7 +338,8 @@ CommandLineDefinitionList:
           $$ = add_defn($1, $3, $4);
       };
 CommandLineDefinitionList:
-      CommandLineDefinitionList HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL {
+      CommandLineDefinitionList HASH_DEFINE ID_LPAREN LambdaList RPAREN
+            ReplacementText EOL {
           $$ = add_defn_args($1, $3, $4, $6);
       };
 CommandLineDefinitionList:
@@ -355,12 +363,14 @@ GroupPart: NonDirective {
       };
 GroupPart: FortranSourceLine {
                $$ = cur_env;
-               $$.e_tokens = append_token_list(cur_env.e_tokens,
-                                               expand_tokens(cur_env, $1.y_tokens));
+               $$.e_tokens =
+                   append_token_list(cur_env.e_tokens,
+                                     expand_tokens(cur_env, $1.y_tokens));
       };
 
-/* TODO: Need to break this up to keep IF value available
- * Probably need to turn these into an AST of some kind and evaluate accordingly.
+/* TODO: Need to break this up to keep IF value available.
+ * Probably need to turn these into an AST of
+ * some kind and evaluate accordingly.
  */
 IfSection: HASH_IF Expression EOL GroupPartList EndifLine {
                $$ = new_ast(HASH_IF, $1.a_loc, $2, NULL, NULL);
@@ -371,14 +381,16 @@ IfSection: HASH_IF Expression EOL GroupPartList ElseGroup EndifLine {
 IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList EndifLine {
                $$ = new_ast(HASH_IF, $1.a_loc, $2, $5, NULL);
       };
-IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList ElseGroup EndifLine {
+IfSection: HASH_IF Expression EOL GroupPartList ElifGroupList
+       ElseGroup EndifLine {
                $$ = new_ast(HASH_IF, $1.a_loc, $2, $5, $6);
       };
 IfSection: HASH_IFDEF ID EOL GroupPartList EndifLine {
                $$ = new_ast(HASH_IFDEF, $1.a_loc, new_ast(ID, $2, $3);
       };
 IfSection: HASH_IFNDEF ID EOL GroupPartList EndifLine {
-               $$ = new_ast(HASH_IFNDEF, $1.a_loc, new_ast(ID, $2, $3), NULL, NULL;
+               $$ = new_ast(HASH_IFNDEF, $1.a_loc,
+                            new_ast(ID, $2, $3), NULL, NULL;
       };
 /* These are constructed such that we need depth-first eval :-( */
 ElifGroupList: HASH_ELIF Expression EOL GroupPartList {
@@ -412,8 +424,10 @@ DefineIdControlLine: HASH_DEFINE ID PPTokenList EOL;        /* TODO */
  * Parameter lists on macro functions are comma-separated
  * identifiers.
  */
-DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN EOL;        /* TODO */
-DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN ReplacementText EOL;        /* TODO */
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN
+      EOL;        /* TODO */
+DefineFunctionControlLine: HASH_DEFINE ID_LPAREN LambdaList RPAREN
+      ReplacementText EOL;        /* TODO */
 
 LambdaList: %empty;        /* TODO */
 LambdaList: ELLIPSES;        /* TODO */
@@ -464,7 +478,8 @@ PPToken: CPPToken;
 PPTokenListExceptCommaRParen: PPTokenExceptCommaRParen {
                    $$ = append_token(new_token_list(), $1);
       };
-PPTokenListExceptCommaRParen: PPTokenListExceptCommaRParen PPTokenExceptCommaRParen {
+PPTokenListExceptCommaRParen: PPTokenListExceptCommaRParen
+      PPTokenExceptCommaRParen {
                    $$ = append_token($1, $2);
       };
 
@@ -550,7 +565,8 @@ FortranTokenAnywhere:
 FortranTokenListExceptFormatImplicit: FortranTokenExceptFormatImplicit {
                    $$ = append_token(new_token_list(), $1);
       };
-FortranTokenListExceptFormatImplicit: FortranTokenListExceptFormatImplicit FortranTokenExceptFormatImplicit {
+FortranTokenListExceptFormatImplicit: FortranTokenListExceptFormatImplicit
+      FortranTokenExceptFormatImplicit {
                    $$ = append_token($1, $2);
       };
 
@@ -592,7 +608,8 @@ Expression: Expression EquivOp ConditionalExpr;        /* TODO */
 EquivOp: PERIOD_EQV_PERIOD;
 EquivOp: PERIOD_NEQV_PERIOD;
 
-ConditionalExpr: LogicalOrExpr QUESTION Expression COLON ConditionalExpr;        /* TODO */
+ConditionalExpr: LogicalOrExpr QUESTION Expression COLON
+      ConditionalExpr;        /* TODO */
 ConditionalExpr: LogicalOrExpr;
 
 LogicalOrExpr: LogicalAndExpr;
@@ -677,7 +694,8 @@ PostfixExpr: ID LPAREN ActualArgumentList RPAREN;        /* TODO */
 
 /* TODO: Really this should be properly nested parenthesized lists */
 ActualArgumentList: PPTokenListExceptCommaRParen;        /* TODO */
-ActualArgumentList: ActualArgumentList COMMA PPTokenListExceptCommaRParen;        /* TODO */
+ActualArgumentList: ActualArgumentList COMMA
+      PPTokenListExceptCommaRParen;        /* TODO */
 
 /* Real numbers aren't allowed in conditional explessions */
 PrimaryExpr: WHOLE_NUMBER;        /* TODO */
