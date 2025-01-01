@@ -32,6 +32,9 @@
 ! defined COUP_OAS_PFL
 ! defined HAVE_GPU_CUDA
 ! defined HAVE_LIBPAW_ABINIT
+! defined in_arpege
+! defined in_nemo
+! defined in_surfex
 ! defined _CRAYFTN
 ! defined _CUDA
 ! defined _DOUBLE
@@ -290,6 +293,7 @@
 !defined (ICE)
 !defined (ICE_EMBEDDING)
 !defined (ICE_FRESHWATER)
+!defined (IDEALIZED_TOPOG_VERBOSE)
 !defined (LANDSLIDE)
 !defined (LIBRARY)
 !defined (LIMITED_NO)
@@ -470,6 +474,8 @@
 !defined I4DVAR_ANA_SENSITIVITY && (defined I4DVAR || defined WEAK_CONSTRAINT)
 !defined IMPLICIT_VCONV || defined SPLINES_VCONV
 !defined INWAVE_SWAN_COUPLING
+!defined in_arpege
+!defined in_surfex || defined SFX_MPI
 !defined IS4DVAR_SENSITIVITY && (defined IS4DVAR || defined VERIFICATION || defined WEAK_CONSTRAINT)
 !defined ISO_C_BINDING
 !defined knf
@@ -793,6 +799,7 @@
 !defined(CERNLIB__DEBUG)
 !defined(CERNLIB__P3CHILD)
 !defined(CFDDEM) && !defined(CFDACM)
+!defined(CHA)
 !defined(CMPLX_) && (defined(PROG_NUMRUNS_) || defined(DOUBLERUN_))
 !defined(CRAY) && !defined(IRIX64) && !defined(IFORT)
 !defined(CRAY) || defined(LONESTAR) || defined(MCURIE)
@@ -829,7 +836,6 @@
 !defined(GMS_EXPLICIT_VECTORIZE)
 !defined(GMS_NECGW_ADD_PADDING)
 !defined(GMS_SEGDATAOUT_ADD_PADDING)
-!defined(GMS_SLICOT_USE_MKL_LAPACK)
 !defined(GMS_TARGETRP_ADD_PADDING)
 !defined(GMS_TREE_SCATTERER_ADD_PADDING)
 !defined(GRAV) || !defined(NBODY)
@@ -871,6 +877,8 @@
 !defined(MFC_OpenACC)
 !defined(MFC_OpenACC) && !(defined(__PGI) || defined(_CRAYFTN))
 !defined(MMF_SAMXX) && !defined(MMF_PAM)
+!defined(MNH_COMPILER_CCE) && !defined(MNH_COMPILER_NVHPC)
+!defined(MNH_LINUX) && !defined(MNH_SGI)
 !defined(mpas)
 !defined(MPI) || !defined(ONEFILE)
 !defined(MPI2)
@@ -887,6 +895,7 @@
 !defined(NDEBUG)&&_HORIZONTAL_DIMENSION_COUNT_>0
 !defined(NETCDF)
 !defined(NEWDIPOLE)
+!defined(NEW_DISTRIBUTION)
 !defined(NFVSE_CORR)
 !defined(NOMPI)
 !defined(NOQUAD)
@@ -927,7 +936,7 @@
 !defined(SW_DYN)
 !defined(TEST_ALL_LAYOUTS)
 !defined(TEST_EIGENVECTORS)
-!defined(TEST_HERMITIAN_MULTIPLY_FULL) && !defined(TEST_HERMITIAN_MULTIPLY_UPPER) && !defined(TEST_HERMITIAN_MULTIPLY_LOWER)
+!defined(TEST_MULTIPLY)
 !defined(test_zeta)
 !defined(TETON_ENABLE_MINIAPP_BUILD)
 !defined(TETON_OPENMP_HAS_FORTRAN_INTERFACE)
@@ -936,7 +945,6 @@
 !defined(twoway) && !defined(mpas)
 !defined(UM_JULES)
 !defined(USE_ADIOS) && !defined(USE_ADIOS2)
-!defined(USE_CCL_MULTIPLY)
 !defined(USE_DEFAULT_MESH)
 !defined(USE_FORTRAN_SCRATCH_FILES) || defined(SINGLE_DISK_IO)
 !defined(USE_FVCORE)
@@ -956,6 +964,7 @@
 !defined(WIN32)
 !defined(WITHOUT_LINALG)
 !defined(WITH_MPI)
+!defined(WITH_NVIDIA_CUSOLVER) && !defined(WITH_AMD_ROCSOLVER)
 !defined(WITH_OPENMP_OFFLOAD_GPU_VERSION) && !defined(WITH_SYCL_GPU_VERSION)
 !defined(XLF) && !defined(_CRAYFTN)
 !defined(_ANIMEC)
@@ -972,6 +981,9 @@
 !defined(_EPHC)
 !defined(_EPS_EXACT_ZERO)
 !defined(_FAST_MOM_KERNELS)
+!defined(_GPU_DIRECT)
+!defined(_GPU_DIRECT) && defined(ACC_MPI_COPY_3D_J)
+!defined(_GPU_DIRECT) && defined(ACC_MPI_COPY_3D_K)
 !defined(_GRIDPOINT_NATURAL_CHANNEL)
 !defined(_HORIZONTAL_IS_VECTORIZED_)
 !defined(_IMPDIFF)
@@ -990,7 +1002,7 @@
 !defined(__CUDA)
 !defined(__CUDA) || !defined(_OPENACC)
 !defined(__DBCSR_DISABLE_RMA_LOCAL_COPY)
-!defined(__DBCSR_DISABLE_WORKSHARE)
+!defined(__flang__)
 !defined(__FORCE_USE_FAST_MATH)
 !defined(__FUJITSU)
 !defined(__GFORTRAN_HACK)
@@ -1628,6 +1640,14 @@ ${xsmm_supported[n]}$
 ( iLVC == 0 )
 ( iLVC == 1 )
 ( iLVC == 2 )
+( LFI_INT == 4 )
+( LFI_INT == 8 )
+( MNH_INT == 4 )
+( MNH_INT == 8 )
+( MNH_REAL == 16 )
+( MNH_REAL == 4 )
+( MNH_REAL == 8 )
+( MNH_REDUCE_DIMENSIONS_IN_FILES == 1 )
 ( NMM_CORE != 1 )
 ( NMM_CORE == 1 && NMM_NEST == 1 )
 ( NMM_CORE == 1 )
@@ -1639,6 +1659,8 @@ ${xsmm_supported[n]}$
 ( RWORDSIZE == 8 )
 ( RWORDSIZE == DWORDSIZE )
 ( VAR4D != 1)
+( VER_ECRAD == 101 )
+( VER_ECRAD == 140 )
 ( WRFPLUS != 1 )
 ( WRFPLUS == 1 )
 ( WRF_CHEM != 1 )
@@ -1723,6 +1745,7 @@ ${xsmm_supported[n]}$
 (!defined USE_OMP)
 (!defined USE_OMP) && (!defined COUP_CSM)
 (!defined __GFORTRAN__)
+(!defined(BC_SSA_LTGF) || BC_SSA_LTGF==1)
 (!defined(CAHNHILLIARD))
 (!defined(CERNLIB_3090S))&&(!defined(CERNLIB_3090J))
 (!defined(CERNLIB_APOF77))&&(!defined(CERNLIB_BSLASH))&&(!defined(CERNLIB_HPUX))&&(!defined(CERNLIB_IBMRT))&&(!defined(CERNLIB_QMALPH))&&(!defined(CERNLIB_QMVAOS))
@@ -1867,6 +1890,7 @@ ${xsmm_supported[n]}$
 (!defined(FLOW)) && (defined(CAHNHILLIARD))
 (!defined(FLOW)) && defined(CAHNHILLIARD)
 (!defined(HAVE_SLUDIST_)) || defined(IPK8)
+(!defined(MODEL_SICOPOLIS))
 (!defined(NAVIERSTOKES) && defined(CAHNHILLIARD))
 (!defined(NAVIERSTOKES) || !(defined(INCNS)))
 (!defined(NAVIERSTOKES) || !defined(INCNS))
@@ -2012,6 +2036,7 @@ ${xsmm_supported[n]}$
 (arpack_ > 0)
 (AUTO_VECTORIZE) == 1
 (BC_ENABLED || PC_ENABLED) && D0_ENABLED
+(BC_SSA_LTGF==2)
 (blacs_ > 0 || mpi_ > 0)
 (blacs_ > 0)
 (BM_ENABLED || CM_ENABLED) && D0_ENABLED
@@ -2624,7 +2649,7 @@ ${xsmm_supported[n]}$
 (defined(ALLOW_OBCS) && defined(ALLOW_SEAICE) && defined(ALLOW_OBCS_SEAICE_SPONGE) && defined(SEAICE_VARIABLE_SALINITY))
 (defined(ALLOW_OBCS) && defined(ALLOW_SEAICE) && defined(ALLOW_OBCS_SEAICE_SPONGE))
 (defined(ALLOW_STREAMICE) && defined(ALLOW_COST_STREAMICE))
-(defined(BSA_USE_GPU)) || (defined(_BSA_CHECK_NOD_COH_SVD))
+(defined(BSA_USE_GPU))
 (defined(BSA_USE_POD_DATA_CACHING)) || (defined(_OPENMP))
 (defined(CAHNHILLIARD) && (!defined(FLOW)))
 (defined(CAHNHILLIARD) && defined(NAVIERSTOKES))
@@ -3123,9 +3148,13 @@ ${xsmm_supported[n]}$
 (defined(LINUX) || defined(CYGNUS))
 (defined(LINUX) || defined(MACX)) && !defined(PGLINUX) && !defined(XLFLINUX) &&!( __GNUC__ >= 4)
 (defined(mhd) || defined(navierstokes))
+(defined(MISMIPP))
+(defined(MODEL_SICOPOLIS))
 (defined(MOVE_NESTS) || ((!defined(KEEP_INT_AROUND)) && (!defined(SGIALTIX)) && (!defined(FUJITSU_FX10))))
 (defined(NAVIERSTOKES) && !defined(CAHNHILLIARD))
+(defined(NAVIERSTOKES) && (!(SPALARTALMARAS))) || defined(INCNS) || defined(MULTIPHASE)
 (defined(NAVIERSTOKES) && defined(CAHNHILLIARD))
+(defined(NAVIERSTOKES) || defined(MULTIPHASE))
 (defined(SDE) && SDE>0)||(defined(DFP))
 (defined(SEAICE_CGRID) && defined(SEAICE_ALLOW_EVP))
 (defined(STREAMICE_SMOOTH_FLOATATION2) || defined(STREAMICE_SMOOTH_FLOATATION))
@@ -3208,8 +3237,6 @@ ${xsmm_supported[n]}$
 (GMS_EXPLICIT_VECTORIZE) == 1
 (GMS_NECGW_ADD_PADDING) == 1
 (GMS_SEGDATAOUT_ADD_PADDING) == 1
-(GMS_SLICOT_USE_MKL_LAPACK) == 0
-(GMS_SLICOT_USE_MKL_LAPACK) == 1
 (GMS_TARGETRP_ADD_PADDING) == 1
 (GMS_TREE_SCATTERER_AVX512_ADD_PADDING) == 1
 (GMS_TREE_SCATTERER_AVX_ADD_PADDING) == 1
@@ -3227,6 +3254,7 @@ ${xsmm_supported[n]}$
 (HWRF==1)
 (IBM > 0 || WORKS > 0 || FUJI_VPP > 0 || LNX >0 || PLE > 0)
 (IBM > 0)
+(IDEALIZED_TOPOG_VERBOSE) == 1
 (IK_ENABLED || LK_ENABLED || RK_ENABLED || CK_ENABLED) && (D1_ENABLED || D2_ENABLED)
 (IK_ENABLED || LK_ENABLED || RK_ENABLED || CK_ENABLED) && D0_ENABLED
 (iLVC == 1)
@@ -3265,6 +3293,10 @@ ${xsmm_supported[n]}$
 (minval_ENABLED || maxval_ENABLED) && D1_ENABLED && CK_ENABLED
 (minval_ENABLED || maxval_ENABLED) && D2_ENABLED && ALL_ENABLED && CK_ENABLED
 (minval_ENABLED || maxval_ENABLED) && D2_ENABLED && DIM_ENABLED && CK_ENABLED
+(MNH_INT == 4)
+(MNH_INT == 8)
+(MNH_REAL == 4)
+(MNH_REAL == 8)
 (MOISTMOD == 0)
 (MOISTMOD == 1)
 (MOISTMOD == 2)
@@ -3302,11 +3334,12 @@ ${xsmm_supported[n]}$
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 7))
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 9))
 (PETSC_VERSION_MAJOR < 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 8))
-(PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 15)
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR > 6))
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 8))
 (PETSC_VERSION_MAJOR > 3 || (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 9))
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR < 8)
+(PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 15)
+(PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 20)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR >= 7)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<18)
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR<22)
@@ -3321,7 +3354,6 @@ ${xsmm_supported[n]}$
 (PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>=22)
 (PETSC_VERSION_MAJOR>=3) && (PETSC_VERSION_MINOR>6)
 (PETSC_VERSION_MINOR < 14)
-(PETSC_VERSION_RELEASE == 1)
 (PIO_DEFINED)
 (plasma_ == 0)
 (plasma_ > 0)
@@ -3473,7 +3505,7 @@ ${xsmm_supported[n]}$
 (SUMR16 == 1)
 (TEST_AMD_GPU == 1)
 (TEST_GPU_DEVICE_POINTER_API == 1)
-(TEST_GPU_DEVICE_POINTER_API == 1) && defined(TEST_MATRIX_RANDOM) && defined(TEST_EIGENVECTORS)
+(TEST_GPU_DEVICE_POINTER_API == 1) && defined(TEST_MATRIX_RANDOM)
 (TEST_GPU_SET_ID == 1) && (TEST_INTEL_GPU == 0) && (TEST_INTEL_GPU_OPENMP == 0) && (TEST_INTEL_GPU_SYCL == 0)
 (TEST_INTEL_GPU == 1) || (TEST_INTEL_GPU_OPENMP == 1) || (TEST_INTEL_GPU_SYCL == 1)
 (TEST_NVIDIA_GPU == 0) && (TEST_INTEL_GPU == 0) && (TEST_AMD_GPU == 0) && (TEST_INTEL_GPU_OPENMP == 0) && (TEST_INTEL_GPU_SYCL == 0)
@@ -3878,11 +3910,18 @@ ${xsmm_supported[n]}$
 (__x86_64__) == 1 && defined __AVX512F__
 0
 0==1
+0B1010 == 10
+0xa == 0b1010
+0xFF == 255
 1
+1 + (1+2 (
+1 + ^ 1 2
 1 || defined(__INTEL_COMPILER)
 1 || LAPACK_ENABLED
 1==1
 1==2
+2 < 1+2+
+2 < 1+2+ / 1 2
 4*LIBINT2_MAX_AM_eri > ${m_max}$ - 1
 ABI_ENABLED
 ABR_ENABLED
@@ -4566,7 +4605,6 @@ defined (ENABLE_VERBOSE) && !defined (NDEBUG)
 defined (ENKF)
 defined (EQUI_TIDE)
 defined (ESMF_)
-defined (ESMF_ENABLESTATENEEDED)
 defined (ESMF_LAPACK)
 defined (ESMF_LAPACK_INTERNAL)
 defined (ESMF_MOAB)
@@ -4666,8 +4704,10 @@ defined (MICROCODE)
 defined (MICROP3)
 defined (MIXING)
 defined (MKL)
+defined (MNH_MPI_ISEND)
 defined (MPDATA)
 defined (MPI)
+defined (MULTIPHASE)
 defined (MULTIPROCESSOR)
 defined (MULTIPROCESSOR) && (TIDE_OUTPUT)
 defined (NAG)
@@ -4686,6 +4726,7 @@ defined (NO_PIO_BUFFER)
 defined (NO_R16)
 defined (NSWALL)
 defined (NVTX)
+defined (O2000)
 defined (OBSTACLE)
 defined (OFFLINE_BIOLOGY)
 defined (OFFLINE_SEDIMENT)
@@ -4727,6 +4768,7 @@ defined (RAMS_MPI)
 defined (RAS)
 defined (RAY_BENDING)
 defined (READ_TTIMETABLE)
+defined (REALCASE)
 defined (REALISTIC_VESSEL_BODY)
 defined (REALLY_BAD_NORMALIZATION)
 defined (RRKF)
@@ -4748,6 +4790,7 @@ defined (SEMI_IMPLICIT) || defined (NH) || (defined (WAVE_CURRENT_INTERACTION) &
 defined (SETWIND)
 defined (SGI) || defined (NEC)
 defined (SIESTA__PEXSI) || defined (SIESTA__ELSI)
+defined (SKNET)
 defined (SLAB)
 defined (SPALARTALMARAS)
 defined (SPHERICAL)
@@ -4921,6 +4964,7 @@ defined (WITH_NVIDIA_GPU_VERSION) && defined (WITH_NVTX)
 defined (ZALPHA)
 defined (_ACML_) && defined (__PGI)
 defined (_AIX) || defined (_BGL) || defined (_BGP)
+defined (_AMD)
 defined (_BRANCH)
 defined (_COMPILED_BY)
 defined (_COMPILING_DATE)
@@ -4931,8 +4975,10 @@ defined (_DEBUGPRINT_) || defined (_CHECK_)
 defined (_DEBUGPRINT_) || defined (_MI_SORT_)
 defined (_DOUBLE_DEFAULT_KIND_IS_REAL128)
 defined (_ENABLE_BLOCK_DMRG_) || defined (_ENABLE_CHEMPS2_DMRG_)
+defined (_ENABLE_BLOCK_DMRG_) || defined (_ENABLE_CHEMPS2_DMRG_) || (_ENABLE_DICE_SHCI_)
 defined (_ENABLE_BLOCK_DMRG_) || defined (_ENABLE_CHEMPS2_DMRG_) || defined (_ENABLE_DICE_SHCI_)
 defined (_ENABLE_CHEMPS2_DMRG_) || defined (_DMRG_)
+defined (_ENABLE_DICE_SHCI_) || defined (_ENABLE_CHEMPS2_DMRG_)
 defined (_HAVE_EXTRA_) && ! defined (_GA_)
 defined (_HYBRID2_)
 defined (_HYBRID3_)
@@ -4944,6 +4990,7 @@ defined (_LASTCOMMIT)
 defined (_MEMTRACE)
 defined (_MOLCAS_MPP_) && ! defined (_GA_)
 defined (_MSC_VER)
+defined (_NVIDIA)
 defined (_OFFLOAD) && defined (_DEBUG)
 defined (_OPENACC)
 defined (_OPENMP)
@@ -4976,7 +5023,6 @@ defined (__CUDA) && (_OPENACC)
 defined (__CUDA) && defined (_OPENACC)
 defined (__CUDA_OPTIMIZED)
 defined (__DBCSR_ACC)
-defined (__DBCSR_ACC_G2G)
 defined (__DEBUG)
 defined (__DEBUG_CONSTRAINTS)
 defined (__DEBUG_RISM)
@@ -5826,6 +5872,7 @@ defined key_diainstant
 defined key_GSW
 defined key_iomput
 defined key_mpp_mpi
+defined key_mpp_mpi || ! defined in_nemo
 defined key_netcdf4
 defined key_oasis3
 defined key_oasis4
@@ -5969,32 +6016,6 @@ defined NETCDF && defined DEBUG
 defined NEUMANN
 defined NEW_LGI_METHOD2a
 defined NEW_LGI_METHOD2b
-defined NF90_DOUBLEPRECISION_IS_C_DOUBLE
-defined NF90_DOUBLEPRECISION_IS_C_FLOAT
-defined NF90_INT1_IS_C_INT
-defined NF90_INT1_IS_C_LONG
-defined NF90_INT1_IS_C_SHORT
-defined NF90_INT1_IS_C_SIGNED_CHAR
-defined NF90_INT2_IS_C_INT
-defined NF90_INT2_IS_C_LONG
-defined NF90_INT2_IS_C_SHORT
-defined NF90_INT_IS_C_INT
-defined NF90_INT_IS_C_LONG
-defined NF90_REAL_IS_C_DOUBLE
-defined NF90_REAL_IS_C_FLOAT
-defined NF_DOUBLEPRECISION_IS_C_DOUBLE
-defined NF_DOUBLEPRECISION_IS_C_FLOAT
-defined NF_INT1_IS_C_INT
-defined NF_INT1_IS_C_LONG
-defined NF_INT1_IS_C_SHORT
-defined NF_INT1_IS_C_SIGNED_CHAR
-defined NF_INT2_IS_C_INT
-defined NF_INT2_IS_C_LONG
-defined NF_INT2_IS_C_SHORT
-defined NF_INT_IS_C_INT
-defined NF_INT_IS_C_LONG
-defined NF_REAL_IS_C_DOUBLE
-defined NF_REAL_IS_C_FLOAT
 defined NLM_OUTER && defined WEAK_CONSTRAINT
 defined NLM_OUTER || defined RBL4DVAR || defined RBL4DVAR_ANA_SENSITIVITY || defined RBL4DVAR_FCT_SENSITIVITY
 defined NLM_OUTER || defined RBL4DVAR || defined RBL4DVAR_ANA_SENSITIVITY || defined RBL4DVAR_FCT_SENSITIVITY || defined SP4DVAR
@@ -6635,6 +6656,7 @@ defined WET_DRY || (defined DIAGNOSTICS_BIO && defined BIO_FENNEL)
 defined WET_DRY_NOT_YET
 defined WIND_MINUS_CURRENT && !defined BULK_FLUXES
 defined WITH_MAGMA
+defined WITH_MKL || defined WITH_HYPRE
 defined WITH_ROCSOLVER
 defined WKSTN_OFF
 defined WRFHYDRO_MODEL
@@ -6846,8 +6868,8 @@ defined __GFORTRAN_
 defined __GFORTRAN__
 defined __GFORTRAN__ && !defined __INTEL_COMPILER
 defined __GFORTRAN__ && (!defined(__ICC) || !defined(__INTEL_COMPILER))
-defined __GFORTRAN__ && (!defined(__INTEL_COMPILER) || !defined(__ICC))
 defined __GFORTRAN__ && defined USE_UCS4
+defined __GFORTRAN__ && __GNUC__ == 4 && __GNUC_MINOR__ == 9
 defined __GFORTRAN__ && __GNUC__ > 8
 defined __GFORTRAN__ &&!defined __INTEL_COMPILER
 defined __GFORTRAN__ || defined __INTEL_COMPILER
@@ -7028,6 +7050,7 @@ defined( USE_REAL8 )
 defined( UWM_STATS ) || defined( PNNL_STATS )
 defined( WINDOWS )
 defined( WRAP_MPI_TIMING )
+defined( Y )
 defined( _BYTESWAPIO )
 defined( _BYTESWAPIO ) && defined( ALLOW_MDSIO )
 defined( _NCARGKS_ )
@@ -7036,7 +7059,10 @@ defined( _TRAJECTORY_ ) && defined( GFIO )
 defined( __CUDA_PROFILING )
 defined( __HIP_PROFILING )
 defined( __INTEL_COMPILER )
+defined( __NAG_COMPILER_RELEASE)
 defined( __PGI) || defined (__FLANG)
+defined(1D)
+defined(A) && (3 <= A)
 defined(ABSOFT) || defined(sysIRIX64)
 defined(AB_OUTPUT)
 defined(ACCELERATE)
@@ -7086,12 +7112,18 @@ defined(ASL)
 defined(ASL) && defined(MICRO)
 defined(ATMOS_NUDGE) || defined(CLIMATE_NUDGE) || defined(ADA_NUDGE)
 defined(ATOM_BLOCKED_SCF)
+defined(B3D_COLLOP_NRL19IE)
+defined(B3D_COLLOP_NUBEAM)
+defined(B3D_VEL_DIFFUSION)
 defined(BALANCE_2D)
 defined(BGP) || defined(BGL)
 defined(BIGENDIAN)
 defined(BILL_DEBUG)
 defined(BioGen)
 defined(BIT_FOR_BIT) && defined(DM_PARALLEL)
+defined(BL)
+defined(BL) || defined(CHA)
+defined(BL) || defined(TGV)
 defined(BLAS95_FOUND)
 defined(BLAS_COPY)
 defined(BLAS_NOTHREADS)
@@ -7837,9 +7869,11 @@ defined(CESR_WINCVF)
 defined(CEW) && ! defined(LES)
 defined(CFDDEM) || defined(CFDACM)
 defined(CFDLPT_TwoWay)
+defined(CHA)
 defined(CHEM)
 defined(CHI_FORCE)
 defined(CHPS)
+defined(Chung)
 defined(CLD_AER_CDNC)
 defined(CLD_AER_CDNC) && !defined(ALT_CDNC_INPUTS)
 defined(CLD_AER_CDNC) && (defined(TRACERS_AEROSOLS_Koch) || defined(TRACERS_AEROSOLS_SEASALT) || defined(TRACERS_DUST) || defined(TRACERS_NITRATE) || defined(TRACERS_HETCHEM) || defined(TRACERS_SOA) || defined(TRACERS_AEROSOLS_OCEAN) || defined(TRACERS_AEROSOLS_VBS))
@@ -7941,7 +7975,10 @@ defined(DEBUG_PARPATTERNGHOST)
 defined(DEBUG_PARPATTERNGHOSTTOGHOST)
 defined(DEBUG_PRINT)
 defined(DEBUG_QECOUPLE)
+defined(DEBUG_rhs_1)
+defined(DEBUG_SF)
 defined(DEBUG_SLP)
+defined(DEBUG_SNES)
 defined(DEBUG_T)
 defined(DEBUG_TEST_CASES)
 defined(DEBUG_TIMER)
@@ -7952,7 +7989,9 @@ defined(DEBUG_WINDS)
 defined(DEF_GHOST_CUDA_)
 defined(DEPRECATED)
 defined(DEV)
+defined(DEVICE_POINTER)
 defined(DEVICE_POINTER) || defined(REDISTRIBUTE_MATRIX)
+defined(DEV_NULL)
 defined(DFP)
 defined(DFT_GASTAT)
 defined(DGEMM_IMPL)
@@ -8016,6 +8055,7 @@ defined(EXT_INT) && !( __GNUC__ >= 4)
 defined(EXT_INT) && !defined(USE_FORTRAN2003)
 defined(EZ_TEST)
 defined(F2003)
+defined(F90HP)
 defined(F90_IO)
 defined(FAKE_DLFUNC)
 defined(FAST_COPY)
@@ -8049,11 +8089,14 @@ defined(FOAM)
 defined(FORCE_LOGICALS)
 defined(FOR_FLUKA) && defined(PNUTINC)
 defined(FP16)
+defined(FRAC_DUST)
 defined(FROUDE_CAP)
 defined(FSKLEARN_PREDICTION)
 defined(FSKLEARN_TRAINING)
 defined(FTN_NO_DEFAULT_INIT)
 defined(FUGAKU)
+defined(FUJI) || defined(NAGf95) || defined(NEC) || defined(HP) || defined(pgf) || defined(G95) || defined(GFORTRAN)
+defined(FUJI) || defined(NAGf95) || defined(NEC) || defined(HP) || defined(pgf) || defined(G95)|| defined(GFORTRAN)
 defined(FUJITSU)
 defined(FUJITSU) || defined(PSCALE)
 defined(FUJITSU) || defined(PSCALE) || defined(SOLARIS) || defined(GCC46)
@@ -8253,6 +8296,7 @@ defined(HORIZ_OPENMP) && defined (COLUMN_OPENMP)
 defined(HORIZ_OPENMP) || defined (COLUMN_OPENMP)
 defined(HORIZ_OPENMP) || defined(COLUMN_OPENMP)
 defined(HP)
+defined(HPPA)
 defined(HPUX)
 defined(HYDRO_RIEMANN_SOLVER_HLLC)
 defined(HYDRO_RIEMANN_SOLVER_HYBRID)
@@ -8263,6 +8307,7 @@ defined(ibm_sp) || defined(_JEDI_)
 defined(ICE)
 defined(IFC)
 defined(IFORT_) || defined(INTELLLVM_)
+defined(IG)
 defined(IMAS)
 defined(IMPA)
 defined(IMPA) && defined(PARTICLES)
@@ -8304,6 +8349,7 @@ defined(ISNAN_INTRINSIC)
 defined(ISSUE49_IS_FIXED)
 defined(IS_ARRAY)
 defined(JESSE_MORTAR)
+defined(JST)
 defined(KAPPAF_CENTERED)
 defined(KCOMP)
 defined(KCOMP) || defined(RICC)
@@ -8338,10 +8384,12 @@ defined(LINUX)
 defined(LINUX) && !defined(XLFLINUX) && !defined(CRAYFORTRAN) && !defined(__flang__)
 defined(LINUX) && (USE_MPI_IO)
 defined(LINUX) || defined (MACX)
+defined(LINUX) || defined (O2000)
 defined(LINUX) || defined(DARWIN)
 defined(LINUX) || defined(LINUX64)
 defined(LINUX) || defined(OSF1)
 defined(LINUX) || defined(OSF1) || defined(DARWIN)
+defined(LINUX) || defined(SUN4)
 defined(LINUXALPHA)
 defined(LIS_JULES)
 defined(LN_ANAMORPHOSIS)
@@ -8400,6 +8448,14 @@ defined(MMF_SAM) || defined(MMF_SAMOMP)
 defined(MMF_SAMXX)
 defined(MMF_SAMXX) || defined(MMF_PAM)
 defined(MMF_SAMXX) || defined(MMF_SAM) || defined(MMF_SAMOMP)
+defined(MNH_LINUX) || defined(MNH_SGI)
+defined(MNH_MPI_BSEND)
+defined(MNH_MPI_ISEND)
+defined(MNH_RTTOV_13)
+defined(MNH_SP4)
+defined(MNH_SX5)
+defined(MNH_SX5) || defined(MNH_SP4) || defined(NAGf95) || defined(MNH_LINUX)
+defined(MNH_VPP) || defined(MNH_SX5) || defined(MNH_SP4)
 defined(MOD)
 defined(MODAL_AERO)
 defined(MODCM_DP_TRANSPOSE)
@@ -8408,8 +8464,6 @@ defined(MODEL_GEOS)
 defined(MODIFY_ACTIVATE)
 defined(MOMTUM4_CFL)
 defined(MOMTUM_CFL)
-defined(MORE_GPU) && !defined(USE_CCL_MULTIPLY)
-defined(MORE_GPU) && defined(USE_CCL_MULTIPLY)
 defined(mpas)
 defined(MPAS_OPENACC) && !defined(USE_GPU_AWARE_MPI)
 defined(MPAS_OPENMP_OFFLOAD) || defined(MPAS_OPENACC)
@@ -8445,7 +8499,7 @@ defined(MUMPS5) && defined(DNC)
 defined(MYREAL8) && !defined(WITHOUT_LINALG)
 defined(NAG)
 defined(NAG) || defined(PGI)
-defined(NAGf90Fortran)
+defined(NAGf95)
 defined(NAGF95) || defined(GFORTRAN_) || defined(BLUEGENE_HACKS)
 defined(NAGF95) || defined(_WIN32_)
 defined(NAGFOR)
@@ -8470,7 +8524,9 @@ defined(NAVIERSTOKES) || defined(INCNS) || defined(ACOUSTIC)
 defined(NAVIERSTOKES) || defined(INCNS) || defined(MULTIPHASE)
 defined(NAVIERSTOKES) || defined(INCNS) || defined(MULTIPHASE) || defined(ACOUSTIC)
 defined(NAVIERSTOKES) || defined(SPALARTALMARAS)
+defined(NCL511)
 defined(NDEBUG)
+defined(NECSX)
 defined(NEC_SX)
 defined(NEED_LOC)
 defined(NEST) & defined(ASSIM)
@@ -8503,6 +8559,7 @@ defined(NWAD_PRINT)
 defined(OAK)
 defined(OBSOLETE)
 defined(OCEANS2)
+defined(ODD_IFX_BUG)
 defined(ODYSSEY) || defined(SUNHPC) || defined(PC_INTEL) || defined(DOCKER_INTEL)
 defined(OLDIFORM)
 defined(OLD_PT_TO_T) || defined(OLD_COS_SG)
@@ -8551,7 +8608,6 @@ defined(PERF_NORMAL)
 defined(PERGRO)
 defined(PETSC_HAVE_CUDA)
 defined(PETSC_HAVE_SUPERLU)
-defined(PETSC_USE_64BIT_INDICES) || PETSC_VERSION_MINOR < 16
 defined(PETSC_USE_FORTRAN_MODULES)
 defined(PETSC_USE_REAL_SINGLE)
 defined(PGI)
@@ -8563,6 +8619,7 @@ defined(PILGRIM)
 defined(PIN_CPUS)
 defined(PLBC)
 defined(POWER9)
+defined(PowerLaw)
 defined(PPCGNS) && defined(PPMPI)
 defined(PPLVLSET) || defined(PPATM)
 defined(PPMPI) && defined(PPCPS)
@@ -8570,6 +8627,7 @@ defined(PPMPI) && defined(PPSAFETYMODE)
 defined(PPTURBINES) || defined(PPATM)
 defined(PPTURBINES) || defined(PPATM) || defined(PPLVLSET)
 defined(PP_GLM) && defined (PP_NC_GLM)
+defined(PR)
 defined(PRG_DIRAC)
 defined(PRINT_AVG_CPU_TIME_PER_THREAD)
 defined(PRINT_CHKSUM)
@@ -8630,8 +8688,12 @@ defined(SEMI)
 defined(SEMI_IMPLICIT)
 defined(SERIAL_IO)
 defined(SERIAL_MPI)
+defined(SetSf_Debugging)
 defined(SET_CPUS)
 defined(SFX_ASC) || defined(SFX_ARO) || defined(SFX_MNH) || defined(SFX_NC)
+defined(SFX_MNH)
+defined(SFX_MPI)
+defined(SFX_MPI) || defined(SFX_MNH)
 defined(SGI)
 defined(sgi) && defined(USE_HYBRID)
 defined(SGICRAY) || defined(NAGFFT)
@@ -8641,6 +8703,7 @@ defined(SIDE_EFFECT)
 defined(SIMPLE_MESODIFF) || defined(USE_1D_MESODIFF)
 defined(SINGLE)
 defined(SINGLEPREC)
+defined(SINGLE_PRECISION)
 defined(SKS2)
 defined(SOLVE_TASK_LOCKED)
 defined(SP1) || defined(SOLARIS)
@@ -8694,6 +8757,8 @@ defined(SUN) || defined(SOLARIS)
 defined(SUN) || defined(SOLARIS) || defined(IBM)||defined(LINUX)||defined(MACX)
 defined(SUPPORT_FOR_MPI_ALLOC_MEM_CPTR)
 defined(surfssa)
+defined(Sutherland)
+defined(SWAPIO) && !defined(f77)
 defined(SW_DYNAMICS)
 defined(sysAIX) || defined(__GFORTRAN__)
 defined(SYSTEM_MEM_USAGE_WORKS)
@@ -8710,6 +8775,8 @@ defined(TEST)
 defined(TESTPART_) && defined(MAGFIELD_)
 defined(TEST_CHOLESKY)
 defined(TEST_COMPLEX)
+defined(TEST_COMPLEX) && defined(TEST_DOUBLE)
+defined(TEST_COMPLEX) && defined(TEST_SINGLE)
 defined(TEST_CORNERS)
 defined(TEST_DOUBLE)
 defined(TEST_EIGENVALUES)
@@ -8719,24 +8786,33 @@ defined(TEST_EIGENVECTORS) && defined(TEST_MATRIX_RANDOM)
 defined(TEST_GENERALIZED_DECOMP_EIGENPROBLEM)
 defined(TEST_GENERALIZED_EIGENPROBLEM)
 defined(TEST_GENERALIZED_EIGENPROBLEM) && defined(TEST_ALL_LAYOUTS)
+defined(TEST_GENERALIZED_EIGENPROBLEM) && defined(TEST_MATRIX_RANDOM)
 defined(TEST_HERMITIAN_MULTIPLY_FULL)
-defined(TEST_HERMITIAN_MULTIPLY_FULL) || defined(TEST_HERMITIAN_MULTIPLY_LOWER) || defined(TEST_HERMITIAN_MULTIPLY_UPPER)
-defined(TEST_HERMITIAN_MULTIPLY_FULL) || defined(TEST_HERMITIAN_MULTIPLY_UPPER)
 defined(TEST_HERMITIAN_MULTIPLY_FULL) || defined(TEST_HERMITIAN_MULTIPLY_UPPER) || defined(TEST_HERMITIAN_MULTIPLY_LOWER)
+defined(TEST_HERMITIAN_MULTIPLY_FULL) || defined(TEST_HERMITIAN_MULTIPLY_UPPER) || defined(TEST_HERMITIAN_MULTIPLY_LOWER) || defined(TEST_PXGEMM_MULTIPLY_NN) || defined(TEST_PXGEMM_MULTIPLY_TN) || defined(TEST_PXGEMM_MULTIPLY_NT) || defined(TEST_PXGEMM_MULTIPLY_TT)
 defined(TEST_HERMITIAN_MULTIPLY_LOWER)
 defined(TEST_HERMITIAN_MULTIPLY_UPPER)
 defined(TEST_MATRIX_ANALYTIC) && !defined(TEST_SOLVE_TRIDIAGONAL) && !defined(TEST_CHOLESKY)
 defined(TEST_MATRIX_ANALYTIC) && (defined(TEST_SOLVE_TRIDIAGONAL) || defined(TEST_CHOLESKY))
 defined(TEST_MATRIX_FRANK) && !defined(TEST_SOLVE_TRIDIAGONAL) && !defined(TEST_CHOLESKY)
 defined(TEST_MATRIX_FRANK) && (defined(TEST_SOLVE_TRIDIAGONAL) || defined(TEST_CHOLESKY))
-defined(TEST_MATRIX_RANDOM) && !defined(TEST_SOLVE_TRIDIAGONAL) && !defined(TEST_CHOLESKY) && !defined(TEST_EIGENVALUES)
+defined(TEST_MATRIX_RANDOM) && !defined(TEST_SOLVE_TRIDIAGONAL) && !defined(TEST_CHOLESKY) && !defined(TEST_EIGENVALUES) && !defined(TEST_MULTIPLY)
 defined(TEST_MATRIX_RANDOM) && (defined(TEST_SOLVE_TRIDIAGONAL) || defined(TEST_EIGENVALUES))
 defined(TEST_MATRIX_RANDOM) && defined(TEST_CHOLESKY)
 defined(TEST_MATRIX_RANDOM) && defined(TEST_GENERALIZED_EIGENPROBLEM)
+defined(TEST_MATRIX_RANDOM) && defined(TEST_MULTIPLY)
 defined(TEST_MATRIX_TOEPLITZ)
 defined(TEST_MATRIX_TOEPLITZ) || defined(TEST_MATRIX_FRANK)
+defined(TEST_MULTIPLY)
 defined(TEST_NVIDIA_GPU) || defined(TEST_AMD_GPU) || defined(TEST_INTEL_GPU) || defined(TEST_INTEL_GPU_OPENMP) || defined(TEST_INTEL_GPU_SYCL)
+defined(TEST_PXGEMM_MULTIPLY_NN)
+defined(TEST_PXGEMM_MULTIPLY_NN) || defined(TEST_PXGEMM_MULTIPLY_NT) || defined(TEST_PXGEMM_MULTIPLY_TN) || defined(TEST_PXGEMM_MULTIPLY_TT)
+defined(TEST_PXGEMM_MULTIPLY_NT)
+defined(TEST_PXGEMM_MULTIPLY_TN)
+defined(TEST_PXGEMM_MULTIPLY_TT)
 defined(TEST_REAL)
+defined(TEST_REAL) && defined(TEST_DOUBLE)
+defined(TEST_REAL) && defined(TEST_SINGLE)
 defined(TEST_SINGLE)
 defined(TEST_SOLVE_TRIDIAGONAL)
 defined(TEST_W3GDATMD) || defined(TEST_W3GDATMD_W3DIMS)
@@ -8761,6 +8837,7 @@ defined(TETON_ENABLE_OPENMP)
 defined(TETON_ENABLE_OPENMP_OFFLOAD)
 defined(TETON_ENABLE_OPENMP_OFFLOAD) && defined(TETON_ENABLE_UMPIRE)
 defined(TETON_ENABLE_UMPIRE)
+defined(TGV)
 defined(THIRD_DERIV)
 defined(THORNADO_CUDA)
 defined(THORNADO_DEBUG_LA)
@@ -8847,8 +8924,10 @@ defined(USE_ARENAS)
 defined(USE_BARRIER)
 defined(use_CAF)
 defined(USE_CCL_CHOLESKY)
+defined(USE_CCL_HERMITIAN_MULTIPLY)
 defined(USE_CCL_INVERT)
-defined(USE_CCL_MULTIPLY)
+defined(USE_CCL_PXGEMM)
+defined(USE_CCL_SOLVE_TRIDI)
 defined(USE_CCL_TRIDIAG)
 defined(USE_COARRAY)
 defined(USE_COND) && defined(MOIST_CAPPA)
@@ -8930,15 +9009,17 @@ defined(VAR_MPI)&&0
 defined(VAR_OPENACC) && defined(VAR_CRAY)
 defined(VAR_WORKAROUND_CRAY_MEM_ISSUE_LARGE_ASSIGN) && !defined(VAR_OPENACC) && !defined(VAR_REAL_SP)
 defined(VAX)
+defined(VdW)
+defined(VdW) || defined(PR)
 defined(VECTOR_MODE)
 defined(VELOC_) || defined (ADVECT_)
 defined(VELOC_) || defined(ADVECT_)
 defined(verbose_isam) && defined(isam)
 defined(VERSION)
 defined(VESSEL)
-defined(VISUAL_CPLUSPLUS)
 defined(VMS)
 defined(VPART_)
+defined(VPP)
 defined(W3_DEBUGSRC) && defined(W3_ST4)
 defined(W3_IC1) || defined(W3_IC2) || defined(W3_IC3) || defined(W3_IC4) || defined(W3_IC5)
 defined(W3_IS1) || defined(W3_IS2)
@@ -9004,6 +9085,7 @@ defined(WITH_COMPLEX_VSX_BLOCK1_KERNEL)
 defined(WITH_COMPLEX_VSX_BLOCK2_KERNEL)
 defined(WITH_DOC)
 defined(WITH_MPI) && defined (SPLIT_COMM_MYSELF)
+defined(WITH_MPICH)
 defined(WITH_NVIDIA_CUSOLVER)
 defined(WITH_NVIDIA_CUSOLVER) || defined(WITH_AMD_ROCSOLVER)
 defined(WITH_NVIDIA_GPU_SM80_COMPUTE_CAPABILITY)
@@ -9064,6 +9146,12 @@ defined(WITH_SYCL_GPU_VERSION) && defined(WITH_SYCL_SOLVER)
 defined(WITH_VALUE)
 defined(wrfmodel)
 defined(WRF_LOG_BUFFERING)
+defined(X)
+defined(X) && !(defined(Y) || defined(Z))
+defined(X) && !defined(Y) || !defined(Z)
+defined(X) && defined(Y)
+defined(X) && defined(Y) && defined(Z)
+defined(X) && defined(Y) || defined(Z)
 defined(X1)
 defined(XHEEVD)
 defined(xlC)
@@ -9087,7 +9175,11 @@ defined(XSMM) && defined(LIBXSMM_SMM_25_5_5)
 defined(XSMM) && defined(LIBXSMM_SMM_5_25_5)
 defined(XSMM_FORCE_EVEN_IF_SLOWER) || ( defined(XSMM) && defined(LIBXSMM_SMM_25_5_5) && defined(__MIC__) )
 defined(XSYEVD)
+defined(Y) && (3 <= Y)
 defined(YMP)
+defined(Z)
+defined(Z) && defined(Y)
+defined(Z) || defined(Y)
 defined(ZALPHA)
 defined(ZCOMPACT)
 defined(zdotc)
@@ -9139,6 +9231,11 @@ defined(_FFT_Z) && !(defined(_FFT_X) || defined(_FFT_Y))
 defined(_FLOW)
 defined(_GAUSS_TABLE)
 defined(_GLOBAL_ARRAYS)
+defined(_GPU)
+defined(_GPU) && defined(_NCCL)
+defined(_GPU_DIRECT)
+defined(_GPU_DIRECT) && defined(ACC_MPI_COPY_3D_J)
+defined(_GPU_DIRECT) && defined(ACC_MPI_COPY_3D_K)
 defined(_GPU_MPI)
 defined(_HALO_DEBUG)
 defined(_HAS_MASK_) && _FABM_DIMENSION_COUNT_>0
@@ -9176,6 +9273,7 @@ defined(_MSC_VER)
 defined(_M_IA64)
 defined(_M_IX86)
 defined(_M_X64) || defined(_M_AMD64)
+defined(_NCCL)
 defined(_NETCDF)
 defined(_NETCDF) || defined(_PNETCDF)
 defined(_OCC)
@@ -9184,6 +9282,7 @@ defined(_OFFLOAD) && defined(_CUBLAS)
 defined(_OFFLOAD) && defined(_CUSOLVER)
 defined(_OFFLOAD) && defined(_CUSOLVER) && defined(_X_)
 defined(_OPENACC)
+defined(_OPENACC) && !defined(_GPU_DIRECT)
 defined(_OPENACC) && !defined(_GPU_MPI)
 defined(_OPENACC) && defined (_CUDA)
 defined(_OPENACC) || defined(_OPENMP)
@@ -9257,7 +9356,6 @@ defined(__COMPILE_REVISION)
 defined(__COMPILE_THIS_UNUSED_FUNCTION)
 defined(__COSMA)
 defined(__CRAY)
-defined(__crayx1)
 defined(__CRAYXE) || defined(__CRAYXC)
 defined(__CRAYXT_COMPUTE_LINUX_TARGET)
 defined(__CRAYY)
@@ -9279,8 +9377,6 @@ defined(__CYGWIN64__)
 defined(__CYGWIN__)
 defined(__DATA_DIR)
 defined(__DBCSR_ACC)
-defined(__DBCSR_ACC_G2G)
-defined(__DBCSR_DISABLE_WORKSHARE)
 defined(__DBCSR_OPENMPI_RMA)
 defined(__DEBUG)
 defined(__DEBUG) || defined(__FLUSH_STDOUT)
@@ -9313,6 +9409,7 @@ defined(__FFT_OPENMP_TASKS)
 defined(__FFT_SCALAR_THREAD_SAFE)
 defined(__FLANG)
 defined(__FLANG_PATCHLEVEL__)
+defined(__flang__)
 defined(__fox)
 defined(__FreeBSD__) || defined(__FreeBSD)
 defined(__FRT_major__)
@@ -9325,12 +9422,9 @@ defined(__G95__) || defined(__GNUC__) || defined(F2KCLI)
 defined(__GET_MAXRSS__)
 defined(__GFC_REAL_10__)
 defined(__GFC_REAL_16__)
-defined(__GFORTAN__) && (!defined(__ICC) || defined(__INTEL_COMPILER))
 defined(__GFORTRAN_HACK)
 defined(__GFORTRAN__)
 defined(__GFORTRAN__) && (!defined(__ICC) || !defined(__INTEL_COMPILER))
-defined(__GFORTRAN__) && (!defined(__ICC) || !defined(__INTRL_COMPILER))
-defined(__GFORTRAN__) && (!defined(__ICC) || defined(__INTEL_COMPILER))
 defined(__GFORTRAN__) && (!defined(__INTEL_COMPILER) || !defined(__ICC))
 defined(__GFORTRAN__) && __GNUC__ < 7
 defined(__GFORTRAN__) || defined(AIX)
@@ -9349,6 +9443,7 @@ defined(__GNUC__) && __GNUC__ < 12
 defined(__GNUC__) && __GNUC__ > 9
 defined(__GNUC__) && __GNUC__ >= 4
 defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__PGI)
+defined(__GPU)
 defined(__GPU_DEBUG)
 defined(__GPU_MPI)
 defined(__HAIKU__)
@@ -9368,7 +9463,6 @@ defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
 defined(__IBMC__)
 defined(__ibmxl__)
 defined(__ICC) || defined(__INTEL_COMPILER)
-defined(__ICC) || defined(__INTEL_COMPILER))
 defined(__icepack)
 defined(__IFC) || defined(__INTEL_COMPILER)
 defined(__INTEL) && defined(__HASVTRIG)
@@ -9397,6 +9491,7 @@ defined(__KNC__) || defined(__AVX512F__)
 defined(__LCC_MINOR__)
 defined(__LCC__) && (defined(__GNUC__) || defined(__GNUG__) || defined(__MCST__))
 defined(__LEGACY_PLUGINS)
+defined(__LFORTRAN__)
 defined(__LIBGRPP)
 defined(__LIBINT)
 defined(__LIBMAXWELL)
@@ -9424,6 +9519,8 @@ defined(__MINGW32__)
 defined(__MINGW64__)
 defined(__MKL)
 defined(__MKL) || defined(__LIBXSMM_TRANS) || defined(__LIBXSMM_BLOCKOPS) || !defined(NDEBUG)
+defined(__MP)
+defined(__MP) && defined(__GPU)
 defined(__MPI)
 defined(__MPI) && ! defined(__MPI_MODULE)
 defined(__MPI) && !defined(__USE_3D_FFT)
@@ -9439,6 +9536,7 @@ defined(__MULTIO)
 defined(__MULTIO) && !defined(__ifsinterface) && !defined(__oasis)
 defined(__NAG)
 defined(__NAG_COMPILER_BUILD) && defined(__DARWIN)
+defined(__NEC__)
 defined(__NetBSD__) || defined(__NetBSD)
 defined(__nldyn_ion_parallelism)
 defined(__NOMBD)
@@ -9534,6 +9632,7 @@ defined(__TNUM_VER)
 defined(__TRACE)
 defined(__TRAP_SIGUSR1)
 defined(__TRAP_SIGUSR1) || defined(__TERMINATE_GRACEFULLY)
+defined(__TREXIO)
 defined(__tru64) || defined(_tru64) || defined(__TRU64__)
 defined(__T_C_G0)
 defined(__ultrix) || defined(__ultrix__) || defined(_ULTRIX)
@@ -9663,6 +9762,7 @@ exponential == 1
 exponential == 2
 EXPORT_SYMBOLS == ENABLED
 Exp_ENABLED
+f(2 < 1+2
 F18_ENABLED
 F2018_LOCALITY
 F2023_LOCALITY
@@ -10946,6 +11046,8 @@ MMG_VERSION_LT(5,6)
 MMG_VERSION_LT(5,8)
 mmvue_typer_ENABLED
 MM_ENABLED
+MNH_SCALARS_IN_SPLITFILES
+mno == 18
 MNPLD_ENABLED
 MNPLD_ENABLED || PWLN_ENABLED || MEAN_ENABLED || NEAR_ENABLED || NEXT_ENABLED || PREV_ENABLED
 MNPLE_ENABLED
@@ -11233,7 +11335,9 @@ PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==18
 PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==19
 PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==20
 PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==21
+PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR==22
 PETSC_VERSION_MAJOR==3 && PETSC_VERSION_MINOR>=18
+PETSC_VERSION_MINOR < 16
 PETSC_VERSION_MINOR > 18 && PETSC_VERSION_MINOR < 22
 PETSC_VERSION_MINOR > 5
 PETSC_VERSION_MINOR >= 14
@@ -12042,6 +12146,7 @@ SFA_ENABLED && SFB_ENABLED && TNA_ENABLED && TNB_ENABLED && BLAS_ENABLED && DISP
 SFA_ENABLED && SLB_ENABLED && CNA_ENABLED && (CSB_ENABLED || CHB_ENABLED) && BLAS_ENABLED && DISPATCH_ENABLED
 SFA_ENABLED && SUB_ENABLED && CNA_ENABLED && (CSB_ENABLED || CHB_ENABLED) && BLAS_ENABLED && DISPATCH_ENABLED
 SFA_ENABLED && TNA_ENABLED
+SFX_MNH
 SHOCKCAPTURE
 SHOCK_NFVSE
 show_ENABLED
@@ -12492,6 +12597,8 @@ USE_CUDA
 USE_CVODE
 USE_DEBUG
 USE_DERIVED_IO
+USE_DIM3
+USE_DIMX
 USE_DOUBLE_PRECISION
 USE_EIRENE == 0
 USE_EIRENE == 1
@@ -12505,6 +12612,9 @@ USE_HDF5
 USE_HDG
 USE_HDG && USE_LOADBALANCE
 USE_HDG && USE_MPI
+USE_INT16
+USE_INT32
+USE_INT64
 USE_INTERF
 USE_ISNAN
 USE_LAPACK
@@ -12535,6 +12645,7 @@ USE_PRECISION == 2
 USE_PRECOND
 USE_QUADRUPLE_PRECISION
 USE_READIN_CONSTANTS
+USE_REAL64
 USE_SED
 USE_SP
 USE_SUPERLU
@@ -12591,7 +12702,9 @@ WIN_CPP
 WITH_CPCMX
 WITH_HDF5
 WITH_JSON
+WITH_MA48
 WITH_MADGRAPH
+WITH_MPI
 WITH_NLO
 WITH_NVIDIA_SM80_GPU_KERNEL == 1
 WITH_QP
@@ -12617,6 +12730,18 @@ WTI_ENABLED || WTR_ENABLED
 WTR_ENABLED
 WTR_ENABLED || WNO_ENABLED
 w_2dim
+X != 1
+X < 3 && Y > 3
+X == 0
+X == 1
+X == 1 && Y == 5
+X == 2
+X == 2 && Y == 5
+X == 3
+X == 3-1
+X == 3-2
+X == 4
+X > 3 && Y < 3
 x11
 X256SSG_ENABLED
 XC_MAJOR_VERSION <= 4
@@ -12642,6 +12767,18 @@ XY_D0_ENABLED
 XY_D1_ENABLED
 XY_ENABLED
 XY_ENABLED && (BSSK_ENABLED || PSSK_ENABLED)
+Y == (+4+6*5)/7
+Y == (+5+6*5)/7
+Y == (+5+6*Y)/7
+Y == (-5+6*5)/5
+Y == (-6+6*5)/5
+Y == (6*5-5)/5
+Y == (6*5-6)/5
+Y == 1
+Y == 2
+Y == 3
+Y == 4
+Z == 16
 ZA_ENABLED
 ZD_ENABLED
 ZLIB
@@ -12654,7 +12791,6 @@ _ARPACK_FOUND
 _CRAY
 _CRAY || REAL8
 _CRAYFTN
-_CRAYIEEE
 _CUDA
 _DBG
 _DEBUG
@@ -12755,8 +12891,10 @@ __alpha
 __APPLE__ || __MACH__
 __ARPACK == 1
 __CERFACS == 1
+__DEBUG
 __DEBUGGING__ == 1
 __DEBUG__
+__DRAG_PART
 __flang__
 __FORTRAN_STANDARD__ >= 2008
 __FUJITSU
@@ -12809,6 +12947,9 @@ __MAX_CONTR > 1 || __MAX_CONTR == 1
 __MAX_CONTR > 2 || __MAX_CONTR == 2
 __MAX_CONTR > 3 || __MAX_CONTR == 3
 __MAX_CONTR > 4 || __MAX_CONTR == 4
+__PARTICLES_FORCE_SEPARATE
+__PARTICLES_NO_SOLVENT
+__PARTICLES_POSITION_FIXED
 __QML == 1
 __QP_AVAILABLE__ == 1
 __REAL_PRECISION__ == 0
