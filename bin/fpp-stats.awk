@@ -429,6 +429,9 @@ END {
     if (JUST_HEADING)
         exit 0
 
+    if (DIRECTIVE == 0)
+        exit 0
+
     OTHER = DIRECTIVE - (INCLUDE + DEFINE + DEFINE_ARGS + UNDEF \
                          + IFDEF + IFNDEF + IF + ELIF + ELSE + ENDIF \
                          + PRAGMA + LINE + NNN + ERROR + WARNING \
